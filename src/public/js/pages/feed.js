@@ -1,4 +1,6 @@
-import { api, ApiError, auth } from "../api.js";
+﻿import { api, ApiError, auth } from "../api.js";
+import { createFlash } from "../components/flash.js";
+import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
 
 const FEED_LIMIT = 20;
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -26,11 +28,8 @@ const elements = {
   createStatus: document.querySelector("[data-create-post-status]"),
 };
 
-function setMessage(target, message) {
-  if (target) {
-    target.textContent = message;
-  }
-}
+const statusFlash = createFlash(elements.status);
+const createFlashStatus = createFlash(elements.createStatus);
 
 function parseTags(raw) {
   return String(raw ?? "")
@@ -92,17 +91,11 @@ function createPostCard(post) {
 }
 
 function renderAuthState() {
-  const hasToken = Boolean(auth.getToken());
-
-  if (elements.loginLink) {
-    elements.loginLink.hidden = hasToken;
-  }
-  if (elements.logoutButton) {
-    elements.logoutButton.hidden = !hasToken;
-  }
-  if (elements.openModalButton) {
-    elements.openModalButton.disabled = !hasToken;
-  }
+  return renderNavbarAuthState({
+    loginLink: elements.loginLink,
+    logoutButton: elements.logoutButton,
+    protectedButtons: [elements.openModalButton],
+  });
 }
 
 function renderFeed() {
@@ -113,7 +106,7 @@ function renderFeed() {
   elements.list.innerHTML = "";
 
   if (state.items.length === 0) {
-    setMessage(elements.status, "Sem posts no momento.");
+    statusFlash.show("Sem posts no momento.", "info");
     if (elements.loadMore) {
       elements.loadMore.hidden = true;
     }
@@ -137,7 +130,7 @@ async function loadFeed({ append = false } = {}) {
   }
 
   state.isLoading = true;
-  setMessage(elements.status, "Carregando feed...");
+  statusFlash.show("Carregando feed...", "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
@@ -153,9 +146,9 @@ async function loadFeed({ append = false } = {}) {
     state.nextCursor = data.pageInfo?.nextCursor ?? null;
 
     renderFeed();
-    setMessage(elements.status, state.items.length > 0 ? "Feed atualizado." : "Sem posts no momento.");
+    statusFlash.show(state.items.length > 0 ? "Feed atualizado." : "Sem posts no momento.", "success");
   } catch (error) {
-    setMessage(elements.status, resolveApiMessage(error));
+    statusFlash.show(resolveApiMessage(error), "error");
     if (!append) {
       state.items = [];
       renderFeed();
@@ -174,13 +167,13 @@ function openModal() {
   }
 
   if (!auth.getToken()) {
-    setMessage(elements.status, "Faca login para publicar um post.");
+    statusFlash.show("Faca login para publicar um post.", "error");
     window.location.href = "./index.html";
     return;
   }
 
   elements.modal.showModal();
-  setMessage(elements.createStatus, "");
+  createFlashStatus.show("", "info");
 }
 
 function closeModal() {
@@ -201,16 +194,16 @@ async function submitCreatePost(event) {
   const tags = parseTags(formData.get("tags"));
 
   state.isCreating = true;
-  setMessage(elements.createStatus, "Publicando...");
+  createFlashStatus.show("Publicando...", "info");
 
   try {
     const created = await api.posts.create({ title, content, tags });
     elements.createForm.reset();
     closeModal();
     await loadFeed();
-    setMessage(elements.status, `Post criado com sucesso: ${created.title}`);
+    statusFlash.show(`Post criado com sucesso: ${created.title}`, "success");
   } catch (error) {
-    setMessage(elements.createStatus, resolveApiMessage(error));
+    createFlashStatus.show(resolveApiMessage(error), "error");
   } finally {
     state.isCreating = false;
   }
@@ -243,14 +236,11 @@ function bindEvents() {
     elements.createForm.addEventListener("submit", submitCreatePost);
   }
 
-  if (elements.logoutButton) {
-    elements.logoutButton.addEventListener("click", () => {
-      auth.clearToken();
-      renderAuthState();
-      setMessage(elements.status, "Sessao encerrada.");
-      closeModal();
-    });
-  }
+  bindLogout(elements.logoutButton, () => {
+    renderAuthState();
+    statusFlash.show("Sessao encerrada.", "info");
+    closeModal();
+  });
 }
 
 function init() {

@@ -1,18 +1,18 @@
 ﻿import { api, ApiError, auth } from "../api.js";
+import { createFlash } from "../components/flash.js";
+import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
 
 const elements = {
   registerForm: document.querySelector("[data-register-form]"),
   loginForm: document.querySelector("[data-login-form]"),
   authStatus: document.querySelector("[data-auth-status]"),
   sessionStatus: document.querySelector("[data-session-status]"),
+  loginLink: document.querySelector("[data-login-link]"),
   logoutButton: document.querySelector("[data-logout]"),
 };
 
-function setMessage(target, message) {
-  if (target) {
-    target.textContent = message;
-  }
-}
+const authFlash = createFlash(elements.authStatus);
+const sessionFlash = createFlash(elements.sessionStatus);
 
 function resolveApiMessage(error) {
   if (error instanceof ApiError) {
@@ -23,17 +23,16 @@ function resolveApiMessage(error) {
 }
 
 function renderSessionState() {
-  const hasToken = Boolean(auth.getToken());
+  const hasToken = renderNavbarAuthState({
+    loginLink: elements.loginLink,
+    logoutButton: elements.logoutButton,
+  });
 
-  if (elements.logoutButton) {
-    elements.logoutButton.hidden = !hasToken;
-  }
-
-  setMessage(
-    elements.sessionStatus,
+  sessionFlash.show(
     hasToken
       ? "Sessao ativa. Voce pode publicar, comentar e acessar metricas privadas."
       : "Faca login para comentar, publicar e acessar metricas privadas.",
+    "info",
   );
 }
 
@@ -55,9 +54,9 @@ async function handleRegister(event) {
     auth.setToken(data.token);
     elements.registerForm.reset();
     renderSessionState();
-    setMessage(elements.authStatus, "Conta criada. Sessao iniciada.");
+    authFlash.show("Conta criada. Sessao iniciada.", "success");
   } catch (error) {
-    setMessage(elements.authStatus, resolveApiMessage(error));
+    authFlash.show(resolveApiMessage(error), "error");
   }
 }
 
@@ -78,9 +77,9 @@ async function handleLogin(event) {
     auth.setToken(data.token);
     elements.loginForm.reset();
     renderSessionState();
-    setMessage(elements.authStatus, "Login realizado com sucesso.");
+    authFlash.show("Login realizado com sucesso.", "success");
   } catch (error) {
-    setMessage(elements.authStatus, resolveApiMessage(error));
+    authFlash.show(resolveApiMessage(error), "error");
   }
 }
 
@@ -93,13 +92,10 @@ function bindEvents() {
     elements.loginForm.addEventListener("submit", handleLogin);
   }
 
-  if (elements.logoutButton) {
-    elements.logoutButton.addEventListener("click", () => {
-      auth.clearToken();
-      renderSessionState();
-      setMessage(elements.authStatus, "Sessao encerrada.");
-    });
-  }
+  bindLogout(elements.logoutButton, () => {
+    renderSessionState();
+    authFlash.show("Sessao encerrada.", "info");
+  });
 }
 
 function init() {

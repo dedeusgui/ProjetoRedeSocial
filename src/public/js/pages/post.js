@@ -1,4 +1,6 @@
 ﻿import { api, ApiError, auth } from "../api.js";
+import { createFlash } from "../components/flash.js";
+import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -14,11 +16,8 @@ const elements = {
   commentHelp: document.querySelector("[data-comment-help]"),
 };
 
-function setMessage(target, message) {
-  if (target) {
-    target.textContent = message;
-  }
-}
+const statusFlash = createFlash(elements.status);
+const commentHelpFlash = createFlash(elements.commentHelp);
 
 function resolveApiMessage(error) {
   if (error instanceof ApiError) {
@@ -38,15 +37,10 @@ function trendClass(trend) {
 }
 
 function renderSessionState() {
-  const hasToken = Boolean(auth.getToken());
-
-  if (elements.loginLink) {
-    elements.loginLink.hidden = hasToken;
-  }
-
-  if (elements.logoutButton) {
-    elements.logoutButton.hidden = !hasToken;
-  }
+  const hasToken = renderNavbarAuthState({
+    loginLink: elements.loginLink,
+    logoutButton: elements.logoutButton,
+  });
 
   if (elements.commentForm) {
     const textarea = elements.commentForm.querySelector("textarea[name='content']");
@@ -61,11 +55,11 @@ function renderSessionState() {
     }
   }
 
-  setMessage(
-    elements.commentHelp,
+  commentHelpFlash.show(
     hasToken
       ? "Comentario publico e visivel no detalhe do post."
       : "Faca login para comentar neste post.",
+    "info",
   );
 }
 
@@ -123,18 +117,18 @@ async function loadPost() {
   const postId = getPostId();
 
   if (!postId) {
-    setMessage(elements.status, "ID do post ausente na URL.");
+    statusFlash.show("ID do post ausente na URL.", "error");
     return;
   }
 
-  setMessage(elements.status, "Carregando post...");
+  statusFlash.show("Carregando post...", "info");
 
   try {
     const post = await api.posts.getById(postId);
     renderPost(post);
-    setMessage(elements.status, "Post carregado.");
+    statusFlash.show("Post carregado.", "success");
   } catch (error) {
-    setMessage(elements.status, resolveApiMessage(error));
+    statusFlash.show(resolveApiMessage(error), "error");
   }
 }
 
@@ -146,7 +140,7 @@ async function handleCommentSubmit(event) {
 
   const postId = getPostId();
   if (!postId) {
-    setMessage(elements.status, "ID do post ausente na URL.");
+    statusFlash.show("ID do post ausente na URL.", "error");
     return;
   }
 
@@ -158,7 +152,7 @@ async function handleCommentSubmit(event) {
     elements.commentForm.reset();
     await loadPost();
   } catch (error) {
-    setMessage(elements.status, resolveApiMessage(error));
+    statusFlash.show(resolveApiMessage(error), "error");
   }
 }
 
@@ -167,13 +161,10 @@ function bindEvents() {
     elements.commentForm.addEventListener("submit", handleCommentSubmit);
   }
 
-  if (elements.logoutButton) {
-    elements.logoutButton.addEventListener("click", () => {
-      auth.clearToken();
-      renderSessionState();
-      setMessage(elements.status, "Sessao encerrada.");
-    });
-  }
+  bindLogout(elements.logoutButton, () => {
+    renderSessionState();
+    statusFlash.show("Sessao encerrada.", "info");
+  });
 }
 
 function init() {

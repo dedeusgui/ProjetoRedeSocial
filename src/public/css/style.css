@@ -51,6 +51,14 @@ a {
   color: var(--text-1);
 }
 
+.muted[data-state="error"] {
+  color: var(--bad-0);
+}
+
+.muted[data-state="success"] {
+  color: var(--ok-0);
+}
+
 .row {
   display: flex;
   gap: var(--space-3);

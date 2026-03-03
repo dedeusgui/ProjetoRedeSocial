@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -8,7 +8,19 @@
   </head>
   <body>
     <main class="page">
-      <h1>Painel de Reviews</h1>
+      <header class="card app-header">
+        <div>
+          <h1>Painel de Reviews</h1>
+          <p class="muted">Area para moderadores e administradores.</p>
+        </div>
+        <nav class="row">
+          <a href="../feed.html">Feed</a>
+          <a href="../profile.html">Meu perfil</a>
+          <a href="../index.html" data-login-link>Entrar</a>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
+
       <section class="card">
         <form data-review-form>
           <input name="postId" placeholder="Post ID" required />
@@ -22,6 +34,6 @@
       </section>
       <p class="muted" data-review-status></p>
     </main>
-    <script src="../../js/script.js"></script>
+    <script type="module" src="../../js/pages/admin-reviews.js"></script>
   </body>
 </html>

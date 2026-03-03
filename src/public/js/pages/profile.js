@@ -1,4 +1,6 @@
 ﻿import { api, ApiError, auth } from "../api.js";
+import { createFlash } from "../components/flash.js";
+import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -12,11 +14,7 @@ const elements = {
   profile: document.querySelector("[data-profile]"),
 };
 
-function setMessage(target, message) {
-  if (target) {
-    target.textContent = message;
-  }
-}
+const statusFlash = createFlash(elements.status);
 
 function resolveApiMessage(error) {
   if (error instanceof ApiError) {
@@ -30,15 +28,10 @@ function resolveApiMessage(error) {
 }
 
 function renderSessionState() {
-  const hasToken = Boolean(auth.getToken());
-
-  if (elements.loginLink) {
-    elements.loginLink.hidden = hasToken;
-  }
-
-  if (elements.logoutButton) {
-    elements.logoutButton.hidden = !hasToken;
-  }
+  renderNavbarAuthState({
+    loginLink: elements.loginLink,
+    logoutButton: elements.logoutButton,
+  });
 }
 
 function renderProfile(profile) {
@@ -68,33 +61,30 @@ function renderProfile(profile) {
 
 async function loadProfile() {
   if (!auth.getToken()) {
-    setMessage(elements.status, "Faca login para visualizar seu perfil.");
+    statusFlash.show("Faca login para visualizar seu perfil.", "error");
     if (elements.profile) {
       elements.profile.innerHTML = "";
     }
     return;
   }
 
-  setMessage(elements.status, "Carregando perfil...");
+  statusFlash.show("Carregando perfil...", "info");
 
   try {
     const profile = await api.users.meProfile();
     renderProfile(profile);
-    setMessage(elements.status, "Metricas privadas visiveis apenas para voce.");
+    statusFlash.show("Metricas privadas visiveis apenas para voce.", "success");
   } catch (error) {
-    setMessage(elements.status, resolveApiMessage(error));
+    statusFlash.show(resolveApiMessage(error), "error");
   }
 }
 
 function bindEvents() {
-  if (elements.logoutButton) {
-    elements.logoutButton.addEventListener("click", () => {
-      auth.clearToken();
-      renderSessionState();
-      loadProfile();
-      setMessage(elements.status, "Sessao encerrada.");
-    });
-  }
+  bindLogout(elements.logoutButton, () => {
+    renderSessionState();
+    loadProfile();
+    statusFlash.show("Sessao encerrada.", "info");
+  });
 }
 
 function init() {
