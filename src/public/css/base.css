@@ -1,18 +1,15 @@
-/* ==============================================
-   base.css — Reset leve + base visual global
-   Usa exclusivamente tokens de tokens.css
-   ============================================== */
-
-/* ── Reset leve ── */
-*,
+* ,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
 }
 
-/* ── Base do documento ── */
 html {
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
@@ -24,37 +21,50 @@ body {
   min-height: 100vh;
   background-color: var(--bg-0);
   color: var(--text-0);
-  font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: var(--font-base);
   font-size: 16px;
   line-height: 1.6;
 }
 
-/* ── Tipografia base ── */
-h1, h2, h3, h4, h5, h6 {
+main {
+  padding-block: var(--space-7);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--text-0);
   line-height: 1.25;
 }
 
-p {
-  color: var(--text-0);
-}
-
+p,
 small {
   color: var(--text-1);
 }
 
-/* ── Links ── */
 a {
   color: var(--text-0);
   text-decoration: none;
-  transition: color var(--motion-fast) var(--motion-ease);
+  transition: color var(--motion-short) var(--motion-ease);
 }
 
 a:hover {
   color: var(--text-1);
 }
 
-/* ── Imagens e mídia ── */
 img,
 picture,
 video,
@@ -63,44 +73,43 @@ svg {
   max-width: 100%;
 }
 
-/* ── Listas ── */
-ul, ol {
+ul,
+ol {
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
 
-/* ── Campos de entrada ── */
 input,
 button,
 textarea,
 select {
   font: inherit;
   color: inherit;
-  background: none;
-  border: none;
-  outline: none;
 }
 
-/* ── Container central ── */
+button {
+  cursor: pointer;
+}
+
 .container {
   width: 100%;
-  max-width: 720px;
+  max-width: 760px;
   margin-inline: auto;
   padding-inline: var(--space-5);
 }
 
-/* ── Seções principais ── */
-main {
-  padding-block: var(--space-7);
+:focus-visible {
+  outline: 2px solid var(--text-1);
+  outline-offset: 2px;
 }
 
-/* ── Acessibilidade: respeitar preferência de movimento reduzido ── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }

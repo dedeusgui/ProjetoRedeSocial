@@ -1,154 +1,106 @@
-/* ==============================================
-   api.js — Camada de API mock para feed
-   Sem fetch real. Sem lógica de UI. Sem DOM.
-   ============================================== */
-
 const api = (() => {
-  /* ── Dados mock ── */
-
   const MOCK_POSTS = [
     {
-      id: "post_001",
-      author: "marcosdev",
-      title: "Como funciona o event loop no Node.js",
-      content:
-        "O event loop é o mecanismo que permite ao Node.js realizar operações não-bloqueantes. " +
-        "Ele funciona em fases: timers, pending callbacks, idle/prepare, poll, check e close callbacks. " +
-        "Cada fase tem sua própria fila de callbacks. Entender essa sequência é essencial para evitar " +
-        "problemas de performance e comportamentos inesperados em aplicações que dependem de I/O intensivo.",
-      tags: ["node.js", "event-loop", "backend"],
+      id: "post_1006",
+      author: "iris.data",
+      title: "Indices compostos para busca textual",
+      content: "Criar indice composto por status e createdAt reduz custo de leitura no feed cronologico e simplifica paginacao por cursor.",
+      tags: ["mongodb", "performance"],
       trend: "positive",
-      createdAt: "2026-03-02T18:30:00Z",
+      createdAt: "2026-03-03T12:40:00.000Z"
     },
     {
-      id: "post_002",
-      author: "ana.santos",
-      title: "Reflexão sobre clean architecture em projetos pequenos",
-      content:
-        "Nem todo projeto precisa de quatro camadas de abstração. Clean architecture é poderosa " +
-        "em sistemas complexos, mas em scripts e MVPs pode adicionar overhead desnecessário. " +
-        "O ponto-chave é entender o contexto: a arquitetura deve servir ao problema, não ao contrário.",
-      tags: ["arquitetura", "clean-code"],
+      id: "post_1005",
+      author: "leo.ops",
+      title: "Checklist de deploy sem recomendacao",
+      content: "Separar feed cronologico de jobs de ranking evita acoplamento com sinal de popularidade e protege a regra de produto.",
+      tags: ["arquitetura", "backend"],
       trend: "neutral",
-      createdAt: "2026-03-01T14:15:00Z",
+      createdAt: "2026-03-03T10:05:00.000Z"
     },
     {
-      id: "post_003",
-      author: "lucas.f",
-      title: "Minha lista de frameworks favoritos",
-      content:
-        "Aqui estão os frameworks que eu mais gosto de usar no dia a dia. Cada um tem seus pontos " +
-        "fortes e fracos, mas no final das contas tudo depende do contexto do projeto e da equipe envolvida.",
-      tags: ["opinião", "frameworks"],
+      id: "post_1004",
+      author: "nina.front",
+      title: "Estados de carregamento discretos",
+      content: "Skeleton curto e sem ruido visual melhora leitura e nao compete com o conteudo principal quando o feed termina de carregar.",
+      tags: ["frontend", "ux"],
+      trend: "positive",
+      createdAt: "2026-03-02T20:15:00.000Z"
+    },
+    {
+      id: "post_1003",
+      author: "caio.dev",
+      title: "Padrao para validacao de payload",
+      content: "Padronizar mensagens de erro por code e message acelera diagnostico e mantem contrato entre backend e frontend.",
+      tags: ["api", "qualidade"],
+      trend: "neutral",
+      createdAt: "2026-03-01T17:35:00.000Z"
+    },
+    {
+      id: "post_1002",
+      author: "tami.res",
+      title: "Escrita tecnica objetiva",
+      content: "Texto curto, contexto minimo e exemplos concretos elevam entendimento sem depender de engajamento por metricas.",
+      tags: ["comunicacao"],
       trend: "negative",
-      createdAt: "2026-02-28T10:45:00Z",
+      createdAt: "2026-02-28T13:50:00.000Z"
     },
     {
-      id: "post_004",
-      author: "dev.carla",
-      title: "Entendendo closures em JavaScript",
-      content:
-        "Uma closure é a combinação de uma função com referências ao seu escopo léxico. " +
-        "Isso permite que funções internas acessem variáveis de funções externas mesmo após a " +
-        "execução da função externa ter terminado. Closures são a base de padrões como módulos, " +
-        "callbacks e currying.",
-      tags: ["javascript", "fundamentos"],
+      id: "post_1001",
+      author: "rafa.db",
+      title: "Cursor baseado em createdAt e id",
+      content: "Quando dois posts tem mesmo horario, combinar createdAt com id evita saltos de pagina e preserva ordenacao estavel.",
+      tags: ["database", "paginacao"],
       trend: "positive",
-      createdAt: "2026-02-27T22:00:00Z",
-    },
-    {
-      id: "post_005",
-      author: "renato.ops",
-      title: "Docker Compose para ambientes de desenvolvimento",
-      content:
-        "Configurar um docker-compose.yml para dev local economiza horas de setup. " +
-        "Definir serviços como banco de dados, cache e a própria aplicação em containers isolados " +
-        "garante que todos na equipe trabalhem com o mesmo ambiente, evitando o clássico " +
-        "'funciona na minha máquina'.",
-      tags: ["docker", "devops", "produtividade"],
-      trend: "positive",
-      createdAt: "2026-02-26T09:20:00Z",
-    },
-    {
-      id: "post_006",
-      author: "julia.code",
-      title: "Por que aprender SQL ainda importa",
-      content:
-        "ORMs abstraem muita coisa, mas entender SQL puro é fundamental para otimizar queries, " +
-        "debugar problemas de performance e compreender o que realmente acontece no banco. " +
-        "Saber escrever JOINs, subqueries e window functions faz diferença real no dia a dia.",
-      tags: ["sql", "banco-de-dados", "fundamentos"],
-      trend: "neutral",
-      createdAt: "2026-02-25T16:50:00Z",
-    },
-    {
-      id: "post_007",
-      author: "pedro.a",
-      title: "Acessibilidade não é opcional",
-      content:
-        "Implementar atributos ARIA, contraste adequado, navegação por teclado e textos alternativos " +
-        "não é luxo — é responsabilidade. Cerca de 15% da população mundial vive com alguma forma " +
-        "de deficiência. Ignorar acessibilidade é excluir usuários.",
-      tags: ["acessibilidade", "frontend", "ux"],
-      trend: "positive",
-      createdAt: "2026-02-24T11:30:00Z",
-    },
-    {
-      id: "post_008",
-      author: "thiago.m",
-      title: "Meu setup de terminal customizado",
-      content:
-        "Uso Oh My Zsh com o tema Powerlevel10k, algumas aliases e scripts personalizados. " +
-        "A produtividade melhorou bastante, mas o mais importante é adaptar a ferramenta ao seu fluxo, " +
-        "não o contrário.",
-      tags: ["terminal", "produtividade"],
-      trend: "neutral",
-      createdAt: "2026-02-23T08:10:00Z",
-    },
+      createdAt: "2026-02-27T08:30:00.000Z"
+    }
   ];
 
-  /* ── Helpers ── */
-
-  function delay(ms) {
+  function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function sortByDateDesc(posts) {
-    return [...posts].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-    );
+  function randomDelay(min = 300, max = 500) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  /* ── API pública ── */
+  function sortByCreatedAtDesc(posts) {
+    return [...posts].sort((a, b) => {
+      const left = new Date(a.createdAt).getTime();
+      const right = new Date(b.createdAt).getTime();
+      return right - left;
+    });
+  }
 
   const feed = {
     /**
-     * Lista posts do feed em ordem cronológica descendente.
-     * @param {Object}  options
-     * @param {string}  [options.cursor]  - ID do último post retornado (paginação)
-     * @param {number}  [options.limit=5] - Máximo de posts por página
-     * @returns {Promise<{ok: boolean, data: {posts: Array}}>}
+     * @param {{ cursor?: string | null, limit?: number }} params
+     * @returns {Promise<{ ok: true, data: { posts: Array } } | { ok: false, error: { code: string, message: string } }>} 
      */
-    async list({ cursor = null, limit = 5 } = {}) {
-      await delay(400);
+    async list({ cursor = null, limit = 10 } = {}) {
+      await wait(randomDelay());
 
-      const sorted = sortByDateDesc(MOCK_POSTS);
+      const ordered = sortByCreatedAtDesc(MOCK_POSTS);
+      const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
 
-      let startIndex = 0;
+      let start = 0;
       if (cursor) {
-        const cursorIndex = sorted.findIndex((p) => p.id === cursor);
-        startIndex = cursorIndex === -1 ? 0 : cursorIndex + 1;
+        const index = ordered.findIndex((item) => item.id === cursor);
+        start = index >= 0 ? index + 1 : 0;
       }
 
-      const posts = sorted.slice(startIndex, startIndex + limit);
+      const posts = ordered.slice(start, start + safeLimit);
 
       return {
         ok: true,
-        data: {
-          posts,
-        },
+        data: { posts }
       };
-    },
+
+      // TODO: switch mock to backend endpoint
+      // const query = new URLSearchParams({ cursor: cursor ?? "", limit: String(safeLimit) });
+      // const response = await fetch(`/feed?${query.toString()}`);
+      // return response.json();
+    }
   };
 
   return { feed };

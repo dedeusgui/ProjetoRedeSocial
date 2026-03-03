@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Feed cronológico — The Social Network. Sem algoritmo, sem recomendação.">
-  <title>Feed — The Social Network</title>
+  <meta name="description" content="Feed cronologico do The Social Network. Sem recomendacao automatica.">
+  <title>Feed | The Social Network</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,76 +13,33 @@
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/components.css">
-
-  <style>
-    /* Layout específico do feed — não é componente reutilizável */
-    .feed-header {
-      margin-bottom: var(--space-6);
-    }
-
-    .feed-header__title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-0);
-      margin-bottom: var(--space-2);
-    }
-
-    .feed-header__subtitle {
-      font-size: 0.8125rem;
-      color: var(--text-1);
-    }
-
-    .feed-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-5);
-    }
-  </style>
 </head>
 <body>
-
   <main>
     <div class="container">
-
-      <!-- Header do feed -->
       <header class="feed-header">
         <h1 class="feed-header__title">Feed</h1>
-        <p class="feed-header__subtitle">Cronológico. Sem recomendação automática.</p>
+        <p class="feed-header__subtitle">Feed cronologico. Sem recomendacao automatica. O indicador publico mostra somente tendencia.</p>
       </header>
 
-      <!-- Container do feed — preenchido por JS -->
-      <div id="feed-root" class="feed-list">
-
-        <!-- Loading: skeletons (visíveis antes do JS carregar) -->
+      <section id="feed-root" class="feed-list" aria-live="polite" aria-busy="true">
         <div class="skeleton-card" data-feed-skeleton>
-          <div class="skeleton skeleton-line skeleton-line--short"></div>
-          <div class="skeleton skeleton-line skeleton-line--title"></div>
-          <div class="skeleton skeleton-line skeleton-line--long"></div>
-          <div class="skeleton skeleton-line skeleton-line--medium"></div>
-          <div class="skeleton skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line skeleton-line--long"></div>
+          <div class="skeleton-line skeleton-line--medium"></div>
         </div>
         <div class="skeleton-card" data-feed-skeleton>
-          <div class="skeleton skeleton-line skeleton-line--short"></div>
-          <div class="skeleton skeleton-line skeleton-line--title"></div>
-          <div class="skeleton skeleton-line skeleton-line--long"></div>
-          <div class="skeleton skeleton-line skeleton-line--medium"></div>
-          <div class="skeleton skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line skeleton-line--long"></div>
+          <div class="skeleton-line skeleton-line--medium"></div>
         </div>
-        <div class="skeleton-card" data-feed-skeleton>
-          <div class="skeleton skeleton-line skeleton-line--short"></div>
-          <div class="skeleton skeleton-line skeleton-line--title"></div>
-          <div class="skeleton skeleton-line skeleton-line--long"></div>
-          <div class="skeleton skeleton-line skeleton-line--medium"></div>
-          <div class="skeleton skeleton-line skeleton-line--short"></div>
-        </div>
-
-      </div>
-
+      </section>
     </div>
   </main>
 
   <script src="/js/api.js"></script>
   <script src="/js/pages/feed.js"></script>
-
 </body>
 </html>

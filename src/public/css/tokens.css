@@ -1,10 +1,4 @@
-/* ==============================================
-   tokens.css — Design tokens oficiais
-   The Social Network
-   ============================================== */
-
 :root {
-  /* ── Cores ── */
   --bg-0: #0b0d10;
   --bg-1: #12161b;
   --bg-2: #181e25;
@@ -18,7 +12,9 @@
   --warn-0: #b7ab91;
   --bad-0: #b59898;
 
-  /* ── Espaçamento ── */
+  --font-base: "Space Grotesk", "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mark: "Caveat", "Patrick Hand", cursive;
+
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -28,16 +24,14 @@
   --space-7: 48px;
   --space-8: 64px;
 
-  /* ── Radius ── */
   --radius-1: 8px;
   --radius-2: 12px;
   --radius-3: 16px;
 
-  /* ── Motion ── */
-  --motion-fast: 120ms;
+  --border-0: 1px solid var(--line-0);
+  --shadow-0: 0 8px 24px rgba(0, 0, 0, 0.28);
+
+  --motion-short: 120ms;
   --motion-medium: 220ms;
   --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-
-  /* ── Sombras ── */
-  --shadow-1: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
