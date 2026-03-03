@@ -8,10 +8,49 @@
   </head>
   <body>
     <main class="page">
-      <h1>Feed</h1>
+      <header class="card app-header">
+        <div>
+          <h1>Feed</h1>
+          <p class="muted">Ordem cronologica, sem recomendacao automatica.</p>
+        </div>
+        <nav class="row">
+          <a href="./feed.html" aria-current="page">Feed</a>
+          <a href="./profile.html">Meu perfil</a>
+          <a href="./index.html" data-login-link>Entrar</a>
+          <button type="button" data-open-post-modal>Novo post</button>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
       <p class="muted" data-feed-status></p>
-      <div data-feed-list></div>
+      <div class="feed-list" data-feed-list></div>
+      <div class="feed-actions">
+        <button type="button" data-feed-more hidden>Carregar mais</button>
+      </div>
     </main>
-    <script src="../js/script.js"></script>
+
+    <dialog class="modal" data-create-post-modal>
+      <section class="card modal-card">
+        <div class="row modal-header">
+          <h2>Criar post</h2>
+          <button type="button" data-close-post-modal>Fechar</button>
+        </div>
+        <form data-create-post-form>
+          <input name="title" placeholder="Titulo do post" required maxlength="120" />
+          <textarea
+            name="content"
+            rows="6"
+            placeholder="Compartilhe uma ideia objetiva."
+            required
+          ></textarea>
+          <input
+            name="tags"
+            placeholder="tags separadas por virgula (ex: node, backend, estudo)"
+          />
+          <button type="submit">Publicar</button>
+        </form>
+        <p class="muted" data-create-post-status></p>
+      </section>
+    </dialog>
+    <script type="module" src="../js/pages/feed.js"></script>
   </body>
 </html>

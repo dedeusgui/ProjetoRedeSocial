@@ -8,18 +8,30 @@
   </head>
   <body>
     <main class="page">
-      <h1>Post</h1>
+      <header class="card app-header">
+        <div>
+          <h1>Post</h1>
+          <p class="muted">Discussao objetiva sobre conteudo.</p>
+        </div>
+        <nav class="row">
+          <a href="./feed.html">Feed</a>
+          <a href="./profile.html">Meu perfil</a>
+          <a href="./index.html" data-login-link>Entrar</a>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
       <p class="muted" data-post-status></p>
       <div data-post-view></div>
 
       <section class="card">
-        <h2>Add comment</h2>
+        <h2>Adicionar comentario</h2>
         <form data-comment-form>
-          <textarea name="content" rows="4" placeholder="Comment" required></textarea>
-          <button type="submit">Send</button>
+          <textarea name="content" rows="4" placeholder="Seu comentario" required></textarea>
+          <button type="submit">Enviar</button>
         </form>
+        <p class="muted" data-comment-help></p>
       </section>
     </main>
-    <script src="../js/script.js"></script>
+    <script type="module" src="../js/pages/post.js"></script>
   </body>
 </html>

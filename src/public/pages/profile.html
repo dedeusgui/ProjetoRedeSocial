@@ -8,10 +8,21 @@
   </head>
   <body>
     <main class="page">
-      <h1>Meu perfil</h1>
+      <header class="card app-header">
+        <div>
+          <h1>Meu perfil</h1>
+          <p class="muted">Metricas privadas visiveis apenas para voce.</p>
+        </div>
+        <nav class="row">
+          <a href="./feed.html">Feed</a>
+          <a href="./profile.html" aria-current="page">Meu perfil</a>
+          <a href="./index.html" data-login-link>Entrar</a>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
       <p class="muted" data-profile-status></p>
       <div data-profile></div>
     </main>
-    <script src="../js/script.js"></script>
+    <script type="module" src="../js/pages/profile.js"></script>
   </body>
 </html>

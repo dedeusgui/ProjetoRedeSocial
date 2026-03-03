@@ -8,19 +8,37 @@
   </head>
   <body>
     <main class="page">
-      <section class="card">
-        <h1>The Social Network</h1>
-        <p class="muted">Feed cronológico. Sem recomendação automática.</p>
-        <p><a href="./feed.html">Ir para o feed</a></p>
+      <header class="card app-header">
+        <div>
+          <h1>The Social Network</h1>
+          <p class="muted">Rede social anti-ego, com feed cronologico.</p>
+        </div>
+        <nav class="row">
+          <a href="./feed.html">Feed</a>
+          <a href="./profile.html">Meu perfil</a>
+          <a href="./index.html" aria-current="page">Entrar</a>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
+
+      <section class="card" data-session-card>
+        <h2>Sessao</h2>
+        <p class="muted" data-session-status>
+          Faca login para comentar, publicar e acessar metricas privadas.
+        </p>
+        <div class="row">
+          <a class="button-link" href="./feed.html">Ir para o feed</a>
+          <a class="button-link" href="./profile.html">Abrir perfil</a>
+        </div>
       </section>
 
       <section class="card">
-        <h2>Register</h2>
+        <h2>Criar conta</h2>
         <form data-register-form>
-          <input name="username" placeholder="username" required />
+          <input name="username" placeholder="username" required maxlength="40" />
           <input name="email" type="email" placeholder="email" required />
-          <input name="password" type="password" placeholder="password" required />
-          <button type="submit">Create account</button>
+          <input name="password" type="password" placeholder="password" required minlength="6" />
+          <button type="submit">Criar conta</button>
         </form>
       </section>
 
@@ -34,6 +52,6 @@
         <p class="muted" data-auth-status></p>
       </section>
     </main>
-    <script src="../js/script.js"></script>
+    <script type="module" src="../js/pages/index.js"></script>
   </body>
 </html>
