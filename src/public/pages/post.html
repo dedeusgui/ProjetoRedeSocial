@@ -7,8 +7,19 @@
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
-    <!-- TODO: Exibir post e comentários -->
-    <h1>Post</h1>
+    <main class="page">
+      <h1>Post</h1>
+      <p class="muted" data-post-status></p>
+      <div data-post-view></div>
+
+      <section class="card">
+        <h2>Add comment</h2>
+        <form data-comment-form>
+          <textarea name="content" rows="4" placeholder="Comment" required></textarea>
+          <button type="submit">Send</button>
+        </form>
+      </section>
+    </main>
     <script src="../js/script.js"></script>
   </body>
 </html>

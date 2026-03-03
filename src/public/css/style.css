@@ -1,0 +1,111 @@
+:root {
+  --bg-0: #0b0d10;
+  --bg-1: #12161b;
+  --bg-2: #181e25;
+  --text-0: #e6ebf2;
+  --text-1: #a8b0bc;
+  --line-0: #2a3340;
+  --ok-0: #9bb6a6;
+  --warn-0: #b7ab91;
+  --bad-0: #b59898;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-2: 12px;
+  --shadow-0: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: var(--space-5);
+  background: radial-gradient(circle at top, #131922 0%, var(--bg-0) 50%);
+  color: var(--text-0);
+  font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--text-0);
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--bg-1);
+  border: 1px solid var(--line-0);
+  border-radius: var(--radius-2);
+  box-shadow: var(--shadow-0);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.muted {
+  color: var(--text-1);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--line-0);
+  border-radius: 10px;
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+input,
+textarea {
+  width: 100%;
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--line-0);
+  border-radius: 10px;
+  padding: var(--space-3);
+}
+
+form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.status-positive {
+  color: var(--ok-0);
+}
+
+.status-neutral {
+  color: var(--warn-0);
+}
+
+.status-negative {
+  color: var(--bad-0);
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: var(--space-4);
+  }
+
+  .card {
+    padding: var(--space-4);
+  }
+}

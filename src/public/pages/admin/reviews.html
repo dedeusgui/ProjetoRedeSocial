@@ -7,8 +7,21 @@
     <link rel="stylesheet" href="../../css/style.css" />
   </head>
   <body>
-    <!-- TODO: Painel privado de aprovações e negações de posts (acesso restrito) -->
-    <h1>Painel de Reviews</h1>
+    <main class="page">
+      <h1>Painel de Reviews</h1>
+      <section class="card">
+        <form data-review-form>
+          <input name="postId" placeholder="Post ID" required />
+          <select name="decision" required>
+            <option value="approved">approved</option>
+            <option value="not_relevant">not_relevant</option>
+          </select>
+          <textarea name="reason" rows="3" placeholder="Reason (optional)"></textarea>
+          <button type="submit">Salvar review</button>
+        </form>
+      </section>
+      <p class="muted" data-review-status></p>
+    </main>
     <script src="../../js/script.js"></script>
   </body>
 </html>

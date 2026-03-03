@@ -1,11 +1,19 @@
-// TODO: Implementar verificação de papéis/permissões
-// Responsabilidade: Controlar acesso a rotas privadas como aprovações/negações de posts
-// Exemplo de uso: router.post('/posts/:id/review', auth, roles('admin', 'moderator'), reviewController.create)
+import AppError from "../common/errors/AppError.js";
 
-const roles = (...allowedRoles) => {
+function roles(...allowedRoles) {
   return (req, res, next) => {
+    if (!req.user) {
+      next(new AppError("Authentication required", "UNAUTHENTICATED", 401));
+      return;
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      next(new AppError("Forbidden", "FORBIDDEN", 403));
+      return;
+    }
+
     next();
   };
-};
+}
 
 export default roles;

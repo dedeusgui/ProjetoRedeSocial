@@ -1,9 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>The Social Network</title>
+    <link rel="stylesheet" href="../css/style.css" />
   </head>
-  <body></body>
+  <body>
+    <main class="page">
+      <section class="card">
+        <h1>The Social Network</h1>
+        <p class="muted">Feed cronologico. Sem recomendacao automatica.</p>
+        <p><a href="./feed.html">Ir para o feed</a></p>
+      </section>
+
+      <section class="card">
+        <h2>Register</h2>
+        <form data-register-form>
+          <input name="username" placeholder="username" required />
+          <input name="email" type="email" placeholder="email" required />
+          <input name="password" type="password" placeholder="password" required />
+          <button type="submit">Create account</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Login</h2>
+        <form data-login-form>
+          <input name="email" type="email" placeholder="email" required />
+          <input name="password" type="password" placeholder="password" required />
+          <button type="submit">Login</button>
+        </form>
+        <p class="muted" data-auth-status></p>
+      </section>
+    </main>
+    <script src="../js/script.js"></script>
+  </body>
 </html>

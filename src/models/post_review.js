@@ -1,17 +1,33 @@
 import mongoose from "mongoose";
 
-const postReviewSchema = new mongoose.Schema({
-  post: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true },
-  reviewer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+const PostReviewSchema = new mongoose.Schema(
+  {
+    postId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      required: true,
+      index: true,
+    },
+    reviewerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    decision: {
+      type: String,
+      enum: ["approved", "not_relevant"],
+      required: true,
+    },
+    reason: { type: String, default: null },
   },
-  approval: { type: Boolean, required: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+  {
+    timestamps: true,
+  },
+);
 
-const PostReview = mongoose.model("PostReview", postReviewSchema);
+PostReviewSchema.index({ postId: 1, reviewerId: 1 }, { unique: true });
+
+const PostReview = mongoose.model("PostReview", PostReviewSchema);
 
 export default PostReview;

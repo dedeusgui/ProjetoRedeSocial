@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
+import env from "./env.js";
 
-function connectDB() {
-  return mongoose.connect("mongodb://localhost:27017/thesocial");
+async function connectDB() {
+  await mongoose.connect(env.mongoUri);
+  return mongoose.connection;
 }
 
 export default connectDB;
