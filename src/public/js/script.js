@@ -15,6 +15,7 @@ function setToken(token) {
 }
 
 async function apiFetch(path, options = {}) {
+  const requestUrl = `${API_BASE}${path}`;
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers ?? {}),
@@ -27,13 +28,31 @@ async function apiFetch(path, options = {}) {
     }
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(requestUrl, {
     method: options.method ?? "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
-  const result = await response.json();
+  const rawBody = await response.text();
+  let result = null;
+
+  if (rawBody) {
+    try {
+      result = JSON.parse(rawBody);
+    } catch {
+      const sample = rawBody.replace(/\s+/g, " ").slice(0, 120);
+      throw new Error(
+        `Expected JSON from ${requestUrl}, but received ${response.status} ${response.statusText}. Response starts with: ${sample}`,
+      );
+    }
+  }
+
+  if (!result) {
+    throw new Error(
+      `Empty or invalid JSON response from ${requestUrl} (${response.status} ${response.statusText}).`,
+    );
+  }
 
   if (!response.ok || !result.ok) {
     const message = result?.error?.message ?? "Request failed";
@@ -290,4 +309,3 @@ function init() {
 }
 
 init();
-
