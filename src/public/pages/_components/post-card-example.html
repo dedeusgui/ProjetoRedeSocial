@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Exemplo do componente PostCard — The Social Network"
+    />
+    <title>PostCard — Componente de Exemplo</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../../css/tokens.css" />
+    <link rel="stylesheet" href="../../css/base.css" />
+    <link rel="stylesheet" href="../../css/components.css" />
+
+    <style>
+      /* Layout apenas para demonstração */
+      .demo-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-6);
+        padding-block: var(--space-7);
+      }
+
+      .demo-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-1);
+        opacity: 0.5;
+        margin-bottom: var(--space-3);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <div class="demo-wrapper">
+          <!-- ═══════════════════════════════════════
+             PostCard 1 — Tendência positiva
+             ═══════════════════════════════════════ -->
+          <div>
+            <p class="demo-label">Post com tendência positiva</p>
+
+            <article class="post-card" id="post-card-1">
+              <header class="post-card__header">
+                <div class="post-card__meta">
+                  <span class="post-card__username">marcosdev</span>
+                  <span class="post-card__date">2 mar 2026</span>
+                </div>
+                <span class="trend trend--positive">Aprovado</span>
+              </header>
+
+              <div class="post-card__body">
+                <h2 class="post-card__title">
+                  Como funciona o event loop no Node.js
+                </h2>
+                <p class="post-card__content">
+                  O event loop é o mecanismo que permite ao Node.js realizar
+                  operações não-bloqueantes. Ele funciona em fases: timers,
+                  pending callbacks, idle/prepare, poll, check e close
+                  callbacks. Cada fase tem sua própria fila de callbacks.
+                  Entender essa sequência é essencial para evitar problemas de
+                  performance e comportamentos inesperados em aplicações que
+                  dependem de I/O intensivo.
+                </p>
+              </div>
+
+              <div class="post-card__tags">
+                <span class="post-card__tag">node.js</span>
+                <span class="post-card__tag">event-loop</span>
+                <span class="post-card__tag">backend</span>
+              </div>
+
+              <footer class="post-card__footer">
+                <div class="post-card__actions">
+                  <button
+                    class="post-card__action post-card__action--approve"
+                    type="button"
+                    id="approve-post-1"
+                  >
+                    ✓ Aprovado
+                  </button>
+                  <button
+                    class="post-card__action post-card__action--reject"
+                    type="button"
+                    id="reject-post-1"
+                  >
+                    ✗ Não relevante
+                  </button>
+                </div>
+              </footer>
+            </article>
+          </div>
+
+          <!-- ═══════════════════════════════════════
+             PostCard 2 — Tendência neutra
+             ═══════════════════════════════════════ -->
+          <div>
+            <p class="demo-label">Post com tendência neutra</p>
+
+            <article class="post-card" id="post-card-2">
+              <header class="post-card__header">
+                <div class="post-card__meta">
+                  <span class="post-card__username">ana.santos</span>
+                  <span class="post-card__date">1 mar 2026</span>
+                </div>
+                <span class="trend trend--neutral">Neutro</span>
+              </header>
+
+              <div class="post-card__body">
+                <h2 class="post-card__title">
+                  Reflexão sobre clean architecture em projetos pequenos
+                </h2>
+                <p class="post-card__content">
+                  Nem todo projeto precisa de quatro camadas de abstração. Clean
+                  architecture é poderosa em sistemas complexos, mas em scripts
+                  e MVPs pode adicionar overhead desnecessário. O ponto-chave é
+                  entender o contexto: a arquitetura deve servir ao problema,
+                  não ao contrário.
+                </p>
+              </div>
+
+              <footer class="post-card__footer">
+                <div class="post-card__actions">
+                  <button
+                    class="post-card__action post-card__action--approve"
+                    type="button"
+                    id="approve-post-2"
+                  >
+                    ✓ Aprovado
+                  </button>
+                  <button
+                    class="post-card__action post-card__action--reject"
+                    type="button"
+                    id="reject-post-2"
+                  >
+                    ✗ Não relevante
+                  </button>
+                </div>
+              </footer>
+            </article>
+          </div>
+
+          <!-- ═══════════════════════════════════════
+             PostCard 3 — Tendência negativa, com tags
+             ═══════════════════════════════════════ -->
+          <div>
+            <p class="demo-label">Post com tendência negativa</p>
+
+            <article class="post-card" id="post-card-3">
+              <header class="post-card__header">
+                <div class="post-card__meta">
+                  <span class="post-card__username">lucas.f</span>
+                  <span class="post-card__date">28 fev 2026</span>
+                </div>
+                <span class="trend trend--negative">Não relevante</span>
+              </header>
+
+              <div class="post-card__body">
+                <h2 class="post-card__title">
+                  Minha lista de frameworks favoritos
+                </h2>
+                <p class="post-card__content">
+                  Aqui estão os frameworks que eu mais gosto de usar no dia a
+                  dia. Cada um tem seus pontos fortes e fracos, mas no final das
+                  contas tudo depende do contexto do projeto e da equipe
+                  envolvida.
+                </p>
+              </div>
+
+              <div class="post-card__tags">
+                <span class="post-card__tag">opinião</span>
+                <span class="post-card__tag">frameworks</span>
+              </div>
+
+              <footer class="post-card__footer">
+                <div class="post-card__actions">
+                  <button
+                    class="post-card__action post-card__action--approve"
+                    type="button"
+                    id="approve-post-3"
+                  >
+                    ✓ Aprovado
+                  </button>
+                  <button
+                    class="post-card__action post-card__action--reject"
+                    type="button"
+                    id="reject-post-3"
+                  >
+                    ✗ Não relevante
+                  </button>
+                </div>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
