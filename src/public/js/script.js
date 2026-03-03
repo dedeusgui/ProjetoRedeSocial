@@ -1,4 +1,4 @@
-const API_BASE = "/api/v1";
+ï»¿const API_BASE = "/api/v1";
 const TOKEN_KEY = "thesocial_token";
 
 function getToken() {
@@ -86,7 +86,7 @@ async function initFeedPage() {
       const article = document.createElement("article");
       article.className = "card";
       article.innerHTML = `
-        <p class="muted">${post.author?.username ?? "Unknown"} · ${new Date(post.createdAt).toLocaleString()}</p>
+        <p class="muted">${post.author?.username ?? "Unknown"} - ${new Date(post.createdAt).toLocaleString()}</p>
         <h2>${post.title}</h2>
         <p>${post.content}</p>
         <p class="${getTrendClass(post.trend)}">Trend: ${post.trend}</p>
@@ -124,7 +124,7 @@ async function initPostPage() {
       const post = await apiFetch(`/posts/${postId}`);
       container.innerHTML = `
         <article class="card">
-          <p class="muted">${post.author?.username ?? "Unknown"} · ${new Date(post.createdAt).toLocaleString()}</p>
+          <p class="muted">${post.author?.username ?? "Unknown"} - ${new Date(post.createdAt).toLocaleString()}</p>
           <h2>${post.title}</h2>
           <p>${post.content}</p>
           <p class="${getTrendClass(post.trend)}">Trend: ${post.trend}</p>
@@ -290,3 +290,4 @@ function init() {
 }
 
 init();
+
