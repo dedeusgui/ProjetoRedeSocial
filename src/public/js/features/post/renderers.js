@@ -1,4 +1,4 @@
-import { escapeHtml, formatDateTime, trendClass } from "../../core/formatters.js";
+import { escapeHtml, formatDateTime, trendClass, trendLabel } from "../../core/formatters.js";
 
 function renderTags(tags) {
   if (!Array.isArray(tags) || tags.length === 0) {
@@ -21,12 +21,13 @@ export function renderPostView(target, post) {
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
   const trend = post.trend ?? "neutral";
   const trendStyleClass = trendClass(trend);
+  const trendText = trendLabel(trend);
 
   target.innerHTML = `
     <article class="card post-card">
       <header class="post-header">
         <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(formatDateTime(post.createdAt))}</p>
-        <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trend)}</p>
+        <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trendText)}</p>
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>

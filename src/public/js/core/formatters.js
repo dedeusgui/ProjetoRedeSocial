@@ -30,6 +30,59 @@ export function parseCsvTags(rawValue) {
     .filter((tag) => tag.length > 0);
 }
 
+function toFiniteNumber(value, fallback = 0) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    return fallback;
+  }
+
+  return numberValue;
+}
+
+export function normalizePercentage(value) {
+  const safeValue = toFiniteNumber(value, 0);
+  const clampedValue = Math.max(0, Math.min(100, safeValue));
+  return Number(clampedValue.toFixed(2));
+}
+
+export function computeValidationScore(approvalRate, rejectionRate) {
+  const safeApprovalRate = normalizePercentage(approvalRate);
+  const safeRejectionRate = normalizePercentage(rejectionRate);
+  return Number((safeApprovalRate - safeRejectionRate).toFixed(2));
+}
+
+export function resolveTrendFromScore(score) {
+  const safeScore = toFiniteNumber(score, 0);
+
+  if (safeScore >= 20) {
+    return "positive";
+  }
+
+  if (safeScore <= -20) {
+    return "negative";
+  }
+
+  return "neutral";
+}
+
+export function formatPercent(value) {
+  const safeValue = normalizePercentage(value);
+  return `${safeValue}%`;
+}
+
+export function formatSignedPercent(value) {
+  const safeValue = toFiniteNumber(value, 0);
+  const roundedValue = Number(safeValue.toFixed(2));
+  const sign = roundedValue > 0 ? "+" : "";
+  return `${sign}${roundedValue}%`;
+}
+
+export function trendLabel(trend) {
+  if (trend === "positive") return "positiva";
+  if (trend === "negative") return "negativa";
+  return "neutra";
+}
+
 export function trendClass(trend) {
   if (trend === "positive") return "status-positive";
   if (trend === "negative") return "status-negative";

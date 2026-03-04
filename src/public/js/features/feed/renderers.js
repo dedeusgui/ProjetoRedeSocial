@@ -1,4 +1,4 @@
-import { escapeHtml, formatDateTime, trendClass } from "../../core/formatters.js";
+import { escapeHtml, formatDateTime, trendClass, trendLabel } from "../../core/formatters.js";
 
 export function ensureChronologicalOrder(items) {
   return [...items].sort((a, b) => {
@@ -33,11 +33,12 @@ export function createPostCard(post) {
   const postIdAttr = escapeHtml(String(post.id ?? ""));
   const trend = post.trend ?? "neutral";
   const trendStyleClass = trendClass(trend);
+  const trendText = trendLabel(trend);
 
   article.innerHTML = `
     <header class="post-header">
       <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(createdAtText)}</p>
-      <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trend)}</p>
+      <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trendText)}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>

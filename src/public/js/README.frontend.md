@@ -14,6 +14,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.
 - `features/*/renderers.js`: receive data and return/update DOM.
 - `core/session.js`: token lifecycle and auth checks.
+- `core/formatters.js`: shared formatting plus derived view metrics (for example profile validation score and tendency labels).
 - `core/http-state.js`: normalize API error messages for UI.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.

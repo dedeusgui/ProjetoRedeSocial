@@ -4,6 +4,7 @@ import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
+import { reviewSavedMessage } from "../features/moderation/renderers.js";
 import { renderPostView } from "../features/post/renderers.js";
 
 const state = {
@@ -198,7 +199,7 @@ async function handleReview(decision) {
 
   try {
     const result = await api.posts.review(state.postId, decision, null);
-    reviewFlash.show(`Avalia\u00e7\u00e3o salva. Tend\u00eancia atual: ${result.trend}.`, "success");
+    reviewFlash.show(reviewSavedMessage(result), "success");
     await loadPost();
   } catch (error) {
     reviewFlash.show(resolveModerationApiMessage(error, "Falha ao salvar avalia\u00e7\u00e3o."), "error");

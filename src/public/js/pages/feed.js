@@ -6,6 +6,7 @@ import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
 import { renderFeedList } from "../features/feed/renderers.js";
+import { reviewSavedMessage } from "../features/moderation/renderers.js";
 
 const FEED_LIMIT = 20;
 const FEED_NOTICE_KEY = "thesocial_feed_notice";
@@ -192,7 +193,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   try {
     const result = await api.posts.review(postId, decision, null);
     await loadFeed();
-    statusFlash.show(`Avalia\u00e7\u00e3o salva. Tend\u00eancia atual: ${result.trend}.`, "success");
+    statusFlash.show(reviewSavedMessage(result), "success");
   } catch (error) {
     statusFlash.show(
       resolveModerationApiMessage(error, "Falha ao salvar avalia\u00e7\u00e3o."),

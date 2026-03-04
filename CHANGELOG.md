@@ -43,6 +43,9 @@ All notable changes to this project should be documented in this file.
   - `docs/architecture/frontend-overview.md`
   - `src/public/js/README.frontend.md`
 - Updated root frontend overview in `README.md` to reflect the shared navigation pattern.
+- Refined moderation trend calculation to use a unified validation score (`approvalRate - rejectionRate`) while preserving `positive|neutral|negative` outcomes.
+- Updated profile UI to show a single derived "Score geral" metric based on private approval/rejection percentages.
+- Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positiva`, `neutra`, `negativa`).
 
 ### Notes
 

@@ -31,9 +31,9 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological feed.
-- `post.html`: post detail with comments.
-- `profile.html`: authenticated profile and private metrics.
+- `feed.html`: chronological feed with post tendency labels.
+- `post.html`: post detail with comments and tendency labels.
+- `profile.html`: authenticated profile with private metrics and derived validation score.
 - `admin/reviews.html`: moderation review flow.
 
 ## Navigation Pattern

@@ -35,8 +35,8 @@ Module construction is centralized in `src/server.js`:
 - `feed`: strictly chronological ordering and cursor pagination.
 - `posts`: hidden posts are not returned by detail endpoint.
 - `moderation`: post author cannot review own post.
-- `moderation`: trend thresholds are:
-  - `positive` if approval rate >= 60%
-  - `negative` if approval rate <= 40%
+- `moderation`: trend is derived from validation score `approvalRate - rejectionRate`:
+  - `positive` if score >= 20
+  - `negative` if score <= -20
   - `neutral` otherwise
 - `users`: private metrics only exposed through authenticated profile endpoint.
