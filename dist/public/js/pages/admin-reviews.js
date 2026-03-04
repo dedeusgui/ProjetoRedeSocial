@@ -20,7 +20,7 @@ const navbar = initNavbar({
 
 function init() {
   navbar.refresh();
-  statusFlash.show("Use a p\u00e1gina do post para revisar conte\u00fado.", "info");
+  statusFlash.show("A avalia\u00e7\u00e3o de posts est\u00e1 restrita \u00e0 \u00e1rea administrativa.", "info");
 }
 
 init();

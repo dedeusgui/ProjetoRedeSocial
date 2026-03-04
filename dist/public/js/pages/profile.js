@@ -20,21 +20,21 @@ const navbar = initNavbar({
   onLogout: () => {
     navbar.refresh();
     loadProfile();
-    statusFlash.show("Sessao encerrada.", "info");
+    statusFlash.show("Sess\u00e3o encerrada.", "info");
   },
 });
 
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para ver seu perfil.",
+    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para ver seu perfil.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
 
 async function loadProfile() {
   if (!hasSession()) {
-    statusFlash.show("Faca login para visualizar seu perfil.", "error");
+    statusFlash.show("Fa\u00e7a login para visualizar seu perfil.", "error");
     if (elements.profile) {
       elements.profile.innerHTML = "";
     }
@@ -46,7 +46,7 @@ async function loadProfile() {
   try {
     const profile = await api.users.meProfile();
     renderProfileView(elements.profile, profile);
-    statusFlash.show("Metricas privadas visiveis apenas para voce.", "success");
+    statusFlash.show("M\u00e9tricas privadas dispon\u00edveis no seu perfil.", "success");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
   }

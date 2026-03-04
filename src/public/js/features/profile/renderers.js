@@ -13,11 +13,11 @@ export function renderProfileView(target, profile) {
       <p class="muted">Criado em: ${escapeHtml(formatDateTime(profile.createdAt))}</p>
       <div class="metrics-grid">
         <article class="card metric-box">
-          <h3>Approval rate</h3>
+          <h3>Taxa de aprova&ccedil;&atilde;o</h3>
           <p>${escapeHtml(profile.privateMetrics?.approvalRate ?? 0)}%</p>
         </article>
         <article class="card metric-box">
-          <h3>Rejection rate</h3>
+          <h3>Taxa de reprova&ccedil;&atilde;o</h3>
           <p>${escapeHtml(profile.privateMetrics?.rejectionRate ?? 0)}%</p>
         </article>
       </div>

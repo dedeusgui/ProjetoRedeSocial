@@ -10,9 +10,9 @@
     <main class="page">
       <header class="card app-header">
         <div class="header-copy">
-          <h1 class="ink-underline">Feed de conhecimento</h1>
-          <p class="muted">Conte&uacute;do acima do autor. Cronologia acima do algoritmo.</p>
-          <p class="tone-note">Sem seguidores. Respire.</p>
+          <h1 class="ink-underline">Feed</h1>
+          <p class="muted">Publica&ccedil;&otilde;es recentes da comunidade.</p>
+          <p class="tone-note">Ordem cronol&oacute;gica.</p>
         </div>
         <nav class="row app-nav">
           <a class="nav-link" href="./feed.html" aria-current="page">Feed</a>
@@ -24,9 +24,9 @@
       </header>
 
       <section class="card info-strip">
-        <p class="ink-underline">Cronol&oacute;gico. Sem truques.</p>
+        <p class="ink-underline">Feed cronol&oacute;gico</p>
         <p class="muted">
-          O feed mostra publica&ccedil;&otilde;es recentes em ordem de tempo. Sem ranking, sem vitrine de status.
+          As publica&ccedil;&otilde;es aparecem da mais recente para a mais antiga.
         </p>
       </section>
 
@@ -40,21 +40,21 @@
     <dialog class="modal" data-create-post-modal>
       <section class="card modal-card">
         <div class="row modal-header">
-          <h2 class="ink-underline">Publicar conhecimento</h2>
+          <h2 class="ink-underline">Publicar post</h2>
           <button type="button" class="button-ghost" data-close-post-modal>Fechar</button>
         </div>
-        <p class="muted">Foque em algo &uacute;til, claro e replic&aacute;vel para quem est&aacute; lendo.</p>
+        <p class="muted">Escreva com clareza e contexto.</p>
         <form data-create-post-form>
           <label>
             T&iacute;tulo
-            <input name="title" placeholder="Ex: Como estudar Node.js sem caos" required maxlength="120" />
+            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="120" />
           </label>
           <label>
             Conte&uacute;do
             <textarea
               name="content"
               rows="6"
-              placeholder="Explique a ideia de forma objetiva e com contexto."
+              placeholder="Explique a ideia de forma objetiva."
               required
             ></textarea>
           </label>

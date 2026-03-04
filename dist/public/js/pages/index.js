@@ -23,7 +23,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   onLogout: () => {
     renderSessionState();
-    authFlash.show("Sess\u00e3o encerrada. Sem truques, sem pressa.", "info");
+    authFlash.show("Sess\u00e3o encerrada.", "info");
   },
 });
 
@@ -32,8 +32,8 @@ function renderSessionState() {
 
   sessionFlash.show(
     isAuthenticated
-      ? "Sess\u00e3o ativa. Voc\u00ea ser\u00e1 direcionado ao feed para publicar."
-      : "Fa\u00e7a login para publicar conhecimento.",
+      ? "Sess\u00e3o ativa. Voc\u00ea pode publicar no feed."
+      : "Fa\u00e7a login para publicar no feed.",
     "info",
   );
 }
@@ -65,7 +65,7 @@ async function handleRegister(event) {
 
     saveSessionToken(data.token);
     elements.registerForm.reset();
-    redirectToFeed("Conta criada. Bem-vindo ao feed cronol\u00f3gico.");
+    redirectToFeed("Conta criada. Bem-vindo ao feed.");
   } catch (error) {
     authFlash.show(
       resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),

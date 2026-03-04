@@ -2,7 +2,7 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { parseCsvTags } from "../core/formatters.js";
-import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
+import { resolveAuthApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
 import { renderFeedList } from "../features/feed/renderers.js";
 
@@ -14,7 +14,6 @@ const state = {
   nextCursor: null,
   isLoading: false,
   isCreating: false,
-  isReviewing: false,
 };
 
 const elements = {
@@ -38,7 +37,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   protectedButtons: [elements.openModalButton],
   onLogout: () => {
-    statusFlash.show("Sess\u00e3o encerrada. O feed continua cronol\u00f3gico.", "info");
+    statusFlash.show("Sess\u00e3o encerrada.", "info");
     navbar.refresh();
     closeModal();
   },
@@ -47,7 +46,7 @@ const navbar = initNavbar({
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para contribuir com posts.",
+    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para publicar no feed.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
@@ -59,7 +58,7 @@ function renderFeed() {
 
   if (state.items.length === 0) {
     elements.list.innerHTML = "";
-    statusFlash.show("Sem publica\u00e7\u00f5es por enquanto. Poste algo que agregue.", "info");
+    statusFlash.show("Nenhuma publica\u00e7\u00e3o ainda.", "info");
     if (elements.loadMore) {
       elements.loadMore.hidden = true;
     }
@@ -80,7 +79,7 @@ async function loadFeed({ append = false } = {}) {
   }
 
   state.isLoading = true;
-  statusFlash.show("Carregando feed cronol\u00f3gico...", "info");
+  statusFlash.show("Carregando feed...", "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
@@ -98,8 +97,8 @@ async function loadFeed({ append = false } = {}) {
     renderFeed();
     statusFlash.show(
       state.items.length > 0
-        ? "Feed atualizado. Conte\u00fado acima de status."
-        : "Sem publica\u00e7\u00f5es por enquanto. Poste algo que agregue.",
+        ? "Feed atualizado."
+        : "Nenhuma publica\u00e7\u00e3o ainda.",
       "success",
     );
   } catch (error) {
@@ -123,7 +122,7 @@ function openModal() {
 
   const isAuthenticated = requireSession({
     onFail: () => {
-      statusFlash.show("Fa\u00e7a login para publicar conhecimento.", "error");
+      statusFlash.show("Fa\u00e7a login para publicar no feed.", "error");
       window.location.href = "./index.html";
     },
   });
@@ -154,7 +153,7 @@ async function submitCreatePost(event) {
   const tags = parseCsvTags(formData.get("tags"));
 
   state.isCreating = true;
-  createFlashStatus.show("Publicando conte\u00fado...", "info");
+  createFlashStatus.show("Publicando post...", "info");
 
   try {
     const created = await api.posts.create({ title, content, tags });
@@ -166,44 +165,6 @@ async function submitCreatePost(event) {
     createFlashStatus.show(resolveMessage(error), "error");
   } finally {
     state.isCreating = false;
-  }
-}
-
-async function submitFeedReview(postId, decision, actionsContainer) {
-  if (state.isReviewing) {
-    return;
-  }
-
-  if (!hasSession()) {
-    statusFlash.show("Fa\u00e7a login para avaliar um post.", "error");
-    window.location.href = "./index.html";
-    return;
-  }
-
-  const reviewButtons = Array.from(
-    actionsContainer?.querySelectorAll("[data-review-action]") ?? [],
-  );
-
-  state.isReviewing = true;
-  reviewButtons.forEach((button) => {
-    button.disabled = true;
-  });
-  statusFlash.show("Salvando avalia\u00e7\u00e3o...", "info");
-
-  try {
-    const result = await api.posts.review(postId, decision, null);
-    await loadFeed();
-    statusFlash.show(`Avalia\u00e7\u00e3o salva. Tend\u00eancia atual: ${result.trend}.`, "success");
-  } catch (error) {
-    statusFlash.show(
-      resolveModerationApiMessage(error, "Falha ao salvar avalia\u00e7\u00e3o."),
-      "error",
-    );
-  } finally {
-    state.isReviewing = false;
-    reviewButtons.forEach((button) => {
-      button.disabled = false;
-    });
   }
 }
 
@@ -232,24 +193,6 @@ function bindEvents() {
 
   if (elements.createForm) {
     elements.createForm.addEventListener("submit", submitCreatePost);
-  }
-
-  if (elements.list) {
-    elements.list.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-review-action]");
-      if (!button || !elements.list.contains(button)) {
-        return;
-      }
-
-      const postId = String(button.dataset.postId ?? "").trim();
-      const decision = String(button.dataset.reviewAction ?? "").trim();
-      if (!postId || !decision) {
-        return;
-      }
-
-      const actionsContainer = button.closest(".review-actions");
-      submitFeedReview(postId, decision, actionsContainer);
-    });
   }
 }
 

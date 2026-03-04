@@ -30,7 +30,6 @@ export function createPostCard(post) {
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
   const createdAtText = formatDateTime(post.createdAt);
   const postId = encodeURIComponent(String(post.id ?? ""));
-  const postIdAttr = escapeHtml(String(post.id ?? ""));
   const trend = post.trend ?? "neutral";
   const trendStyleClass = trendClass(trend);
 
@@ -42,13 +41,9 @@ export function createPostCard(post) {
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
     ${renderTags(tags)}
-    <div class="feed-card-actions">
+    <p>
       <a class="link-inline post-link" href="./post.html?id=${postId}">Abrir discuss&atilde;o</a>
-      <div class="review-actions review-actions-inline">
-        <button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>
-        <button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>
-      </div>
-    </div>
+    </p>
   `;
 
   article.querySelector(".post-title").textContent = post.title ?? "";

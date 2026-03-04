@@ -1,3 +1,3 @@
 export function reviewSavedMessage(result) {
-  return `Review salva. Tendencia atual: ${result.trend}`;
+  return `Avalia\u00e7\u00e3o salva. Tend\u00eancia atual: ${result.trend}`;
 }
