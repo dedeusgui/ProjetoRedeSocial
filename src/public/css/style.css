@@ -76,26 +76,6 @@ p {
   margin: 0;
 }
 
-a {
-  color: #c6d5ee;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-a:visited {
-  color: #b8c9e4;
-}
-
-a:hover {
-  color: #eef4ff;
-  text-decoration: none;
-}
-
-a:active {
-  color: #ffffff;
-  text-decoration: none;
-}
-
 .page {
   width: min(980px, 100%);
   margin: 0 auto;
@@ -137,11 +117,7 @@ a:active {
 
 .nav-link {
   color: var(--text-1);
-  text-decoration: none;
-}
-
-.nav-link:visited {
-  color: var(--text-1);
+  min-width: 88px;
 }
 
 .nav-link:hover,
@@ -258,11 +234,6 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
-}
-
-.button-link:visited {
-  color: var(--text-0);
 }
 
 .button-link-inline {
@@ -299,8 +270,7 @@ select {
 input:focus-visible,
 textarea:focus-visible,
 button:focus-visible,
-select:focus-visible,
-a:focus-visible {
+select:focus-visible {
   outline: 2px solid rgba(157, 173, 203, 0.58);
   outline-offset: 2px;
 }

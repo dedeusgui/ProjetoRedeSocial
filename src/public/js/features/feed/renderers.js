@@ -43,7 +43,7 @@ export function createPostCard(post) {
     <p class="post-content"></p>
     ${renderTags(tags)}
     <div class="feed-card-actions">
-      <a class="link-inline post-link" href="./post.html?id=${postId}">Abrir discuss&atilde;o</a>
+      <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discuss&atilde;o</button>
       <div class="review-actions review-actions-inline">
         <button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>
         <button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>

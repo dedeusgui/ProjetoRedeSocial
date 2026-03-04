@@ -9,14 +9,14 @@
   <body>
     <main class="page">
       <header class="card app-header">
-        <div>
-          <h1>Meu perfil</h1>
+        <div class="header-copy">
+          <h1 class="ink-underline">Meu perfil</h1>
           <p class="muted">M&eacute;tricas privadas vis&iacute;veis apenas para voc&ecirc;.</p>
         </div>
-        <nav class="row">
-          <a href="./feed.html">Feed</a>
-          <a href="./profile.html" aria-current="page" data-profile-link hidden>Meu perfil</a>
-          <a href="./index.html" data-login-link>Entrar</a>
+        <nav class="row app-nav">
+          <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" aria-current="page" data-profile-link hidden>Meu perfil</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
           <button type="button" data-logout hidden>Sair</button>
         </nav>
       </header>

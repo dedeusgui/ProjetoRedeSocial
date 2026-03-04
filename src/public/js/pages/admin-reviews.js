@@ -1,5 +1,6 @@
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
+import { bindNavigation } from "../components/navigation.js";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
@@ -18,6 +19,7 @@ const navbar = initNavbar({
 });
 
 function init() {
+  bindNavigation();
   navbar.refresh();
   statusFlash.show("Avalie posts com aprovar/n\u00e3o relevante. Use coment\u00e1rios para contexto.", "info");
 }

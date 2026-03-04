@@ -318,11 +318,12 @@ Arquitetura frontend em `src/public/js`:
 
 - `api.js` (cliente HTTP + facade de endpoints)
 - `core/` (sessão, formatadores e tratamento de estado/erro)
-- `components/` (comportamentos reutilizáveis de UI)
+- `components/` (navbar, navegação por `data-nav-href`, feedback visual)
 - `features/*/renderers.js` (renderização por domínio)
 - `pages/*.js` (orquestração por página)
 
 O frontend consome a API em `/api/v1` por meio dessa estrutura modular.
+A navegação interna entre páginas usa botões com `data-nav-href`, tratados por `src/public/js/components/navigation.js`.
 
 ## Padrões de contribuição
 

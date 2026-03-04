@@ -39,6 +39,10 @@ All notable changes to this project should be documented in this file.
   - `docs/workflows/feature-process.md`
   - `docs/workflows/bugfix-process.md`
   - `docs/templates/feature-rfc.md`
+- Updated frontend docs to document delegated button-based navigation (`data-nav-href` + `components/navigation.js`):
+  - `docs/architecture/frontend-overview.md`
+  - `src/public/js/README.frontend.md`
+- Updated root frontend overview in `README.md` to reflect the shared navigation pattern.
 
 ### Notes
 

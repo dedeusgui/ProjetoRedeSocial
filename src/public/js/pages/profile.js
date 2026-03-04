@@ -1,6 +1,7 @@
 import { ApiError, api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
+import { bindNavigation } from "../components/navigation.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 import { clearSession, hasSession } from "../core/session.js";
 import { renderProfileView } from "../features/profile/renderers.js";
@@ -69,6 +70,7 @@ async function loadProfile() {
 }
 
 function init() {
+  bindNavigation();
   navbar.refresh();
   loadProfile();
 }

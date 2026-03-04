@@ -15,15 +15,20 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `features/*/renderers.js`: receive data and return/update DOM.
 - `core/session.js`: token lifecycle and auth checks.
 - `core/http-state.js`: normalize API error messages for UI.
+- `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
+- `components/navbar.js`: auth-aware nav state and logout behavior.
+- `components/flash.js`: transient status/feedback messaging.
 
 ## Conventions
 - Use `data-*` selectors for DOM hooks.
+- For internal page-to-page actions, use `<button type="button" data-nav-href="...">` and shared navigation binding.
 - Always show user feedback for async actions: loading, success, or error.
 - Keep each module small and single-purpose.
 - Keep API contract aligned with `{ ok, data/error }`.
 
 ## Session and authorization
 - Use `initNavbar()` for auth-aware nav state and logout binding.
+- Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
 
 ## Review checklist for new pages

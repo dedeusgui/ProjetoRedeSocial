@@ -19,7 +19,7 @@ Folder responsibilities:
 - `core/`
   - session handling, formatter helpers, API error-to-UI state mapping.
 - `components/`
-  - reusable UI behavior (navbar, motion, flash messages).
+  - reusable UI behavior (navbar state, delegated navigation, flash messages).
 - `features/<domain>/renderers.js`
   - render functions grouped by feature domain.
 - `pages/*.js`
@@ -36,9 +36,17 @@ Reference guide:
 - `profile.html`: authenticated profile and private metrics.
 - `admin/reviews.html`: moderation review flow.
 
+## Navigation Pattern
+
+- Internal page navigation uses buttons with `data-nav-href` (instead of inline anchor-driven logic).
+- `components/navigation.js` exposes `bindNavigation()` for delegated click-to-navigation behavior.
+- Page bootstraps should call `bindNavigation()` in `init()` when page markup includes `data-nav-href`.
+- Keep semantic buttons (`<button type="button">`) for nav actions to preserve explicit disabled-state behavior.
+
 ## Frontend Guardrails
 
 - Page scripts should orchestrate, not implement rendering templates directly.
 - Session/token handling should go through `core/session.js`.
 - API error messages should be normalized through `core/http-state.js`.
+- Prefer shared `bindNavigation()` for internal navigation controls.
 - Do not expose public validation counters in UI outside allowed private profile context.
