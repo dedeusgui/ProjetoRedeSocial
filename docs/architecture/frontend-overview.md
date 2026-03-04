@@ -33,7 +33,7 @@ Reference guide:
 - `index.html`: authentication entrypoint.
 - `feed.html`: chronological feed with post tendency labels.
 - `post.html`: post detail with comments and tendency labels.
-- `profile.html`: authenticated profile with private metrics and derived validation score.
+- `profile.html`: authenticated profile with consolidated private validation score and tendency.
 - `admin/reviews.html`: moderation review flow.
 
 ## Navigation Pattern

@@ -46,6 +46,7 @@ All notable changes to this project should be documented in this file.
 - Refined moderation trend calculation to use a unified validation score (`approvalRate - rejectionRate`) while preserving `positive|neutral|negative` outcomes.
 - Updated profile UI to show a single derived "Score geral" metric based on private approval/rejection percentages.
 - Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positiva`, `neutra`, `negativa`).
+- Removed redundant approval/rejection cards from profile UI, keeping only the consolidated score and tendency.
 
 ### Notes
 

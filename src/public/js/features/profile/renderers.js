@@ -2,7 +2,6 @@ import {
   computeValidationScore,
   escapeHtml,
   formatDateTime,
-  formatPercent,
   formatSignedPercent,
   resolveTrendFromScore,
   trendClass,
@@ -28,16 +27,9 @@ export function renderProfileView(target, profile) {
       <p class="muted">Criado em: ${escapeHtml(formatDateTime(profile.createdAt))}</p>
       <div class="metrics-grid">
         <article class="card metric-box">
-          <h3>Taxa de aprova&ccedil;&atilde;o</h3>
-          <p>${escapeHtml(formatPercent(approvalRate))}</p>
-        </article>
-        <article class="card metric-box">
-          <h3>Taxa de reprova&ccedil;&atilde;o</h3>
-          <p>${escapeHtml(formatPercent(rejectionRate))}</p>
-        </article>
-        <article class="card metric-box">
           <h3>Score geral</h3>
           <p class="${escapeHtml(scoreTrendClass)}">${escapeHtml(formatSignedPercent(score))}</p>
+          <p class="muted">F&oacute;rmula: aprova&ccedil;&atilde;o - reprova&ccedil;&atilde;o</p>
           <p class="muted">Tend&ecirc;ncia: ${escapeHtml(trendLabel(scoreTrend))}</p>
         </article>
       </div>
