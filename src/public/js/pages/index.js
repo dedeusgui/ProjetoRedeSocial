@@ -1,6 +1,7 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
+import { bindNavigation } from "../components/navigation.js";
 import { resolveApiMessage } from "../core/http-state.js";
 import { saveSessionToken } from "../core/session.js";
 
@@ -144,6 +145,7 @@ function bindEvents() {
 }
 
 function init() {
+  bindNavigation();
   renderAuthExperience();
   consumeHomeNotice();
   bindEvents();

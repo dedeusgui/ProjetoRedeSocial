@@ -1,6 +1,7 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
+import { bindNavigation } from "../components/navigation.js";
 import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
@@ -256,6 +257,7 @@ function init() {
     return;
   }
 
+  bindNavigation();
   navbar.refresh();
   try {
     const pendingNotice = window.sessionStorage.getItem(FEED_NOTICE_KEY);

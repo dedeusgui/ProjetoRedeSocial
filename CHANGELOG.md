@@ -27,7 +27,7 @@ All notable changes to this project should be documented in this file.
 - Added reusable templates:
   - `docs/templates/bug-report.md`
   - `docs/templates/feature-rfc.md`
-- Added root `AGENTS.md` with bilingual PT/EN collaboration rules focused on agent behavior.
+- Added root `AGENTS.md` with collaboration rules focused on agent behavior.
 
 ### Changed
 

@@ -1,6 +1,7 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
+import { bindNavigation } from "../components/navigation.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
 import { renderPostView } from "../features/post/renderers.js";
@@ -116,7 +117,7 @@ function renderMissingPostState(message) {
       <h2 class="ink-underline">Post indispon\u00edvel</h2>
       <p class="muted">${message}</p>
       <p class="muted">Volte ao feed para continuar.</p>
-      <a class="button-link button-link-inline" href="./feed.html">Voltar ao feed</a>
+      <button type="button" class="button-link button-link-inline" data-nav-href="./feed.html">Voltar ao feed</button>
     </section>
   `;
 }
@@ -226,6 +227,7 @@ function bindEvents() {
 }
 
 async function init() {
+  bindNavigation();
   renderSessionState();
   bindEvents();
   await loadPost();
