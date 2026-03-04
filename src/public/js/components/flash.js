@@ -8,5 +8,14 @@ export function createFlash(target) {
     target.dataset.state = type;
   }
 
-  return { show };
+  function clear() {
+    if (!target) {
+      return;
+    }
+
+    target.textContent = "";
+    target.dataset.state = "info";
+  }
+
+  return { show, clear };
 }

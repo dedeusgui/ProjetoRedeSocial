@@ -1,11 +1,11 @@
-import { auth } from "../api.js";
+import { clearSession, hasSession } from "../core/session.js";
 
 export function renderNavbarAuthState({
   loginLink = null,
   logoutButton = null,
   protectedButtons = [],
 } = {}) {
-  const hasToken = Boolean(auth.getToken());
+  const hasToken = hasSession();
 
   if (loginLink) {
     loginLink.hidden = hasToken;
@@ -30,9 +30,32 @@ export function bindLogout(logoutButton, onLogout) {
   }
 
   logoutButton.addEventListener("click", () => {
-    auth.clearToken();
+    clearSession();
     if (typeof onLogout === "function") {
       onLogout();
     }
   });
+}
+
+export function initNavbar({
+  loginLink = null,
+  logoutButton = null,
+  protectedButtons = [],
+  onLogout = null,
+} = {}) {
+  function refresh() {
+    return renderNavbarAuthState({
+      loginLink,
+      logoutButton,
+      protectedButtons,
+    });
+  }
+
+  bindLogout(logoutButton, onLogout);
+  const hasToken = refresh();
+
+  return {
+    hasToken,
+    refresh,
+  };
 }

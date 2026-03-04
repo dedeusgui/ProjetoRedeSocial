@@ -1,6 +1,8 @@
-﻿import { api, ApiError } from "../api.js";
+import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
-import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
+import { initNavbar } from "../components/navbar.js";
+import { resolveModerationApiMessage } from "../core/http-state.js";
+import { reviewSavedMessage } from "../features/moderation/renderers.js";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
@@ -11,28 +13,14 @@ const elements = {
 
 const statusFlash = createFlash(elements.status);
 
-function resolveApiMessage(error) {
-  if (!(error instanceof ApiError)) {
-    return "Erro inesperado ao comunicar com a API.";
-  }
-
-  if (error.code === "UNAUTHENTICATED" || error.status === 401) {
-    return "Autenticacao necessaria para acessar moderacao.";
-  }
-
-  if (error.code === "FORBIDDEN" || error.status === 403) {
-    return "Sua conta nao possui permissao de moderacao.";
-  }
-
-  return error.message;
-}
-
-function renderSessionState() {
-  renderNavbarAuthState({
-    loginLink: elements.loginLink,
-    logoutButton: elements.logoutButton,
-  });
-}
+const navbar = initNavbar({
+  loginLink: elements.loginLink,
+  logoutButton: elements.logoutButton,
+  onLogout: () => {
+    navbar.refresh();
+    statusFlash.show("Sessao encerrada.", "info");
+  },
+});
 
 async function handleSubmit(event) {
   event.preventDefault();
@@ -51,26 +39,18 @@ async function handleSubmit(event) {
   try {
     const result = await api.posts.review(postId, decision, reason || null);
     elements.form.reset();
-    statusFlash.show(`Review salva. Tendencia atual: ${result.trend}`, "success");
+    statusFlash.show(reviewSavedMessage(result), "success");
   } catch (error) {
-    statusFlash.show(resolveApiMessage(error), "error");
+    statusFlash.show(resolveModerationApiMessage(error, "Erro inesperado ao comunicar com a API."), "error");
   }
-}
-
-function bindEvents() {
-  if (elements.form) {
-    elements.form.addEventListener("submit", handleSubmit);
-  }
-
-  bindLogout(elements.logoutButton, () => {
-    renderSessionState();
-    statusFlash.show("Sessao encerrada.", "info");
-  });
 }
 
 function init() {
-  renderSessionState();
-  bindEvents();
+  navbar.refresh();
+
+  if (elements.form) {
+    elements.form.addEventListener("submit", handleSubmit);
+  }
 }
 
 init();

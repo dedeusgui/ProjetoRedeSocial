@@ -1,6 +1,8 @@
-﻿import { api, ApiError, auth } from "../api.js";
+import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
-import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
+import { initNavbar } from "../components/navbar.js";
+import { resolveApiMessage } from "../core/http-state.js";
+import { hasSession, saveSessionToken } from "../core/session.js";
 
 const elements = {
   registerForm: document.querySelector("[data-register-form]"),
@@ -14,22 +16,20 @@ const elements = {
 const authFlash = createFlash(elements.authStatus);
 const sessionFlash = createFlash(elements.sessionStatus);
 
-function resolveApiMessage(error) {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  return "Erro inesperado ao comunicar com a API.";
-}
+const navbar = initNavbar({
+  loginLink: elements.loginLink,
+  logoutButton: elements.logoutButton,
+  onLogout: () => {
+    renderSessionState();
+    authFlash.show("Sessao encerrada.", "info");
+  },
+});
 
 function renderSessionState() {
-  const hasToken = renderNavbarAuthState({
-    loginLink: elements.loginLink,
-    logoutButton: elements.logoutButton,
-  });
+  const isAuthenticated = navbar.refresh();
 
   sessionFlash.show(
-    hasToken
+    isAuthenticated
       ? "Sessao ativa. Voce pode publicar, comentar e acessar metricas privadas."
       : "Faca login para comentar, publicar e acessar metricas privadas.",
     "info",
@@ -51,12 +51,12 @@ async function handleRegister(event) {
       password: String(formData.get("password") ?? ""),
     });
 
-    auth.setToken(data.token);
+    saveSessionToken(data.token);
     elements.registerForm.reset();
     renderSessionState();
     authFlash.show("Conta criada. Sessao iniciada.", "success");
   } catch (error) {
-    authFlash.show(resolveApiMessage(error), "error");
+    authFlash.show(resolveApiMessage(error, "Erro inesperado ao comunicar com a API."), "error");
   }
 }
 
@@ -74,12 +74,12 @@ async function handleLogin(event) {
       password: String(formData.get("password") ?? ""),
     });
 
-    auth.setToken(data.token);
+    saveSessionToken(data.token);
     elements.loginForm.reset();
     renderSessionState();
     authFlash.show("Login realizado com sucesso.", "success");
   } catch (error) {
-    authFlash.show(resolveApiMessage(error), "error");
+    authFlash.show(resolveApiMessage(error, "Erro inesperado ao comunicar com a API."), "error");
   }
 }
 
@@ -92,10 +92,9 @@ function bindEvents() {
     elements.loginForm.addEventListener("submit", handleLogin);
   }
 
-  bindLogout(elements.logoutButton, () => {
-    renderSessionState();
-    authFlash.show("Sessao encerrada.", "info");
-  });
+  if (!hasSession()) {
+    authFlash.clear();
+  }
 }
 
 function init() {

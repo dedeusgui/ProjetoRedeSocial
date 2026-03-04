@@ -1,11 +1,9 @@
-﻿import { api, ApiError, auth } from "../api.js";
+import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
-import { bindLogout, renderNavbarAuthState } from "../components/navbar.js";
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
-});
+import { initNavbar } from "../components/navbar.js";
+import { resolveAuthApiMessage } from "../core/http-state.js";
+import { hasSession } from "../core/session.js";
+import { renderPostView } from "../features/post/renderers.js";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
@@ -19,44 +17,41 @@ const elements = {
 const statusFlash = createFlash(elements.status);
 const commentHelpFlash = createFlash(elements.commentHelp);
 
-function resolveApiMessage(error) {
-  if (error instanceof ApiError) {
-    if (error.code === "UNAUTHENTICATED" || error.status === 401) {
-      return "Autenticacao necessaria. Faca login para comentar.";
-    }
-    return error.message;
-  }
+const navbar = initNavbar({
+  loginLink: elements.loginLink,
+  logoutButton: elements.logoutButton,
+  onLogout: () => {
+    renderSessionState();
+    statusFlash.show("Sessao encerrada.", "info");
+  },
+});
 
-  return "Erro inesperado ao comunicar com a API.";
-}
-
-function trendClass(trend) {
-  if (trend === "positive") return "status-positive";
-  if (trend === "negative") return "status-negative";
-  return "status-neutral";
+function resolveMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Autenticacao necessaria. Faca login para comentar.",
+    "Erro inesperado ao comunicar com a API.",
+  );
 }
 
 function renderSessionState() {
-  const hasToken = renderNavbarAuthState({
-    loginLink: elements.loginLink,
-    logoutButton: elements.logoutButton,
-  });
+  const isAuthenticated = navbar.refresh();
 
   if (elements.commentForm) {
     const textarea = elements.commentForm.querySelector("textarea[name='content']");
     const submit = elements.commentForm.querySelector("button[type='submit']");
 
     if (textarea) {
-      textarea.disabled = !hasToken;
+      textarea.disabled = !isAuthenticated;
     }
 
     if (submit) {
-      submit.disabled = !hasToken;
+      submit.disabled = !isAuthenticated;
     }
   }
 
   commentHelpFlash.show(
-    hasToken
+    isAuthenticated
       ? "Comentario publico e visivel no detalhe do post."
       : "Faca login para comentar neste post.",
     "info",
@@ -66,51 +61,6 @@ function renderSessionState() {
 function getPostId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
-}
-
-function renderPost(post) {
-  if (!elements.view) {
-    return;
-  }
-
-  const comments = Array.isArray(post.comments) ? post.comments : [];
-  const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
-
-  elements.view.innerHTML = `
-    <article class="card post-card">
-      <p class="muted post-meta">@${post.author?.username ?? "desconhecido"} - ${dateFormatter.format(new Date(post.createdAt))}</p>
-      <h2 class="post-title"></h2>
-      <p class="post-content"></p>
-      <p class="muted post-tags"></p>
-      <p class="${trendClass(post.trend)}">Tendencia: ${post.trend ?? "neutral"}</p>
-    </article>
-    <section class="card">
-      <h3>Comentarios</h3>
-      <div class="comments-list" data-comments-list></div>
-    </section>
-  `;
-
-  elements.view.querySelector(".post-title").textContent = post.title ?? "";
-  elements.view.querySelector(".post-content").textContent = post.content ?? "";
-  elements.view.querySelector(".post-tags").textContent =
-    tags.length > 0 ? tags.map((tag) => `#${tag}`).join(" ") : "";
-
-  const commentsList = elements.view.querySelector("[data-comments-list]");
-  if (!commentsList) {
-    return;
-  }
-
-  if (comments.length === 0) {
-    commentsList.innerHTML = "<p class='muted'>Nenhum comentario ainda.</p>";
-    return;
-  }
-
-  commentsList.innerHTML = comments
-    .map(
-      (comment) =>
-        `<article class='comment-item'><p><strong>@${comment.author?.username ?? "desconhecido"}</strong> <span class='muted'>${dateFormatter.format(new Date(comment.createdAt))}</span></p><p>${comment.content}</p></article>`,
-    )
-    .join("");
 }
 
 async function loadPost() {
@@ -125,10 +75,10 @@ async function loadPost() {
 
   try {
     const post = await api.posts.getById(postId);
-    renderPost(post);
+    renderPostView(elements.view, post);
     statusFlash.show("Post carregado.", "success");
   } catch (error) {
-    statusFlash.show(resolveApiMessage(error), "error");
+    statusFlash.show(resolveMessage(error), "error");
   }
 }
 
@@ -144,6 +94,11 @@ async function handleCommentSubmit(event) {
     return;
   }
 
+  if (!hasSession()) {
+    statusFlash.show("Faca login para comentar neste post.", "error");
+    return;
+  }
+
   const formData = new FormData(elements.commentForm);
   const content = String(formData.get("content") ?? "").trim();
 
@@ -152,7 +107,7 @@ async function handleCommentSubmit(event) {
     elements.commentForm.reset();
     await loadPost();
   } catch (error) {
-    statusFlash.show(resolveApiMessage(error), "error");
+    statusFlash.show(resolveMessage(error), "error");
   }
 }
 
@@ -160,11 +115,6 @@ function bindEvents() {
   if (elements.commentForm) {
     elements.commentForm.addEventListener("submit", handleCommentSubmit);
   }
-
-  bindLogout(elements.logoutButton, () => {
-    renderSessionState();
-    statusFlash.show("Sessao encerrada.", "info");
-  });
 }
 
 function init() {
