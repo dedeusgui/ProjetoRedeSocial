@@ -6,14 +6,8 @@ import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http
 import { hasSession } from "../core/session.js";
 import { renderPostView } from "../features/post/renderers.js";
 
-const MODERATOR_ROLES = new Set(["admin", "moderator"]);
-
 const state = {
   postId: null,
-  postAuthorId: null,
-  viewerId: null,
-  viewerRole: null,
-  canModerate: false,
   isReviewSubmitting: false,
 };
 
@@ -83,67 +77,38 @@ function getPostId() {
   return params.get("id");
 }
 
-function refreshReviewPanel() {
+function refreshReviewPanel({ preserveStatus = false } = {}) {
   if (!elements.reviewPanel) {
     return;
   }
 
-  const isAuthenticated = hasSession();
-  const isAuthor = state.viewerId && state.postAuthorId && state.viewerId === state.postAuthorId;
-
-  if (!isAuthenticated || !state.canModerate || !state.postId) {
+  if (!state.postId) {
     elements.reviewPanel.hidden = true;
     reviewFlash.clear();
     return;
   }
 
   elements.reviewPanel.hidden = false;
-
-  if (isAuthor) {
-    if (elements.reviewApprove) {
-      elements.reviewApprove.disabled = true;
-    }
-
-    if (elements.reviewReject) {
-      elements.reviewReject.disabled = true;
-    }
-
-    reviewFlash.show("O autor do post n\u00e3o pode revisar o pr\u00f3prio conte\u00fado.", "error");
-    return;
-  }
+  const isAuthenticated = hasSession();
 
   if (elements.reviewApprove) {
-    elements.reviewApprove.disabled = state.isReviewSubmitting;
+    elements.reviewApprove.disabled = !isAuthenticated || state.isReviewSubmitting;
   }
 
   if (elements.reviewReject) {
-    elements.reviewReject.disabled = state.isReviewSubmitting;
+    elements.reviewReject.disabled = !isAuthenticated || state.isReviewSubmitting;
   }
 
-  if (!state.isReviewSubmitting && !elements.reviewStatus?.textContent) {
-    reviewFlash.show("Modera\u00e7\u00e3o: escolha aprovar ou marcar como n\u00e3o relevante.", "info");
-  }
-}
-
-async function loadViewerContext() {
-  state.viewerId = null;
-  state.viewerRole = null;
-  state.canModerate = false;
-
-  if (!hasSession()) {
+  if (preserveStatus || state.isReviewSubmitting) {
     return;
   }
 
-  try {
-    const profile = await api.users.meProfile();
-    state.viewerId = String(profile.id ?? "");
-    state.viewerRole = String(profile.role ?? "");
-    state.canModerate = MODERATOR_ROLES.has(state.viewerRole);
-  } catch {
-    state.viewerId = null;
-    state.viewerRole = null;
-    state.canModerate = false;
+  if (!isAuthenticated) {
+    reviewFlash.show("Fa\u00e7a login para aprovar ou marcar como n\u00e3o relevante.", "info");
+    return;
   }
+
+  reviewFlash.show("Voc\u00ea pode aprovar ou marcar como n\u00e3o relevante.", "info");
 }
 
 function renderMissingPostState(message) {
@@ -161,14 +126,14 @@ function renderMissingPostState(message) {
   `;
 }
 
-async function loadPost() {
+async function loadPost({ preserveReviewStatus = false } = {}) {
   const postId = getPostId();
   state.postId = postId;
 
   if (!postId) {
     renderMissingPostState("ID do post ausente na URL.");
     statusFlash.show("N\u00e3o foi poss\u00edvel abrir o post.", "error");
-    refreshReviewPanel();
+    refreshReviewPanel({ preserveStatus: preserveReviewStatus });
     return;
   }
 
@@ -176,14 +141,12 @@ async function loadPost() {
 
   try {
     const post = await api.posts.getById(postId);
-    state.postAuthorId = String(post.author?.id ?? "");
     renderPostView(elements.view, post);
-    refreshReviewPanel();
+    refreshReviewPanel({ preserveStatus: preserveReviewStatus });
     statusFlash.show("Discuss\u00e3o carregada.", "success");
   } catch (error) {
     renderMissingPostState("Este conte\u00fado n\u00e3o pode ser exibido agora.");
-    state.postAuthorId = null;
-    refreshReviewPanel();
+    refreshReviewPanel({ preserveStatus: preserveReviewStatus });
     statusFlash.show(resolveMessage(error), "error");
   }
 }
@@ -224,7 +187,7 @@ async function handleCommentSubmit(event) {
 
 async function handleReview(decision) {
   if (!state.postId) {
-    reviewFlash.show("Post inv\u00e1lido para modera\u00e7\u00e3o.", "error");
+    reviewFlash.show("Post inv\u00e1lido para avalia\u00e7\u00e3o.", "error");
     return;
   }
 
@@ -233,25 +196,20 @@ async function handleReview(decision) {
     return;
   }
 
-  if (!state.canModerate) {
-    reviewFlash.show("Apenas moderadores e administradores podem revisar posts.", "error");
-    return;
-  }
-
   const reason = String(elements.reviewReason?.value ?? "").trim();
   state.isReviewSubmitting = true;
-  refreshReviewPanel();
-  reviewFlash.show("Salvando review...", "info");
+  refreshReviewPanel({ preserveStatus: true });
+  reviewFlash.show("Salvando avalia\u00e7\u00e3o...", "info");
 
   try {
     const result = await api.posts.review(state.postId, decision, reason || null);
-    reviewFlash.show(`Review salva. Tend\u00eancia atual: ${result.trend}.`, "success");
-    await loadPost();
+    reviewFlash.show(`Avalia\u00e7\u00e3o salva. Tend\u00eancia atual: ${result.trend}.`, "success");
+    await loadPost({ preserveReviewStatus: true });
   } catch (error) {
-    reviewFlash.show(resolveModerationApiMessage(error, "Falha ao salvar review."), "error");
+    reviewFlash.show(resolveModerationApiMessage(error, "Falha ao salvar avalia\u00e7\u00e3o."), "error");
   } finally {
     state.isReviewSubmitting = false;
-    refreshReviewPanel();
+    refreshReviewPanel({ preserveStatus: true });
   }
 }
 
@@ -275,7 +233,6 @@ function bindEvents() {
 
 async function init() {
   initMotionToggle({ button: elements.motionToggle });
-  await loadViewerContext();
   renderSessionState();
   bindEvents();
   await loadPost();
