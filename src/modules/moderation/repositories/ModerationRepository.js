@@ -12,7 +12,7 @@ class ModerationRepository {
       },
       {
         upsert: true,
-        new: true,
+        returnDocument: "after",
       },
     );
   }

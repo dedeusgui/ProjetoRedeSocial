@@ -9,7 +9,7 @@ class UserRepository {
     return User.findByIdAndUpdate(
       userId,
       { $set: { privateMetrics } },
-      { new: true },
+      { returnDocument: "after" },
     );
   }
 }

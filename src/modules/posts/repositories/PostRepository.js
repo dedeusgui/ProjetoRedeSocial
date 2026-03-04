@@ -14,7 +14,11 @@ class PostRepository {
   }
 
   async updateTrend(postId, trend) {
-    return Post.findByIdAndUpdate(postId, { $set: { trend } }, { new: true });
+    return Post.findByIdAndUpdate(
+      postId,
+      { $set: { trend } },
+      { returnDocument: "after" },
+    );
   }
 
   async findAuthorByPostId(postId) {
