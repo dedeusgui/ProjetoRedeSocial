@@ -2,7 +2,7 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { parseCsvTags } from "../core/formatters.js";
-import { resolveAuthApiMessage } from "../core/http-state.js";
+import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
 import { renderFeedList } from "../features/feed/renderers.js";
 
@@ -14,6 +14,7 @@ const state = {
   nextCursor: null,
   isLoading: false,
   isCreating: false,
+  isReviewing: false,
 };
 
 const elements = {
@@ -21,6 +22,7 @@ const elements = {
   list: document.querySelector("[data-feed-list]"),
   loadMore: document.querySelector("[data-feed-more]"),
   loginLink: document.querySelector("[data-login-link]"),
+  profileLink: document.querySelector("[data-profile-link]"),
   openModalButton: document.querySelector("[data-open-post-modal]"),
   logoutButton: document.querySelector("[data-logout]"),
   modal: document.querySelector("[data-create-post-modal]"),
@@ -34,13 +36,10 @@ const createFlashStatus = createFlash(elements.createStatus);
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
+  profileLink: elements.profileLink,
   logoutButton: elements.logoutButton,
   protectedButtons: [elements.openModalButton],
-  onLogout: () => {
-    statusFlash.show("Sess\u00e3o encerrada.", "info");
-    navbar.refresh();
-    closeModal();
-  },
+  logoutRedirectUrl: "./index.html",
 });
 
 function resolveMessage(error) {
@@ -168,6 +167,44 @@ async function submitCreatePost(event) {
   }
 }
 
+async function submitFeedReview(postId, decision, actionsContainer) {
+  if (state.isReviewing) {
+    return;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Fa\u00e7a login para avaliar um post.", "error");
+    window.location.href = "./index.html";
+    return;
+  }
+
+  const reviewButtons = Array.from(
+    actionsContainer?.querySelectorAll("[data-review-action]") ?? [],
+  );
+
+  state.isReviewing = true;
+  reviewButtons.forEach((button) => {
+    button.disabled = true;
+  });
+  statusFlash.show("Salvando avalia\u00e7\u00e3o...", "info");
+
+  try {
+    const result = await api.posts.review(postId, decision, null);
+    await loadFeed();
+    statusFlash.show(`Avalia\u00e7\u00e3o salva. Tend\u00eancia atual: ${result.trend}.`, "success");
+  } catch (error) {
+    statusFlash.show(
+      resolveModerationApiMessage(error, "Falha ao salvar avalia\u00e7\u00e3o."),
+      "error",
+    );
+  } finally {
+    state.isReviewing = false;
+    reviewButtons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
+}
+
 function bindEvents() {
   if (elements.loadMore) {
     elements.loadMore.addEventListener("click", () => {
@@ -193,6 +230,24 @@ function bindEvents() {
 
   if (elements.createForm) {
     elements.createForm.addEventListener("submit", submitCreatePost);
+  }
+
+  if (elements.list) {
+    elements.list.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-review-action]");
+      if (!button || !elements.list.contains(button)) {
+        return;
+      }
+
+      const postId = String(button.dataset.postId ?? "").trim();
+      const decision = String(button.dataset.reviewAction ?? "").trim();
+      if (!postId || !decision) {
+        return;
+      }
+
+      const actionsContainer = button.closest(".review-actions");
+      submitFeedReview(postId, decision, actionsContainer);
+    });
   }
 }
 

@@ -16,7 +16,7 @@
         </div>
         <nav class="row app-nav">
           <a class="nav-link" href="./feed.html">Feed</a>
-          <a class="nav-link" href="./profile.html">Meu perfil</a>
+          <a class="nav-link" href="./profile.html" data-profile-link>Meu perfil</a>
           <a class="nav-link" href="./index.html" data-login-link>Entrar</a>
           <button type="button" data-logout hidden>Sair</button>
         </nav>
@@ -24,6 +24,16 @@
 
       <p class="muted status-line" data-post-status></p>
       <div data-post-view></div>
+
+      <section class="card moderation-panel" data-review-panel hidden>
+        <h2 class="ink-underline">Avalia&ccedil;&atilde;o do post</h2>
+        <p class="muted">Aprove ou marque como n&atilde;o relevante. Use os coment&aacute;rios para contexto.</p>
+        <div class="review-actions">
+          <button type="button" class="button-approve" data-review-approve>Aprovar</button>
+          <button type="button" class="button-reject" data-review-reject>N&atilde;o relevante</button>
+        </div>
+        <p class="muted status-line" data-review-status></p>
+      </section>
 
       <section class="card">
         <h2 class="ink-underline">Adicionar coment&aacute;rio</h2>

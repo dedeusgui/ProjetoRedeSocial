@@ -1,7 +1,10 @@
 import { clearSession, hasSession } from "../core/session.js";
 
+export const HOME_NOTICE_KEY = "thesocial_home_notice";
+
 export function renderNavbarAuthState({
   loginLink = null,
+  profileLink = null,
   logoutButton = null,
   protectedButtons = [],
 } = {}) {
@@ -9,6 +12,10 @@ export function renderNavbarAuthState({
 
   if (loginLink) {
     loginLink.hidden = hasToken;
+  }
+
+  if (profileLink) {
+    profileLink.hidden = !hasToken;
   }
 
   if (logoutButton) {
@@ -24,34 +31,70 @@ export function renderNavbarAuthState({
   return hasToken;
 }
 
-export function bindLogout(logoutButton, onLogout) {
+function persistHomeNotice(message) {
+  if (!message) {
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(HOME_NOTICE_KEY, message);
+  } catch {
+    // noop: sessionStorage can be unavailable in restricted environments
+  }
+}
+
+export function bindLogout(
+  logoutButton,
+  {
+    onLogout = null,
+    redirectOnLogout = true,
+    logoutRedirectUrl = "./index.html",
+    logoutNotice = "Sessão encerrada.",
+  } = {},
+) {
   if (!logoutButton) {
     return;
   }
 
   logoutButton.addEventListener("click", () => {
     clearSession();
+
     if (typeof onLogout === "function") {
       onLogout();
+    }
+
+    if (redirectOnLogout) {
+      persistHomeNotice(logoutNotice);
+      window.location.href = logoutRedirectUrl;
     }
   });
 }
 
 export function initNavbar({
   loginLink = null,
+  profileLink = null,
   logoutButton = null,
   protectedButtons = [],
   onLogout = null,
+  redirectOnLogout = true,
+  logoutRedirectUrl = "./index.html",
+  logoutNotice = "Sessão encerrada.",
 } = {}) {
   function refresh() {
     return renderNavbarAuthState({
       loginLink,
+      profileLink,
       logoutButton,
       protectedButtons,
     });
   }
 
-  bindLogout(logoutButton, onLogout);
+  bindLogout(logoutButton, {
+    onLogout,
+    redirectOnLogout,
+    logoutRedirectUrl,
+    logoutNotice,
+  });
   const hasToken = refresh();
 
   return {

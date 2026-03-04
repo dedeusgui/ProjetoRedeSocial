@@ -16,7 +16,7 @@
         </div>
         <nav class="row app-nav">
           <a class="nav-link" href="./feed.html">Feed</a>
-          <a class="nav-link" href="./profile.html">Meu perfil</a>
+          <a class="nav-link" href="./profile.html" data-profile-link hidden>Meu perfil</a>
           <a class="nav-link" href="./index.html" data-login-link aria-current="page">Entrar</a>
           <button type="button" data-logout hidden>Sair</button>
         </nav>
@@ -33,13 +33,16 @@
       <section class="card" data-session-card>
         <h2 class="ink-underline">Sess&atilde;o</h2>
         <p class="muted status-line" data-session-status>Fa&ccedil;a login para publicar no feed.</p>
-        <div class="row">
+        <div class="row" data-session-actions-anon>
           <a class="button-link" href="./feed.html">Ir para o feed</a>
-          <a class="button-link" href="./profile.html">Ver m&eacute;tricas privadas</a>
+        </div>
+        <div class="row" data-session-actions-auth hidden>
+          <a class="button-link" href="./feed.html">Ir para o feed</a>
+          <a class="button-link" href="./profile.html" data-private-metrics-cta>Ver m&eacute;tricas privadas</a>
         </div>
       </section>
 
-      <div class="auth-grid">
+      <div class="auth-grid" data-auth-anon>
         <section class="card">
           <h2 class="ink-underline">Entrar</h2>
           <p class="muted">Acesse sua conta para continuar.</p>

@@ -1,12 +1,15 @@
-import { api } from "../api.js";
+import { ApiError, api } from "../api.js";
 import { createFlash } from "../components/flash.js";
-import { initNavbar } from "../components/navbar.js";
+import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
-import { hasSession } from "../core/session.js";
+import { clearSession, hasSession } from "../core/session.js";
 import { renderProfileView } from "../features/profile/renderers.js";
+
+const AUTH_REQUIRED_NOTICE = "Autenticacao necessaria para acessar seu perfil.";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
+  profileLink: document.querySelector("[data-profile-link]"),
   logoutButton: document.querySelector("[data-logout]"),
   status: document.querySelector("[data-profile-status]"),
   profile: document.querySelector("[data-profile]"),
@@ -16,28 +19,32 @@ const statusFlash = createFlash(elements.status);
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
+  profileLink: elements.profileLink,
   logoutButton: elements.logoutButton,
-  onLogout: () => {
-    navbar.refresh();
-    loadProfile();
-    statusFlash.show("Sess\u00e3o encerrada.", "info");
-  },
+  logoutRedirectUrl: "./index.html",
 });
 
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para ver seu perfil.",
+    AUTH_REQUIRED_NOTICE,
     "Erro inesperado ao comunicar com a API.",
   );
 }
 
+function redirectToHome(noticeMessage = AUTH_REQUIRED_NOTICE) {
+  try {
+    window.sessionStorage.setItem(HOME_NOTICE_KEY, noticeMessage);
+  } catch {
+    // noop: redirect still happens without persisted notice
+  }
+
+  window.location.href = "./index.html";
+}
+
 async function loadProfile() {
   if (!hasSession()) {
-    statusFlash.show("Fa\u00e7a login para visualizar seu perfil.", "error");
-    if (elements.profile) {
-      elements.profile.innerHTML = "";
-    }
+    redirectToHome();
     return;
   }
 
@@ -48,6 +55,15 @@ async function loadProfile() {
     renderProfileView(elements.profile, profile);
     statusFlash.show("M\u00e9tricas privadas dispon\u00edveis no seu perfil.", "success");
   } catch (error) {
+    if (
+      error instanceof ApiError &&
+      (error.code === "UNAUTHENTICATED" || error.status === 401)
+    ) {
+      clearSession();
+      redirectToHome();
+      return;
+    }
+
     statusFlash.show(resolveMessage(error), "error");
   }
 }

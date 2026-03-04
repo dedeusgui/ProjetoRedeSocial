@@ -247,6 +247,16 @@ button:disabled {
   border-color: var(--line-0);
 }
 
+.button-approve {
+  border-color: #3f6651;
+  background: linear-gradient(180deg, #234536 0%, #1b352a 100%);
+}
+
+.button-reject {
+  border-color: #6f4242;
+  background: linear-gradient(180deg, #4a2a2a 0%, #3b2222 100%);
+}
+
 input,
 textarea,
 select {
@@ -332,6 +342,14 @@ a:focus-visible {
   font-size: 0.8rem;
 }
 
+.feed-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
 .modal {
   width: min(720px, calc(100vw - 28px));
   border: 0;
@@ -358,6 +376,22 @@ a:focus-visible {
   padding: var(--space-3);
   display: grid;
   gap: var(--space-1);
+}
+
+.moderation-panel {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.review-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.review-actions-inline button {
+  padding: 7px 10px;
+  font-size: 0.9rem;
 }
 
 .status-positive {
