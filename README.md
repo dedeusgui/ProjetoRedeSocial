@@ -293,7 +293,15 @@ Páginas disponíveis em `src/public/pages`:
 - `profile.html`
 - `admin/reviews.html`
 
-O frontend consome a API em `/api/v1` via `src/public/js/script.js`.
+Arquitetura frontend em `src/public/js`:
+
+- `api.js` (cliente HTTP + facade de endpoints)
+- `core/` (sessão, formatadores e tratamento de estado/erro)
+- `components/` (comportamentos reutilizáveis de UI)
+- `features/*/renderers.js` (renderização por domínio)
+- `pages/*.js` (orquestração por página)
+
+O frontend consome a API em `/api/v1` por meio dessa estrutura modular.
 
 ## Padrões de contribuição
 

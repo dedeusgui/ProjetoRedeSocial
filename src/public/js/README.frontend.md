@@ -1,0 +1,34 @@
+# Frontend Architecture Guide
+
+## Goal
+Keep page scripts small and focused on orchestration. Reuse shared modules for session, API error handling, and rendering.
+
+## Folder layout
+- `api.js`: HTTP client and endpoint facade for `/api/v1`
+- `core/`: shared helpers (session, formatters, API error mapping)
+- `components/`: reusable UI behaviors used across pages
+- `features/<domain>/renderers.js`: domain-specific rendering
+- `pages/`: page bootstrap + event binding + orchestration
+
+## Responsibilities
+- `pages/*`: no duplicated rendering templates and no direct localStorage handling.
+- `features/*/renderers.js`: receive data and return/update DOM.
+- `core/session.js`: token lifecycle and auth checks.
+- `core/http-state.js`: normalize API error messages for UI.
+
+## Conventions
+- Use `data-*` selectors for DOM hooks.
+- Always show user feedback for async actions: loading, success, or error.
+- Keep each module small and single-purpose.
+- Keep API contract aligned with `{ ok, data/error }`.
+
+## Session and authorization
+- Use `initNavbar()` for auth-aware nav state and logout binding.
+- Use `hasSession()`/`requireSession()` for protected actions.
+
+## Review checklist for new pages
+1. Page script only orchestrates flow.
+2. Rendering logic lives in `features` or `components`.
+3. API errors are mapped through `core/http-state.js`.
+4. No public metrics exposure outside allowed profile endpoint.
+5. Direct URL access works without broken dependencies.
