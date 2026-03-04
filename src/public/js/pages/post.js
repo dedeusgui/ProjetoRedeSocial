@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import { initMotionToggle } from "../components/motion.js";
 import { initNavbar } from "../components/navbar.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
@@ -12,6 +13,7 @@ const elements = {
   view: document.querySelector("[data-post-view]"),
   commentForm: document.querySelector("[data-comment-form]"),
   commentHelp: document.querySelector("[data-comment-help]"),
+  motionToggle: document.querySelector("[data-motion-toggle]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -22,7 +24,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   onLogout: () => {
     renderSessionState();
-    statusFlash.show("Sessao encerrada.", "info");
+    statusFlash.show("Sessao encerrada. Para comentar, entre novamente.", "info");
   },
 });
 
@@ -63,11 +65,27 @@ function getPostId() {
   return params.get("id");
 }
 
+function renderMissingPostState(message) {
+  if (!elements.view) {
+    return;
+  }
+
+  elements.view.innerHTML = `
+    <section class="card empty-card">
+      <h2 class="ink-underline">Post indisponivel</h2>
+      <p class="muted">${message}</p>
+      <p class="muted">Volte ao feed cronologico para continuar.</p>
+      <a class="button-link button-link-inline" href="./feed.html">Voltar ao feed</a>
+    </section>
+  `;
+}
+
 async function loadPost() {
   const postId = getPostId();
 
   if (!postId) {
-    statusFlash.show("ID do post ausente na URL.", "error");
+    renderMissingPostState("ID do post ausente na URL.");
+    statusFlash.show("Nao foi possivel abrir o post.", "error");
     return;
   }
 
@@ -76,8 +94,9 @@ async function loadPost() {
   try {
     const post = await api.posts.getById(postId);
     renderPostView(elements.view, post);
-    statusFlash.show("Post carregado.", "success");
+    statusFlash.show("Discussao carregada.", "success");
   } catch (error) {
+    renderMissingPostState("Este conteudo nao pode ser exibido agora.");
     statusFlash.show(resolveMessage(error), "error");
   }
 }
@@ -101,11 +120,16 @@ async function handleCommentSubmit(event) {
 
   const formData = new FormData(elements.commentForm);
   const content = String(formData.get("content") ?? "").trim();
+  if (!content) {
+    statusFlash.show("Escreva um comentario antes de enviar.", "error");
+    return;
+  }
 
   try {
     await api.posts.createComment(postId, content);
     elements.commentForm.reset();
     await loadPost();
+    statusFlash.show("Comentario enviado.", "success");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
   }
@@ -118,6 +142,7 @@ function bindEvents() {
 }
 
 function init() {
+  initMotionToggle({ button: elements.motionToggle });
   renderSessionState();
   bindEvents();
   loadPost();

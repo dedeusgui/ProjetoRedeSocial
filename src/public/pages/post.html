@@ -3,33 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Post | Rede Social</title>
+    <title>Post | The Social Network</title>
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
     <main class="page">
       <header class="card app-header">
-        <div>
-          <h1>Post</h1>
-          <p class="muted">Discussao objetiva sobre conteudo.</p>
+        <div class="header-copy">
+          <h1 class="ink-underline">Discussao de post</h1>
+          <p class="muted">Aqui o conteudo fala por si. Comentarios para aprofundar a ideia.</p>
+          <p class="tone-note">Zero influencia, so contexto.</p>
         </div>
-        <nav class="row">
-          <a href="./feed.html">Feed</a>
-          <a href="./profile.html">Meu perfil</a>
-          <a href="./index.html" data-login-link>Entrar</a>
+        <nav class="row app-nav">
+          <a class="nav-link" href="./feed.html">Feed</a>
+          <a class="nav-link" href="./profile.html">Meu perfil</a>
+          <a class="nav-link" href="./index.html" data-login-link>Entrar</a>
+          <button type="button" class="button-ghost" data-motion-toggle>Movimento: ligado</button>
           <button type="button" data-logout hidden>Sair</button>
         </nav>
       </header>
-      <p class="muted" data-post-status></p>
+
+      <p class="muted status-line" data-post-status></p>
       <div data-post-view></div>
 
       <section class="card">
-        <h2>Adicionar comentario</h2>
+        <h2 class="ink-underline">Adicionar comentario</h2>
+        <p class="muted">Contribua com contexto, explicacao ou contraponto objetivo.</p>
         <form data-comment-form>
-          <textarea name="content" rows="4" placeholder="Seu comentario" required></textarea>
-          <button type="submit">Enviar</button>
+          <label>
+            Comentario
+            <textarea name="content" rows="4" placeholder="Seu comentario" required></textarea>
+          </label>
+          <button type="submit">Enviar comentario</button>
         </form>
-        <p class="muted" data-comment-help></p>
+        <p class="muted status-line" data-comment-help></p>
       </section>
     </main>
     <script type="module" src="../js/pages/post.js"></script>

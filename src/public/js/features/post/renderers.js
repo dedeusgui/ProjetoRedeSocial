@@ -1,5 +1,17 @@
 import { escapeHtml, formatDateTime, trendClass } from "../../core/formatters.js";
 
+function renderTags(tags) {
+  if (!Array.isArray(tags) || tags.length === 0) {
+    return "<p class='muted post-tags'>Sem tags.</p>";
+  }
+
+  return `
+    <ul class="tag-list" aria-label="Tags do post">
+      ${tags.map((tag) => `<li class="tag-item">#${escapeHtml(tag)}</li>`).join("")}
+    </ul>
+  `;
+}
+
 export function renderPostView(target, post) {
   if (!target) {
     return;
@@ -7,25 +19,27 @@ export function renderPostView(target, post) {
 
   const comments = Array.isArray(post.comments) ? post.comments : [];
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
+  const trend = post.trend ?? "neutral";
+  const trendStyleClass = trendClass(trend);
 
   target.innerHTML = `
     <article class="card post-card">
-      <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(formatDateTime(post.createdAt))}</p>
+      <header class="post-header">
+        <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(formatDateTime(post.createdAt))}</p>
+        <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tendencia: ${escapeHtml(trend)}</p>
+      </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
-      <p class="muted post-tags"></p>
-      <p class="${escapeHtml(trendClass(post.trend))}">Tendencia: ${escapeHtml(post.trend ?? "neutral")}</p>
+      ${renderTags(tags)}
     </article>
     <section class="card">
-      <h3>Comentarios</h3>
+      <h3 class="ink-underline">Comentarios</h3>
       <div class="comments-list" data-comments-list></div>
     </section>
   `;
 
   target.querySelector(".post-title").textContent = post.title ?? "";
   target.querySelector(".post-content").textContent = post.content ?? "";
-  target.querySelector(".post-tags").textContent =
-    tags.length > 0 ? tags.map((tag) => `#${tag}`).join(" ") : "";
 
   const commentsList = target.querySelector("[data-comments-list]");
   if (!commentsList) {
@@ -40,7 +54,7 @@ export function renderPostView(target, post) {
   commentsList.innerHTML = comments
     .map(
       (comment) =>
-        `<article class='comment-item'><p><strong>@${escapeHtml(comment.author?.username ?? "desconhecido")}</strong> <span class='muted'>${escapeHtml(formatDateTime(comment.createdAt))}</span></p><p>${escapeHtml(comment.content)}</p></article>`,
+        `<article class="comment-item"><p><strong>@${escapeHtml(comment.author?.username ?? "desconhecido")}</strong> <span class="muted">${escapeHtml(formatDateTime(comment.createdAt))}</span></p><p>${escapeHtml(comment.content)}</p></article>`,
     )
     .join("");
 }

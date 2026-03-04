@@ -1,4 +1,9 @@
 export function createFlash(target) {
+  if (target) {
+    target.setAttribute("role", "status");
+    target.setAttribute("aria-live", "polite");
+  }
+
   function show(message, type = "info") {
     if (!target) {
       return;
@@ -6,6 +11,7 @@ export function createFlash(target) {
 
     target.textContent = message;
     target.dataset.state = type;
+    target.hidden = false;
   }
 
   function clear() {
@@ -15,6 +21,7 @@ export function createFlash(target) {
 
     target.textContent = "";
     target.dataset.state = "info";
+    target.hidden = true;
   }
 
   return { show, clear };

@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import { initMotionToggle } from "../components/motion.js";
 import { initNavbar } from "../components/navbar.js";
 import { resolveApiMessage } from "../core/http-state.js";
 import { hasSession, saveSessionToken } from "../core/session.js";
@@ -11,6 +12,7 @@ const elements = {
   sessionStatus: document.querySelector("[data-session-status]"),
   loginLink: document.querySelector("[data-login-link]"),
   logoutButton: document.querySelector("[data-logout]"),
+  motionToggle: document.querySelector("[data-motion-toggle]"),
 };
 
 const authFlash = createFlash(elements.authStatus);
@@ -21,7 +23,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   onLogout: () => {
     renderSessionState();
-    authFlash.show("Sessao encerrada.", "info");
+    authFlash.show("Sessao encerrada. Sem truques, sem pressa.", "info");
   },
 });
 
@@ -30,8 +32,8 @@ function renderSessionState() {
 
   sessionFlash.show(
     isAuthenticated
-      ? "Sessao ativa. Voce pode publicar, comentar e acessar metricas privadas."
-      : "Faca login para comentar, publicar e acessar metricas privadas.",
+      ? "Sessao ativa. Va para o feed e compartilhe algo util para a comunidade."
+      : "Faca login para publicar conhecimento. Sem seguidores, sem disputa.",
     "info",
   );
 }
@@ -54,9 +56,15 @@ async function handleRegister(event) {
     saveSessionToken(data.token);
     elements.registerForm.reset();
     renderSessionState();
-    authFlash.show("Conta criada. Sessao iniciada.", "success");
+    authFlash.show(
+      "Conta criada com sucesso. Proximo passo: publicar seu primeiro post.",
+      "success",
+    );
   } catch (error) {
-    authFlash.show(resolveApiMessage(error, "Erro inesperado ao comunicar com a API."), "error");
+    authFlash.show(
+      resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),
+      "error",
+    );
   }
 }
 
@@ -77,9 +85,15 @@ async function handleLogin(event) {
     saveSessionToken(data.token);
     elements.loginForm.reset();
     renderSessionState();
-    authFlash.show("Login realizado com sucesso.", "success");
+    authFlash.show(
+      "Login realizado. Abra o feed e poste algo que agregue.",
+      "success",
+    );
   } catch (error) {
-    authFlash.show(resolveApiMessage(error, "Erro inesperado ao comunicar com a API."), "error");
+    authFlash.show(
+      resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),
+      "error",
+    );
   }
 }
 
@@ -98,6 +112,7 @@ function bindEvents() {
 }
 
 function init() {
+  initMotionToggle({ button: elements.motionToggle });
   renderSessionState();
   bindEvents();
 }

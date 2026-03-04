@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import { initMotionToggle } from "../components/motion.js";
 import { initNavbar } from "../components/navbar.js";
 import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
@@ -26,6 +27,7 @@ const elements = {
   closeModalButton: document.querySelector("[data-close-post-modal]"),
   createForm: document.querySelector("[data-create-post-form]"),
   createStatus: document.querySelector("[data-create-post-status]"),
+  motionToggle: document.querySelector("[data-motion-toggle]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -36,7 +38,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   protectedButtons: [elements.openModalButton],
   onLogout: () => {
-    statusFlash.show("Sessao encerrada.", "info");
+    statusFlash.show("Sessao encerrada. O feed continua cronologico.", "info");
     navbar.refresh();
     closeModal();
   },
@@ -45,7 +47,7 @@ const navbar = initNavbar({
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login na pagina inicial.",
+    "Autenticacao necessaria. Faca login para contribuir com posts.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
@@ -57,7 +59,7 @@ function renderFeed() {
 
   if (state.items.length === 0) {
     elements.list.innerHTML = "";
-    statusFlash.show("Sem posts no momento.", "info");
+    statusFlash.show("Sem publicacoes por enquanto. Poste algo que agregue.", "info");
     if (elements.loadMore) {
       elements.loadMore.hidden = true;
     }
@@ -78,7 +80,7 @@ async function loadFeed({ append = false } = {}) {
   }
 
   state.isLoading = true;
-  statusFlash.show("Carregando feed...", "info");
+  statusFlash.show("Carregando feed cronologico...", "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
@@ -94,7 +96,12 @@ async function loadFeed({ append = false } = {}) {
     state.nextCursor = data.pageInfo?.nextCursor ?? null;
 
     renderFeed();
-    statusFlash.show(state.items.length > 0 ? "Feed atualizado." : "Sem posts no momento.", "success");
+    statusFlash.show(
+      state.items.length > 0
+        ? "Feed atualizado. Conteudo acima de status."
+        : "Sem publicacoes por enquanto. Poste algo que agregue.",
+      "success",
+    );
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
     if (!append) {
@@ -116,7 +123,7 @@ function openModal() {
 
   const isAuthenticated = requireSession({
     onFail: () => {
-      statusFlash.show("Faca login para publicar um post.", "error");
+      statusFlash.show("Faca login para publicar conhecimento.", "error");
       window.location.href = "./index.html";
     },
   });
@@ -147,14 +154,14 @@ async function submitCreatePost(event) {
   const tags = parseCsvTags(formData.get("tags"));
 
   state.isCreating = true;
-  createFlashStatus.show("Publicando...", "info");
+  createFlashStatus.show("Publicando conteudo...", "info");
 
   try {
     const created = await api.posts.create({ title, content, tags });
     elements.createForm.reset();
     closeModal();
     await loadFeed();
-    statusFlash.show(`Post criado com sucesso: ${created.title}`, "success");
+    statusFlash.show(`Post publicado: ${created.title}`, "success");
   } catch (error) {
     createFlashStatus.show(resolveMessage(error), "error");
   } finally {
@@ -195,6 +202,7 @@ function init() {
     return;
   }
 
+  initMotionToggle({ button: elements.motionToggle });
   navbar.refresh();
   if (!hasSession()) {
     createFlashStatus.clear();

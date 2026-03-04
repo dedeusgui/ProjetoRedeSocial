@@ -1,6 +1,5 @@
 import { escapeHtml, formatDateTime, trendClass } from "../../core/formatters.js";
 
-
 export function ensureChronologicalOrder(items) {
   return [...items].sort((a, b) => {
     const dateDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -12,27 +11,43 @@ export function ensureChronologicalOrder(items) {
   });
 }
 
+function renderTags(tags) {
+  if (!Array.isArray(tags) || tags.length === 0) {
+    return "<p class='muted post-tags'>Sem tags.</p>";
+  }
+
+  return `
+    <ul class="tag-list" aria-label="Tags do post">
+      ${tags.map((tag) => `<li class="tag-item">#${escapeHtml(tag)}</li>`).join("")}
+    </ul>
+  `;
+}
+
 export function createPostCard(post) {
   const article = document.createElement("article");
   article.className = "card post-card";
 
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
   const createdAtText = formatDateTime(post.createdAt);
+  const postId = encodeURIComponent(String(post.id ?? ""));
+  const trend = post.trend ?? "neutral";
+  const trendStyleClass = trendClass(trend);
 
   article.innerHTML = `
-    <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(createdAtText)}</p>
+    <header class="post-header">
+      <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(createdAtText)}</p>
+      <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tendencia: ${escapeHtml(trend)}</p>
+    </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
-    <p class="muted post-tags"></p>
-    <p class="${escapeHtml(trendClass(post.trend))}">Tendencia: ${escapeHtml(post.trend ?? "neutral")}</p>
-    <p><a class="link-inline" href="./post.html?id=${escapeHtml(post.id)}">Abrir post e comentarios</a></p>
+    ${renderTags(tags)}
+    <p class="post-action-row">
+      <a class="link-inline post-link" href="./post.html?id=${postId}">Abrir discussao</a>
+    </p>
   `;
-
 
   article.querySelector(".post-title").textContent = post.title ?? "";
   article.querySelector(".post-content").textContent = post.content ?? "";
-  article.querySelector(".post-tags").textContent =
-    tags.length > 0 ? tags.map((tag) => `#${tag}`).join(" ") : "";
 
   return article;
 }
