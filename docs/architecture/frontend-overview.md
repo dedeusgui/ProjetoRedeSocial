@@ -42,6 +42,8 @@ Reference guide:
 - `components/navigation.js` exposes `bindNavigation()` for delegated click-to-navigation behavior.
 - Page bootstraps should call `bindNavigation()` in `init()` when page markup includes `data-nav-href`.
 - Keep semantic buttons (`<button type="button">`) for nav actions to preserve explicit disabled-state behavior.
+- Header branding should live in `header-copy` (outside `.app-nav`) to avoid compressing auth/navigation actions.
+- Shared brand asset path: `src/public/images/logo-transparent.png`.
 
 ## Frontend Guardrails
 
