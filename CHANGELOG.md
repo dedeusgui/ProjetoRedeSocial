@@ -47,6 +47,7 @@ All notable changes to this project should be documented in this file.
 - Updated profile UI to show a single derived "Score geral" metric based on private approval/rejection percentages.
 - Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positiva`, `neutra`, `negativa`).
 - Removed redundant approval/rejection cards from profile UI, keeping only the consolidated score and tendency.
+- Updated tendency rule: `neutral` is now only the exact 50/50 split; any imbalance becomes `positive` or `negative`.
 
 ### Notes
 

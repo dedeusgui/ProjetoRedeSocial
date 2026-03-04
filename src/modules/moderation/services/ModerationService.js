@@ -8,28 +8,16 @@ class ModerationService {
     this.userService = userService;
   }
 
-  calculateValidationScore(approved, notRelevant) {
-    const total = approved + notRelevant;
-
-    if (total === 0) {
-      return 0;
+  resolveTrend(approved, notRelevant) {
+    if (approved === notRelevant) {
+      return "neutral";
     }
 
-    return ((approved - notRelevant) / total) * 100;
-  }
-
-  resolveTrend(approved, notRelevant) {
-    const score = this.calculateValidationScore(approved, notRelevant);
-
-    if (score >= 20) {
+    if (approved > notRelevant) {
       return "positive";
     }
 
-    if (score <= -20) {
-      return "negative";
-    }
-
-    return "neutral";
+    return "negative";
   }
 
   calculatePercentages(approved, notRelevant) {

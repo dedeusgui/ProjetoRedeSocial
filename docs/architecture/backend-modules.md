@@ -36,7 +36,7 @@ Module construction is centralized in `src/server.js`:
 - `posts`: hidden posts are not returned by detail endpoint.
 - `moderation`: post author cannot review own post.
 - `moderation`: trend is derived from validation score `approvalRate - rejectionRate`:
-  - `positive` if score >= 20
-  - `negative` if score <= -20
-  - `neutral` otherwise
+  - `neutral` only when approval and rejection are exactly tied (50/50)
+  - `positive` when approval is greater than rejection
+  - `negative` when rejection is greater than approval
 - `users`: private metrics only exposed through authenticated profile endpoint.

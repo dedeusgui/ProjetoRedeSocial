@@ -54,15 +54,9 @@ export function computeValidationScore(approvalRate, rejectionRate) {
 export function resolveTrendFromScore(score) {
   const safeScore = toFiniteNumber(score, 0);
 
-  if (safeScore >= 20) {
-    return "positive";
-  }
-
-  if (safeScore <= -20) {
-    return "negative";
-  }
-
-  return "neutral";
+  if (safeScore === 0) return "neutral";
+  if (safeScore > 0) return "positive";
+  return "negative";
 }
 
 export function formatPercent(value) {
