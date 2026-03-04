@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Reviews | Rede Social</title>
+    <link rel="stylesheet" href="../../css/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="card app-header">
+        <div class="header-copy">
+          <h1 class="ink-underline">Painel de Reviews</h1>
+          <p class="muted">A revis&atilde;o foi centralizada no detalhe do post.</p>
+        </div>
+        <nav class="row app-nav">
+          <a class="nav-link" href="../feed.html">Feed</a>
+          <a class="nav-link" href="../profile.html">Meu perfil</a>
+          <a class="nav-link" href="../index.html" data-login-link>Entrar</a>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
+
+      <section class="card">
+        <h2 class="ink-underline">Fluxo de modera&ccedil;&atilde;o</h2>
+        <p class="muted">
+          Use os bot&otilde;es <strong>Aprovar</strong> e <strong>N&atilde;o relevante</strong> diretamente na
+          p&aacute;gina de post.
+        </p>
+        <a class="button-link" href="../feed.html">Ir para o feed</a>
+      </section>
+      <p class="muted status-line" data-review-status></p>
+    </main>
+    <script type="module" src="../../js/pages/admin-reviews.js"></script>
+  </body>
+</html>
