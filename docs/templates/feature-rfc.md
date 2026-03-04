@@ -30,6 +30,19 @@ Describe the proposed solution in enough detail to implement.
 - In scope:
 - Out of scope:
 
+## Decisions Requested From Developer
+
+- Decision 1:
+  - Options:
+  - Recommended option:
+  - Tradeoffs:
+
+## Chosen Decisions and Rationale
+
+- Chosen option:
+- Why this option:
+- Assumptions (if any):
+
 ## API and Interface Impact
 
 - New/changed endpoints:
@@ -69,6 +82,7 @@ Describe incremental rollout strategy and rollback strategy.
 
 ## Documentation Updates Required
 
+- [ ] `AGENTS.md` if agent behavior/process changed
 - [ ] `docs/architecture/*`
 - [ ] `docs/api/*`
 - [ ] `docs/workflows/*` if process changed

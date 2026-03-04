@@ -10,6 +10,7 @@ Fix defects quickly without breaking architecture, API contracts, or product pri
 - clear reproduction steps
 - expected and actual behavior
 - impact assessment
+- relevant docs reviewed first (`AGENTS.md`, architecture/API/workflow as needed)
 
 ## Workflow
 
@@ -19,19 +20,23 @@ Fix defects quickly without breaking architecture, API contracts, or product pri
 2. Isolate
   - identify the failing module and layer (`route`, `service`, `repository`, frontend page).
   - classify root cause type: validation, auth, business logic, data access, UI orchestration.
-3. Patch
+3. Decision Gate
+  - when fix changes contract/scope/rules, ask developer before patching.
+  - provide options, recommendation, and tradeoffs.
+4. Patch
   - implement minimal, targeted change.
   - preserve response envelope and role rules.
-4. Verify
+5. Verify
   - run manual checks on affected endpoints/pages.
   - validate no regressions in neighboring flows.
-5. Document
+6. Document
   - update impacted docs in `docs/` and root `README.md` if needed.
   - add release note entry under "Fixed".
 
 ## Completion Checklist
 
 - [ ] root cause identified and documented
+- [ ] decision gate used when high-impact choices existed
 - [ ] fix validated against reproduction steps
 - [ ] no contract drift (or drift explicitly documented)
 - [ ] docs updated in same PR

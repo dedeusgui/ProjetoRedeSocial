@@ -27,10 +27,18 @@ All notable changes to this project should be documented in this file.
 - Added reusable templates:
   - `docs/templates/bug-report.md`
   - `docs/templates/feature-rfc.md`
+- Added root `AGENTS.md` with bilingual PT/EN collaboration rules focused on agent behavior.
 
 ### Changed
 
 - Updated `README.md` to include the Engineering docs hub link (`docs/README.md`).
+- Updated `README.md` with explicit agent/dev decision-gate policy.
+- Updated `docs/README.md` onboarding flow to require `AGENTS.md` first.
+- Updated governance/workflow/template docs to enforce docs-first + developer decision gate:
+  - `docs/governance/documentation-policy.md`
+  - `docs/workflows/feature-process.md`
+  - `docs/workflows/bugfix-process.md`
+  - `docs/templates/feature-rfc.md`
 
 ### Notes
 

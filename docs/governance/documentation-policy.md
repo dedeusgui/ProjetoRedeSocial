@@ -3,11 +3,29 @@
 ## Purpose
 
 Keep architecture and API documentation synchronized with code so bugfixes and feature work stay predictable.
+Enforce a docs-first and decision-first workflow for agents and developers.
 
 ## Ownership
 
 - Every contributor owns docs updates for their changes.
 - PR reviewers must enforce docs completeness before merge.
+- Agents must follow `AGENTS.md` before proposing implementation.
+
+## Mandatory Decision Gate
+
+Before implementation, ask the developer to confirm high-impact decisions that affect:
+
+- architecture/module boundaries
+- API contract or payload shape
+- auth/role behavior
+- core business rules
+- scope boundaries (in/out)
+
+Each decision request must include:
+
+- 2-4 concrete options
+- one recommended option
+- short tradeoff per option
 
 ## Mandatory Update Triggers
 
@@ -19,6 +37,7 @@ Update docs in the same PR when changing:
 - module responsibilities or dependencies
 - core business rules (feed order, moderation, private metrics behavior)
 - environment variables or run commands
+- agent collaboration rules or decision protocol
 
 ## Required Files by Change Type
 
@@ -42,6 +61,11 @@ Process change:
 - `docs/workflows/*.md`
 - corresponding templates under `docs/templates/`
 
+Agent behavior/process change:
+
+- `AGENTS.md`
+- `docs/README.md` when onboarding order changes
+
 ## Review Checklist
 
 - [ ] docs reflect real behavior in code
@@ -49,6 +73,8 @@ Process change:
 - [ ] auth/role notes match middleware usage
 - [ ] diagrams are still valid
 - [ ] links in `docs/README.md` are valid
+- [ ] decision gate was applied before implementation
+- [ ] decision options + recommendation are documented when relevant
 
 ## Conflict Resolution
 

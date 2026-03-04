@@ -17,6 +17,21 @@ Este projeto implementa uma API REST + frontend estático com foco em:
 For implementation workflows, architecture references, and API contracts, use:
 
 - [`docs/README.md`](docs/README.md)
+- [`AGENTS.md`](AGENTS.md) (agent/dev collaboration policy and decision gate)
+
+## Agent collaboration policy
+
+Antes de implementar qualquer mudança, consulte:
+
+1. [`AGENTS.md`](AGENTS.md)
+2. [`docs/README.md`](docs/README.md)
+
+Regras principais:
+
+- documentação primeiro, implementação depois
+- decisões de alto impacto devem ser confirmadas com o dev
+- agentes devem trazer opções concretas com recomendação e tradeoff
+- projeto acadêmico com execução profissional: decisões rastreáveis e docs atualizados no mesmo PR
 
 ## Estado atual (implementado)
 

@@ -77,7 +77,23 @@ p {
 }
 
 a {
-  color: var(--text-0);
+  color: #c6d5ee;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:visited {
+  color: #b8c9e4;
+}
+
+a:hover {
+  color: #eef4ff;
+  text-decoration: none;
+}
+
+a:active {
+  color: #ffffff;
+  text-decoration: none;
 }
 
 .page {
@@ -122,6 +138,10 @@ a {
 .nav-link {
   color: var(--text-1);
   text-decoration: none;
+}
+
+.nav-link:visited {
+  color: var(--text-1);
 }
 
 .nav-link:hover,
@@ -239,6 +259,10 @@ button:disabled {
   align-items: center;
   justify-content: center;
   text-decoration: none;
+}
+
+.button-link:visited {
+  color: var(--text-0);
 }
 
 .button-link-inline {
