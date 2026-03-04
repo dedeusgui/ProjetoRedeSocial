@@ -12,6 +12,12 @@ Este projeto implementa uma API REST + frontend estático com foco em:
 - métricas privadas apenas para o dono do perfil
 - governança por papéis (`user`, `moderator`, `admin`)
 
+## Engineering docs hub
+
+For implementation workflows, architecture references, and API contracts, use:
+
+- [`docs/README.md`](docs/README.md)
+
 ## Estado atual (implementado)
 
 A base foi evoluída para **monólito modular** com camadas por módulo:

@@ -26,11 +26,11 @@ export function resolveModerationApiMessage(error, fallbackMessage) {
   }
 
   if (error.code === "UNAUTHENTICATED" || error.status === 401) {
-    return "Autenticacao necessaria para acessar moderacao.";
+    return "Autentica\u00e7\u00e3o necess\u00e1ria para acessar modera\u00e7\u00e3o.";
   }
 
   if (error.code === "FORBIDDEN" || error.status === 403) {
-    return "Sua conta nao possui permissao de moderacao.";
+    return "Sua conta n\u00e3o possui permiss\u00e3o de modera\u00e7\u00e3o.";
   }
 
   return error.message;

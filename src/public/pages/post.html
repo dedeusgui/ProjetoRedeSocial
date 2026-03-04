@@ -10,9 +10,9 @@
     <main class="page">
       <header class="card app-header">
         <div class="header-copy">
-          <h1 class="ink-underline">Discussao de post</h1>
-          <p class="muted">Aqui o conteudo fala por si. Comentarios para aprofundar a ideia.</p>
-          <p class="tone-note">Zero influencia, so contexto.</p>
+          <h1 class="ink-underline">Discuss&atilde;o de post</h1>
+          <p class="muted">Aqui o conte&uacute;do fala por si. Coment&aacute;rios para aprofundar a ideia.</p>
+          <p class="tone-note">Zero influ&ecirc;ncia, s&oacute; contexto.</p>
         </div>
         <nav class="row app-nav">
           <a class="nav-link" href="./feed.html">Feed</a>
@@ -26,15 +26,29 @@
       <p class="muted status-line" data-post-status></p>
       <div data-post-view></div>
 
+      <section class="card moderation-panel" data-review-panel hidden>
+        <h2 class="ink-underline">Revis&atilde;o de modera&ccedil;&atilde;o</h2>
+        <p class="muted">Dispon&iacute;vel apenas para moderadores e administradores.</p>
+        <div class="review-actions">
+          <button type="button" class="button-approve" data-review-approve>Aprovar</button>
+          <button type="button" class="button-reject" data-review-reject>N&atilde;o relevante</button>
+        </div>
+        <label>
+          Motivo opcional
+          <textarea data-review-reason rows="3" placeholder="Contexto adicional (opcional)"></textarea>
+        </label>
+        <p class="muted status-line" data-review-status></p>
+      </section>
+
       <section class="card">
-        <h2 class="ink-underline">Adicionar comentario</h2>
-        <p class="muted">Contribua com contexto, explicacao ou contraponto objetivo.</p>
+        <h2 class="ink-underline">Adicionar coment&aacute;rio</h2>
+        <p class="muted">Contribua com contexto, explica&ccedil;&atilde;o ou contraponto objetivo.</p>
         <form data-comment-form>
           <label>
-            Comentario
-            <textarea name="content" rows="4" placeholder="Seu comentario" required></textarea>
+            Coment&aacute;rio
+            <textarea name="content" rows="4" placeholder="Seu coment&aacute;rio" required></textarea>
           </label>
-          <button type="submit">Enviar comentario</button>
+          <button type="submit">Enviar coment&aacute;rio</button>
         </form>
         <p class="muted status-line" data-comment-help></p>
       </section>

@@ -5,6 +5,8 @@ import { initNavbar } from "../components/navbar.js";
 import { resolveApiMessage } from "../core/http-state.js";
 import { hasSession, saveSessionToken } from "../core/session.js";
 
+const FEED_NOTICE_KEY = "thesocial_feed_notice";
+
 const elements = {
   registerForm: document.querySelector("[data-register-form]"),
   loginForm: document.querySelector("[data-login-form]"),
@@ -23,7 +25,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   onLogout: () => {
     renderSessionState();
-    authFlash.show("Sessao encerrada. Sem truques, sem pressa.", "info");
+    authFlash.show("Sess\u00e3o encerrada. Sem truques, sem pressa.", "info");
   },
 });
 
@@ -32,10 +34,20 @@ function renderSessionState() {
 
   sessionFlash.show(
     isAuthenticated
-      ? "Sessao ativa. Va para o feed e compartilhe algo util para a comunidade."
-      : "Faca login para publicar conhecimento. Sem seguidores, sem disputa.",
+      ? "Sess\u00e3o ativa. Voc\u00ea ser\u00e1 direcionado ao feed para publicar."
+      : "Fa\u00e7a login para publicar conhecimento.",
     "info",
   );
+}
+
+function redirectToFeed(noticeMessage) {
+  try {
+    window.sessionStorage.setItem(FEED_NOTICE_KEY, noticeMessage);
+  } catch {
+    // noop: redirect still happens without persisted notice
+  }
+
+  window.location.href = "./feed.html";
 }
 
 async function handleRegister(event) {
@@ -55,11 +67,7 @@ async function handleRegister(event) {
 
     saveSessionToken(data.token);
     elements.registerForm.reset();
-    renderSessionState();
-    authFlash.show(
-      "Conta criada com sucesso. Proximo passo: publicar seu primeiro post.",
-      "success",
-    );
+    redirectToFeed("Conta criada. Bem-vindo ao feed cronol\u00f3gico.");
   } catch (error) {
     authFlash.show(
       resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),
@@ -84,11 +92,7 @@ async function handleLogin(event) {
 
     saveSessionToken(data.token);
     elements.loginForm.reset();
-    renderSessionState();
-    authFlash.show(
-      "Login realizado. Abra o feed e poste algo que agregue.",
-      "success",
-    );
+    redirectToFeed("Login realizado. Voc\u00ea entrou no feed.");
   } catch (error) {
     authFlash.show(
       resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),

@@ -36,13 +36,13 @@ export function createPostCard(post) {
   article.innerHTML = `
     <header class="post-header">
       <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(createdAtText)}</p>
-      <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tendencia: ${escapeHtml(trend)}</p>
+      <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trend)}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
     ${renderTags(tags)}
     <p class="post-action-row">
-      <a class="link-inline post-link" href="./post.html?id=${postId}">Abrir discussao</a>
+      <a class="link-inline post-link" href="./post.html?id=${postId}">Abrir discuss&atilde;o</a>
     </p>
   `;
 

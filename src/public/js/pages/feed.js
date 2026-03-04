@@ -8,6 +8,7 @@ import { hasSession, requireSession } from "../core/session.js";
 import { renderFeedList } from "../features/feed/renderers.js";
 
 const FEED_LIMIT = 20;
+const FEED_NOTICE_KEY = "thesocial_feed_notice";
 
 const state = {
   items: [],
@@ -38,7 +39,7 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   protectedButtons: [elements.openModalButton],
   onLogout: () => {
-    statusFlash.show("Sessao encerrada. O feed continua cronologico.", "info");
+    statusFlash.show("Sess\u00e3o encerrada. O feed continua cronol\u00f3gico.", "info");
     navbar.refresh();
     closeModal();
   },
@@ -47,7 +48,7 @@ const navbar = initNavbar({
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para contribuir com posts.",
+    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para contribuir com posts.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
@@ -59,7 +60,7 @@ function renderFeed() {
 
   if (state.items.length === 0) {
     elements.list.innerHTML = "";
-    statusFlash.show("Sem publicacoes por enquanto. Poste algo que agregue.", "info");
+    statusFlash.show("Sem publica\u00e7\u00f5es por enquanto. Poste algo que agregue.", "info");
     if (elements.loadMore) {
       elements.loadMore.hidden = true;
     }
@@ -80,7 +81,7 @@ async function loadFeed({ append = false } = {}) {
   }
 
   state.isLoading = true;
-  statusFlash.show("Carregando feed cronologico...", "info");
+  statusFlash.show("Carregando feed cronol\u00f3gico...", "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
@@ -98,8 +99,8 @@ async function loadFeed({ append = false } = {}) {
     renderFeed();
     statusFlash.show(
       state.items.length > 0
-        ? "Feed atualizado. Conteudo acima de status."
-        : "Sem publicacoes por enquanto. Poste algo que agregue.",
+        ? "Feed atualizado. Conte\u00fado acima de status."
+        : "Sem publica\u00e7\u00f5es por enquanto. Poste algo que agregue.",
       "success",
     );
   } catch (error) {
@@ -123,7 +124,7 @@ function openModal() {
 
   const isAuthenticated = requireSession({
     onFail: () => {
-      statusFlash.show("Faca login para publicar conhecimento.", "error");
+      statusFlash.show("Fa\u00e7a login para publicar conhecimento.", "error");
       window.location.href = "./index.html";
     },
   });
@@ -154,7 +155,7 @@ async function submitCreatePost(event) {
   const tags = parseCsvTags(formData.get("tags"));
 
   state.isCreating = true;
-  createFlashStatus.show("Publicando conteudo...", "info");
+  createFlashStatus.show("Publicando conte\u00fado...", "info");
 
   try {
     const created = await api.posts.create({ title, content, tags });
@@ -204,6 +205,16 @@ function init() {
 
   initMotionToggle({ button: elements.motionToggle });
   navbar.refresh();
+  try {
+    const pendingNotice = window.sessionStorage.getItem(FEED_NOTICE_KEY);
+    if (pendingNotice) {
+      statusFlash.show(pendingNotice, "success");
+      window.sessionStorage.removeItem(FEED_NOTICE_KEY);
+    }
+  } catch {
+    // noop: sessionStorage can be unavailable in restricted environments
+  }
+
   if (!hasSession()) {
     createFlashStatus.clear();
   }

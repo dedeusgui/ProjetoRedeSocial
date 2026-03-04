@@ -57,10 +57,6 @@ class ModerationService {
 
     const post = await this.postService.getPostForModeration(postId);
 
-    if (String(post.authorId) === String(reviewerId)) {
-      throw new AppError("Author cannot review own post", "FORBIDDEN", 403);
-    }
-
     const review = await this.moderationRepository.upsertReview({
       postId,
       reviewerId,

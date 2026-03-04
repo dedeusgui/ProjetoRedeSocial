@@ -26,14 +26,14 @@ export function renderPostView(target, post) {
     <article class="card post-card">
       <header class="post-header">
         <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(formatDateTime(post.createdAt))}</p>
-        <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tendencia: ${escapeHtml(trend)}</p>
+        <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trend)}</p>
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
       ${renderTags(tags)}
     </article>
     <section class="card">
-      <h3 class="ink-underline">Comentarios</h3>
+      <h3 class="ink-underline">Coment&aacute;rios</h3>
       <div class="comments-list" data-comments-list></div>
     </section>
   `;
@@ -47,7 +47,7 @@ export function renderPostView(target, post) {
   }
 
   if (comments.length === 0) {
-    commentsList.innerHTML = "<p class='muted'>Nenhum comentario ainda.</p>";
+    commentsList.innerHTML = "<p class='muted'>Nenhum coment&aacute;rio ainda.</p>";
     return;
   }
 
