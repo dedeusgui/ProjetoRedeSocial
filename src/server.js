@@ -27,14 +27,16 @@ function createApp() {
 
   const usersModule = createUsersModule();
   const commentsModule = createCommentsModule();
-  const postsModule = createPostsModule({ commentService: commentsModule.service });
+  const postsModule = createPostsModule({
+    commentService: commentsModule.service,
+    userService: usersModule.service,
+  });
   const feedModule = createFeedModule();
   const adminModule = createAdminModule({
     adminEmails: env.adminEmails,
   });
   const moderationModule = createModerationModule({
     postService: postsModule.service,
-    userService: usersModule.service,
   });
   const authModule = createAuthModule({
     jwtSecret: env.jwtSecret,

@@ -74,6 +74,7 @@ function renderUserCards(target, users, emptyMessage, actionLabel, actionKind, b
           <p><strong>@${escapeHtml(user.username)}</strong> <span class="muted">(${escapeHtml(user.email)})</span></p>
           <p class="muted">Papel: ${escapeHtml(user.role)}</p>
           <p class="muted">Taxa de aprova\u00e7\u00e3o: ${formatPercent(user.approvalRate)} | Posts: ${user.postCount}</p>
+          <p class="muted">Avalia\u00e7\u00f5es recebidas: ${escapeHtml(user.totalReviews ?? 0)} (aprovar: ${escapeHtml(user.approvedCount ?? 0)} | n\u00e3o relevante: ${escapeHtml(user.notRelevantCount ?? 0)})</p>
           <p class="muted">Criado em: ${formatDateTime(user.createdAt)}</p>
           <button
             type="button"

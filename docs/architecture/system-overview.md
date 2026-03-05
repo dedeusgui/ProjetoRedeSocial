@@ -6,8 +6,8 @@ The system is a social network API and static frontend focused on knowledge shar
 
 - chronological feed (no recommendation algorithm)
 - binary moderation decisions on posts (`approved`, `not_relevant`)
-- no public validation counters
-- private metrics visible only in authenticated profile endpoint
+- post-level like/dislike percentages are public in feed and post detail
+- user aggregate metrics remain private to authenticated profile/admin endpoints
 
 ## Runtime Architecture
 
@@ -51,8 +51,9 @@ Active modules:
 ## Cross-Module Dependencies
 
 - `posts` depends on `comments` service for post detail responses with visible comments.
-- `moderation` depends on `posts` service and `users` service to:
-  - update post trend
+- `posts` depends on `users` service to refresh author private metrics after post deletion.
+- `moderation` depends on `posts` service to:
+  - update post trend and post moderation metrics
   - recalculate author private metrics
 
 These dependencies are composed at application startup in `src/server.js`.

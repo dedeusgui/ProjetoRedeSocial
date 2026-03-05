@@ -10,6 +10,8 @@ import { renderPostView } from "../features/post/renderers.js";
 const state = {
   postId: null,
   viewerRole: null,
+  viewerId: null,
+  postAuthorId: null,
   isReviewSubmitting: false,
   isDeletingPost: false,
   isDeletingComment: false,
@@ -149,13 +151,18 @@ async function loadPost() {
 
   try {
     const post = await api.posts.getById(postId);
+    state.postAuthorId = post.author?.id ?? null;
+    const canDeletePost =
+      ["moderator", "admin"].includes(state.viewerRole ?? "") ||
+      String(state.viewerId ?? "") === String(state.postAuthorId ?? "");
     renderPostView(elements.view, post, {
-      canDeletePost: state.viewerRole === "admin",
-      canDeleteComments: state.viewerRole === "admin",
+      canDeletePost,
+      canDeleteComments: ["moderator", "admin"].includes(state.viewerRole ?? ""),
     });
     refreshReviewPanel();
     statusFlash.show("Post carregado.", "success");
   } catch (error) {
+    state.postAuthorId = null;
     renderMissingPostState("Este post n\u00e3o pode ser exibido no momento.");
     refreshReviewPanel();
     statusFlash.show(resolveMessage(error), "error");
@@ -165,14 +172,17 @@ async function loadPost() {
 async function syncViewerRole() {
   if (!hasSession()) {
     state.viewerRole = null;
+    state.viewerId = null;
     return;
   }
 
   try {
     const profile = await api.users.meProfile();
     state.viewerRole = profile.role ?? null;
+    state.viewerId = profile.id ?? null;
   } catch {
     state.viewerRole = null;
+    state.viewerId = null;
   }
 }
 
@@ -242,8 +252,9 @@ async function handleDeletePost() {
     return;
   }
 
-  if (!hasSession() || state.viewerRole !== "admin") {
-    statusFlash.show("Apenas administradores podem excluir posts.", "error");
+  const isOwner = String(state.viewerId ?? "") === String(state.postAuthorId ?? "");
+  if (!hasSession() || (!["moderator", "admin"].includes(state.viewerRole ?? "") && !isOwner)) {
+    statusFlash.show("Apenas autor do post, moderadores ou administradores podem excluir posts.", "error");
     return;
   }
 
@@ -264,8 +275,8 @@ async function handleDeleteComment(commentId) {
     return;
   }
 
-  if (!hasSession() || state.viewerRole !== "admin") {
-    statusFlash.show("Apenas administradores podem excluir coment\u00e1rios.", "error");
+  if (!hasSession() || !["moderator", "admin"].includes(state.viewerRole ?? "")) {
+    statusFlash.show("Apenas moderadores ou administradores podem excluir coment\u00e1rios.", "error");
     return;
   }
 

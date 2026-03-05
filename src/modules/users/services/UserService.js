@@ -20,6 +20,9 @@ class UserService {
       privateMetrics: {
         approvalRate: user.privateMetrics.approvalRate,
         rejectionRate: user.privateMetrics.rejectionRate,
+        approvedCount: user.privateMetrics.approvedCount ?? 0,
+        notRelevantCount: user.privateMetrics.notRelevantCount ?? 0,
+        totalReviews: user.privateMetrics.totalReviews ?? 0,
       },
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

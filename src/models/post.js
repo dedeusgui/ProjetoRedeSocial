@@ -22,6 +22,13 @@ const PostSchema = new mongoose.Schema(
       enum: ["positive", "neutral", "negative"],
       default: "neutral",
     },
+    moderationMetrics: {
+      approvedCount: { type: Number, default: 0, min: 0 },
+      notRelevantCount: { type: Number, default: 0, min: 0 },
+      totalReviews: { type: Number, default: 0, min: 0 },
+      approvalPercentage: { type: Number, default: 0, min: 0, max: 100 },
+      notRelevantPercentage: { type: Number, default: 0, min: 0, max: 100 },
+    },
   },
   {
     timestamps: true,

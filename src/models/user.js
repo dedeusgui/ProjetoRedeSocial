@@ -9,6 +9,9 @@ const UserSchema = new mongoose.Schema(
     privateMetrics: {
       approvalRate: { type: Number, default: 0, min: 0, max: 100 },
       rejectionRate: { type: Number, default: 0, min: 0, max: 100 },
+      approvedCount: { type: Number, default: 0, min: 0 },
+      notRelevantCount: { type: Number, default: 0, min: 0 },
+      totalReviews: { type: Number, default: 0, min: 0 },
     },
   },
   {

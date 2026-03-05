@@ -23,8 +23,8 @@ Refine ideas into implementable, reviewable features with explicit decisions and
   - include API/data/auth implications.
 4. Validate Against Product Principles
   - keep chronological feed invariant.
-  - avoid public validation metrics.
-  - preserve private-metrics-only profile rule.
+  - expose only post-level moderation percentages publicly when the feature requires it.
+  - preserve user aggregate metrics as private profile/admin data.
 5. Define Acceptance Criteria
   - write testable behavioral outcomes.
   - include failure and edge cases.

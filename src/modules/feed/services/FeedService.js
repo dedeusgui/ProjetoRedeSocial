@@ -25,6 +25,13 @@ class FeedService {
       content: post.content,
       tags: post.tags,
       trend: post.trend,
+      moderationMetrics: {
+        approvedCount: post.moderationMetrics?.approvedCount ?? 0,
+        notRelevantCount: post.moderationMetrics?.notRelevantCount ?? 0,
+        totalReviews: post.moderationMetrics?.totalReviews ?? 0,
+        approvalPercentage: post.moderationMetrics?.approvalPercentage ?? 0,
+        notRelevantPercentage: post.moderationMetrics?.notRelevantPercentage ?? 0,
+      },
       createdAt: post.createdAt,
     }));
 

@@ -8,7 +8,12 @@ function createCommentRoutes(controller) {
 
   router.get("/posts/:id/comments", asyncHandler(controller.getCommentsByPost));
   router.post("/posts/:id/comments", auth, asyncHandler(controller.createComment));
-  router.delete("/comments/:id", auth, roles("admin"), asyncHandler(controller.deleteCommentByAdmin));
+  router.delete(
+    "/comments/:id",
+    auth,
+    roles("moderator", "admin"),
+    asyncHandler(controller.deleteCommentByAdmin),
+  );
 
   return router;
 }

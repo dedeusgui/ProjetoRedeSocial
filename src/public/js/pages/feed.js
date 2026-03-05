@@ -15,6 +15,7 @@ const state = {
   items: [],
   nextCursor: null,
   viewerRole: null,
+  viewerId: null,
   isLoading: false,
   isCreating: false,
   isReviewing: false,
@@ -69,7 +70,9 @@ function renderFeed() {
   }
 
   renderFeedList(elements.list, state.items, {
-    canDeletePosts: state.viewerRole === "admin",
+    viewerRole: state.viewerRole,
+    viewerId: state.viewerId,
+    canReviewPosts: hasSession(),
   });
 
   if (elements.loadMore) {
@@ -176,14 +179,17 @@ async function submitCreatePost(event) {
 async function syncViewerRole() {
   if (!hasSession()) {
     state.viewerRole = null;
+    state.viewerId = null;
     return;
   }
 
   try {
     const profile = await api.users.meProfile();
     state.viewerRole = profile.role ?? null;
+    state.viewerId = profile.id ?? null;
   } catch {
     state.viewerRole = null;
+    state.viewerId = null;
   }
 }
 
@@ -244,8 +250,10 @@ async function deleteFeedPost(postId) {
     return;
   }
 
-  if (state.viewerRole !== "admin") {
-    statusFlash.show("Apenas administradores podem excluir posts.", "error");
+  const post = state.items.find((item) => String(item.id) === String(postId));
+  const isOwner = String(state.viewerId ?? "") === String(post?.author?.id ?? "");
+  if (!["moderator", "admin"].includes(state.viewerRole ?? "") && !isOwner) {
+    statusFlash.show("Apenas autor do post, moderadores ou administradores podem excluir posts.", "error");
     return;
   }
 

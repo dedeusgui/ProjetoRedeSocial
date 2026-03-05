@@ -182,7 +182,18 @@ class AdminRepository {
       trendUpdates.map((entry) => ({
         updateOne: {
           filter: { _id: new mongoose.Types.ObjectId(String(entry.postId)) },
-          update: { $set: { trend: entry.trend } },
+          update: {
+            $set: {
+              trend: entry.trend,
+              moderationMetrics: {
+                approvedCount: entry.approvedCount,
+                notRelevantCount: entry.notRelevantCount,
+                totalReviews: entry.totalReviews,
+                approvalPercentage: entry.approvalPercentage,
+                notRelevantPercentage: entry.notRelevantPercentage,
+              },
+            },
+          },
         },
       })),
     );
@@ -193,30 +204,17 @@ class AdminRepository {
     return users.map((user) => user._id);
   }
 
-  async summarizeAuthorDecisions() {
-    const summary = await PostReview.aggregate([
-      {
-        $lookup: {
-          from: "posts",
-          localField: "postId",
-          foreignField: "_id",
-          as: "post",
-        },
-      },
-      { $unwind: "$post" },
+  async summarizeAuthorPostMetrics() {
+    const summary = await Post.aggregate([
       {
         $group: {
-          _id: "$post.authorId",
-          approved: {
-            $sum: {
-              $cond: [{ $eq: ["$decision", "approved"] }, 1, 0],
-            },
-          },
-          notRelevant: {
-            $sum: {
-              $cond: [{ $eq: ["$decision", "not_relevant"] }, 1, 0],
-            },
-          },
+          _id: "$authorId",
+          postCount: { $sum: 1 },
+          avgApprovalPercentage: { $avg: "$moderationMetrics.approvalPercentage" },
+          avgNotRelevantPercentage: { $avg: "$moderationMetrics.notRelevantPercentage" },
+          approvedCount: { $sum: "$moderationMetrics.approvedCount" },
+          notRelevantCount: { $sum: "$moderationMetrics.notRelevantCount" },
+          totalReviews: { $sum: "$moderationMetrics.totalReviews" },
         },
       },
     ]);
@@ -225,8 +223,12 @@ class AdminRepository {
       summary.map((entry) => [
         String(entry._id),
         {
-          approved: entry.approved,
-          notRelevant: entry.notRelevant,
+          postCount: entry.postCount,
+          avgApprovalPercentage: entry.avgApprovalPercentage,
+          avgNotRelevantPercentage: entry.avgNotRelevantPercentage,
+          approvedCount: entry.approvedCount,
+          notRelevantCount: entry.notRelevantCount,
+          totalReviews: entry.totalReviews,
         },
       ]),
     );
@@ -246,6 +248,9 @@ class AdminRepository {
               privateMetrics: {
                 approvalRate: entry.approvalRate,
                 rejectionRate: entry.rejectionRate,
+                approvedCount: entry.approvedCount,
+                notRelevantCount: entry.notRelevantCount,
+                totalReviews: entry.totalReviews,
               },
             },
           },

@@ -8,8 +8,8 @@ Este projeto implementa uma API REST + frontend estático com foco em:
 
 - feed cronológico (sem recomendação algorítmica)
 - interação binária em posts (`approved` e `not_relevant`)
-- ausência de métricas públicas de validação social
-- métricas privadas apenas para o dono do perfil
+- percentual público de aprovação/não relevante por post
+- métricas agregadas do usuário em contexto autenticado
 - governança por papéis (`user`, `moderator`, `admin`)
 
 ## Engineering docs hub
@@ -112,13 +112,13 @@ src/
 - criação de post autenticado
 - detalhe de post + comentários visíveis
 - atualização de tendência por contrato interno
-- exclusão administrativa de post com limpeza de comentários/reviews vinculados
+- exclusão de post por autor, moderador ou admin, com limpeza de comentários/reviews vinculados
 
 ### Comments
 
 - criação de comentários autenticada
 - listagem de comentários visíveis por post
-- exclusão administrativa de comentário
+- exclusão de comentário por moderador ou admin
 
 ### Feed
 
@@ -128,7 +128,7 @@ src/
 ### Moderation
 
 - registro de review em post
-- regras de autorização (`admin`/`moderator`)
+- regras de autorização para usuário autenticado
 - cálculo de tendência do post
 - recálculo de métricas privadas do autor
 
@@ -143,8 +143,7 @@ src/
 ## Regras de negócio principais
 
 - feed público em ordem cronológica decrescente
-- sem exposição de contagens públicas de validação
-- público vê apenas `trend` (`positive`, `neutral`, `negative`)
+- público vê percentual de aprovação e de não relevante por post
 - autor não pode revisar o próprio post
 - métricas privadas são retornadas somente em `/me/profile`
 - papel `admin` é controlado por configuração do projeto
@@ -183,13 +182,13 @@ Erro:
 | `GET` | `/posts/:id` | Não | - | Detalhe do post + comentários |
 | `GET` | `/posts/:id/comments` | Não | - | Lista comentários visíveis |
 | `POST` | `/posts/:id/comments` | Sim | `user+` | Cria comentário |
-| `DELETE` | `/posts/:id` | Sim | `admin` | Exclui post |
-| `DELETE` | `/comments/:id` | Sim | `admin` | Exclui comentário |
+| `DELETE` | `/posts/:id` | Sim | `user+` | Exclui post (autor/mod/admin) |
+| `DELETE` | `/comments/:id` | Sim | `moderator/admin` | Exclui comentário |
 | `GET` | `/admin/users` | Sim | `admin` | Lista usuários e papéis |
 | `GET` | `/admin/moderator-eligibility` | Sim | `admin` | Lista elegíveis e moderadores |
 | `PATCH` | `/admin/users/:id/moderator` | Sim | `admin` | Concede/remove `moderator` |
 | `DELETE` | `/admin/users/:id` | Sim | `admin` | Exclui usuário e recalcula estatísticas |
-| `POST` | `/posts/:id/review` | Sim | `moderator/admin` | Registra review |
+| `POST` | `/posts/:id/review` | Sim | `user+` | Registra review |
 | `GET` | `/me/profile` | Sim | `user+` | Perfil autenticado + métricas privadas |
 
 Observações:

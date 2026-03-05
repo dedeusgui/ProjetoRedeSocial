@@ -54,6 +54,13 @@ Example request:
 - Success: `200`
 - Returns:
   - `items[]` with post summary
+    - includes `trend`
+    - includes `moderationMetrics`:
+      - `approvedCount`
+      - `notRelevantCount`
+      - `totalReviews`
+      - `likePercentage`
+      - `dislikePercentage`
   - `pageInfo.nextCursor` (`string | null`)
   - `pageInfo.limit`
 
@@ -69,16 +76,20 @@ Example request:
 - Success: `201`
 - Side effects:
   - creates post with `status: "published"` and `trend: "neutral"`
+  - initializes moderation metrics counters/percentages with zeros
 
 ### `DELETE /api/v1/posts/:id`
 
-- Auth: required (`admin`)
+- Auth: required (`user` or higher)
 - Path params:
   - `id` must be a valid ObjectId
 - Success: `200`
+- Rules:
+  - only post author or `admin` can delete
 - Side effects:
   - permanently deletes the post
   - permanently deletes related comments and reviews
+  - recomputes post-author private metrics
 
 ### `GET /api/v1/posts/:id`
 
@@ -89,6 +100,12 @@ Example request:
 - Returns:
   - post detail
   - embedded `comments` list with visible comments only
+  - includes `moderationMetrics`:
+    - `approvedCount`
+    - `notRelevantCount`
+    - `totalReviews`
+    - `likePercentage`
+    - `dislikePercentage`
 - Error:
   - `404 NOT_FOUND` if post does not exist or is hidden
 
@@ -136,6 +153,9 @@ Example request:
     - `role`
     - `approvalRate`
     - `rejectionRate`
+    - `approvedCount`
+    - `notRelevantCount`
+    - `totalReviews`
     - `postCount`
     - `createdAt`
 
@@ -148,8 +168,8 @@ Example request:
     - `minPosts`
     - `minAccountAgeDays`
     - `minApprovalRate`
-  - `eligibleUsers[]` (users eligible for moderator promotion)
-  - `moderators[]` (current moderators)
+  - `eligibleUsers[]` (users eligible for moderator promotion; includes approval/rejection rates and decision counters)
+  - `moderators[]` (current moderators; includes approval/rejection rates and decision counters)
 
 ### `PATCH /api/v1/admin/users/:id/moderator`
 
@@ -192,8 +212,8 @@ Example request:
   - post author cannot review own post
   - one review per `(postId, reviewerId)` pair is upserted
 - Side effects:
-  - recomputes post trend
-  - recomputes author private metrics
+  - recomputes post trend and moderation metrics (like/dislike percentages + counters)
+  - recomputes author private metrics using per-post average percentages
 
 ## Users
 
@@ -204,8 +224,11 @@ Example request:
 - Returns:
   - user identity and role
   - private metrics:
-    - `approvalRate`
-    - `rejectionRate`
+    - `approvalRate` (average approval percentage across authored posts)
+    - `rejectionRate` (average not-relevant percentage across authored posts)
+    - `approvedCount`
+    - `notRelevantCount`
+    - `totalReviews`
 
 ## Representative Error Examples
 

@@ -1,6 +1,5 @@
 import { Router } from "express";
 import auth from "../../../middleware/auth.js";
-import roles from "../../../middleware/roles.js";
 import asyncHandler from "../../../common/http/asyncHandler.js";
 
 function createModerationRoutes(controller) {
@@ -9,7 +8,6 @@ function createModerationRoutes(controller) {
   router.post(
     "/posts/:id/review",
     auth,
-    roles("moderator", "admin"),
     asyncHandler(controller.createReview),
   );
 

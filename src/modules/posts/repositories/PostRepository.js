@@ -1,6 +1,7 @@
 import Post from "../../../models/post.js";
 import Comment from "../../../models/comment.js";
 import PostReview from "../../../models/post_review.js";
+import mongoose from "mongoose";
 
 class PostRepository {
   async create(payload) {
@@ -23,6 +24,19 @@ class PostRepository {
     );
   }
 
+  async updateTrendAndModerationMetrics(postId, trend, moderationMetrics) {
+    return Post.findByIdAndUpdate(
+      postId,
+      {
+        $set: {
+          trend,
+          moderationMetrics,
+        },
+      },
+      { returnDocument: "after" },
+    );
+  }
+
   async findAuthorByPostId(postId) {
     const post = await Post.findById(postId).select("authorId");
     return post?.authorId ?? null;
@@ -30,6 +44,41 @@ class PostRepository {
 
   async listByAuthorId(authorId) {
     return Post.find({ authorId }).select("_id");
+  }
+
+  async summarizeAuthorModeration(authorId) {
+    const authorObjectId = new mongoose.Types.ObjectId(String(authorId));
+    const summary = await Post.aggregate([
+      {
+        $match: {
+          authorId: authorObjectId,
+        },
+      },
+      {
+        $group: {
+          _id: "$authorId",
+          postCount: { $sum: 1 },
+          avgApprovalPercentage: { $avg: "$moderationMetrics.approvalPercentage" },
+          avgNotRelevantPercentage: { $avg: "$moderationMetrics.notRelevantPercentage" },
+          approvedCount: { $sum: "$moderationMetrics.approvedCount" },
+          notRelevantCount: { $sum: "$moderationMetrics.notRelevantCount" },
+          totalReviews: { $sum: "$moderationMetrics.totalReviews" },
+        },
+      },
+    ]);
+
+    if (!summary.length) {
+      return {
+        postCount: 0,
+        avgApprovalPercentage: 0,
+        avgNotRelevantPercentage: 0,
+        approvedCount: 0,
+        notRelevantCount: 0,
+        totalReviews: 0,
+      };
+    }
+
+    return summary[0];
   }
 
   async deleteWithRelations(postId) {

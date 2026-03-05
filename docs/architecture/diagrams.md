@@ -79,15 +79,13 @@ sequenceDiagram
   participant S as ModerationService
   participant MR as ModerationRepository
   participant PS as PostService
-  participant US as UserService
   M->>C: POST /api/v1/posts/:id/review
   C->>S: createReview(postId, reviewerId, decision, reason)
   S->>PS: getPostForModeration(postId)
   S->>MR: upsertReview(...)
   S->>MR: countPostDecisions(postId)
-  S->>PS: updatePostTrend(postId, trend)
-  S->>MR: countAuthorDecisions(authorId)
-  S->>US: updatePrivateMetrics(authorId, metrics)
+  S->>PS: updatePostModeration(postId, trend, metrics)
+  S->>PS: refreshAuthorPrivateMetrics(authorId)
   S-->>C: review summary + trend
   C-->>M: 201 { ok: true, data }
 ```

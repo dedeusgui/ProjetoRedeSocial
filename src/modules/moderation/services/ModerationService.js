@@ -1,42 +1,14 @@
 import AppError from "../../../common/errors/AppError.js";
+import {
+  buildPostModerationMetrics,
+  resolveTrend,
+} from "../../../common/metrics/moderationMetrics.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
 class ModerationService {
-  constructor(moderationRepository, postService, userService) {
+  constructor(moderationRepository, postService) {
     this.moderationRepository = moderationRepository;
     this.postService = postService;
-    this.userService = userService;
-  }
-
-  resolveTrend(approved, notRelevant) {
-    if (approved === notRelevant) {
-      return "neutral";
-    }
-
-    if (approved > notRelevant) {
-      return "positive";
-    }
-
-    return "negative";
-  }
-
-  calculatePercentages(approved, notRelevant) {
-    const total = approved + notRelevant;
-
-    if (total === 0) {
-      return {
-        approvalRate: 0,
-        rejectionRate: 0,
-      };
-    }
-
-    const approvalRate = Number(((approved / total) * 100).toFixed(2));
-    const rejectionRate = Number(((notRelevant / total) * 100).toFixed(2));
-
-    return {
-      approvalRate,
-      rejectionRate,
-    };
   }
 
   async createReview({ postId, reviewerId, decision, reason }) {
@@ -48,6 +20,9 @@ class ModerationService {
     }
 
     const post = await this.postService.getPostForModeration(postId);
+    if (String(post.authorId) === String(reviewerId)) {
+      throw new AppError("Authors cannot review their own posts", "FORBIDDEN", 403);
+    }
 
     const review = await this.moderationRepository.upsertReview({
       postId,
@@ -57,21 +32,20 @@ class ModerationService {
     });
 
     const postSummary = await this.moderationRepository.countPostDecisions(postId);
-    const trend = this.resolveTrend(postSummary.approved, postSummary.not_relevant);
-    await this.postService.updatePostTrend(postId, trend);
-
-    const authorSummary = await this.moderationRepository.countAuthorDecisions(post.authorId);
-    const metrics = this.calculatePercentages(
-      authorSummary.approved,
-      authorSummary.not_relevant,
+    const moderationMetrics = buildPostModerationMetrics(
+      postSummary.approved,
+      postSummary.not_relevant,
     );
-    await this.userService.updatePrivateMetrics(post.authorId, metrics);
+    const trend = resolveTrend(postSummary.approved, postSummary.not_relevant);
+    await this.postService.updatePostModeration(postId, trend, moderationMetrics);
+    await this.postService.refreshAuthorPrivateMetrics(post.authorId);
 
     return {
       id: review.id,
       postId,
       decision: review.decision,
       trend,
+      moderationMetrics,
       createdAt: review.createdAt,
       updatedAt: review.updatedAt,
     };

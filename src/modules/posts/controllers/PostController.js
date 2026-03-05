@@ -5,7 +5,7 @@ class PostController {
     this.postService = postService;
     this.createPost = this.createPost.bind(this);
     this.getPostById = this.getPostById.bind(this);
-    this.deletePostByAdmin = this.deletePostByAdmin.bind(this);
+    this.deletePost = this.deletePost.bind(this);
   }
 
   async createPost(req, res) {
@@ -18,8 +18,8 @@ class PostController {
     return sendSuccess(res, result);
   }
 
-  async deletePostByAdmin(req, res) {
-    const result = await this.postService.deletePostByAdmin(req.params.id);
+  async deletePost(req, res) {
+    const result = await this.postService.deletePostByRequester(req.params.id, req.user);
     return sendSuccess(res, result);
   }
 }

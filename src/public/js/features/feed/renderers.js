@@ -1,4 +1,8 @@
-import { escapeHtml, formatDateTime, trendClass, trendLabel } from "../../core/formatters.js";
+import {
+  escapeHtml,
+  formatDateTime,
+  formatPercent,
+} from "../../core/formatters.js";
 
 export function ensureChronologicalOrder(items) {
   return [...items].sort((a, b) => {
@@ -23,7 +27,10 @@ function renderTags(tags) {
   `;
 }
 
-export function createPostCard(post, { canDeletePosts = false } = {}) {
+export function createPostCard(
+  post,
+  { viewerRole = null, viewerId = null, canReviewPosts = false } = {},
+) {
   const article = document.createElement("article");
   article.className = "card post-card";
 
@@ -31,24 +38,27 @@ export function createPostCard(post, { canDeletePosts = false } = {}) {
   const createdAtText = formatDateTime(post.createdAt);
   const postId = encodeURIComponent(String(post.id ?? ""));
   const postIdAttr = escapeHtml(String(post.id ?? ""));
-  const trend = post.trend ?? "neutral";
-  const trendStyleClass = trendClass(trend);
-  const trendText = trendLabel(trend);
+  const canDeletePost =
+    ["moderator", "admin"].includes(viewerRole ?? "") ||
+    (viewerId && String(viewerId) === String(post.author?.id ?? ""));
+  const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
+  const notRelevantPercentage = post.moderationMetrics?.notRelevantPercentage ?? 0;
 
   article.innerHTML = `
     <header class="post-header">
       <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(createdAtText)}</p>
-      <p class="trend-chip ${escapeHtml(trendStyleClass)}">Tend&ecirc;ncia: ${escapeHtml(trendText)}</p>
+      <p class="trend-chip status-neutral">Aprova&ccedil;&atilde;o: ${escapeHtml(formatPercent(approvalPercentage))}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
+    <p class="muted">N&atilde;o relevante: ${escapeHtml(formatPercent(notRelevantPercentage))}</p>
     ${renderTags(tags)}
     <div class="feed-card-actions">
       <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discuss&atilde;o</button>
       <div class="review-actions review-actions-inline">
-        <button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>
-        <button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>
-        ${canDeletePosts ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Excluir post</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>` : ""}
+        ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Excluir post</button>` : ""}
       </div>
     </div>
   `;

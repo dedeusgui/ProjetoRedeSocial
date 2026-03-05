@@ -31,8 +31,8 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological feed with post tendency labels.
-- `post.html`: post detail with comments and tendency labels.
+- `feed.html`: chronological feed with post tendency labels and like/dislike percentages.
+- `post.html`: post detail with comments, tendency labels, and like/dislike percentages.
 - `profile.html`: authenticated profile with private metrics; admins also see user/role testing panel.
 - `admin/reviews.html`: moderation review flow + admin-only moderator management panel.
 
@@ -51,4 +51,4 @@ Reference guide:
 - Session/token handling should go through `core/session.js`.
 - API error messages should be normalized through `core/http-state.js`.
 - Prefer shared `bindNavigation()` for internal navigation controls.
-- Do not expose public validation counters in UI outside allowed private profile context.
+- Post-level like/dislike percentages are allowed in feed/post pages; user aggregate metrics stay private to profile/admin contexts.

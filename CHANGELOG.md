@@ -27,6 +27,13 @@ All notable changes to this project should be documented in this file.
 ### Changed
 
 - Enforced role authorization on moderation endpoint (`POST /api/v1/posts/:id/review`) using `roles("moderator", "admin")`.
+- Updated `DELETE /api/v1/posts/:id` authorization to allow post owner or admin deletion.
+- Updated moderation flow to persist per-post moderation metrics (`approvedCount`, `notRelevantCount`, `totalReviews`, `likePercentage`, `dislikePercentage`) and return them in feed/post endpoints.
+- Updated private profile metrics to include decision counters and to compute approval/rejection rates as averages across authored posts.
+- Updated moderator eligibility requirement `minApprovalRate` from `70` to `90`.
+- Enforced moderation rule preventing authors from reviewing their own posts.
+- Updated auth middleware to resolve role from current database user on each authenticated request (prevents stale JWT role issues after role changes).
+- Updated feed/post/profile/admin UIs to display new moderation metrics and owner-or-admin post deletion controls.
 - Updated auth service to ensure users whose email is in `ADMIN_EMAILS` receive role `admin` on register/login.
 - Updated docs and architecture references to include the new admin module, routes, and role-governance contract.
 

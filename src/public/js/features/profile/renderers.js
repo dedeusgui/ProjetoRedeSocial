@@ -1,11 +1,7 @@
 import {
-  computeValidationScore,
   escapeHtml,
   formatDateTime,
-  formatSignedPercent,
-  resolveTrendFromScore,
-  trendClass,
-  trendLabel,
+  formatPercent,
 } from "../../core/formatters.js";
 
 export function renderProfileView(target, profile) {
@@ -15,9 +11,9 @@ export function renderProfileView(target, profile) {
 
   const approvalRate = profile.privateMetrics?.approvalRate ?? 0;
   const rejectionRate = profile.privateMetrics?.rejectionRate ?? 0;
-  const score = computeValidationScore(approvalRate, rejectionRate);
-  const scoreTrend = resolveTrendFromScore(score);
-  const scoreTrendClass = trendClass(scoreTrend);
+  const approvedCount = profile.privateMetrics?.approvedCount ?? 0;
+  const notRelevantCount = profile.privateMetrics?.notRelevantCount ?? 0;
+  const totalReviews = profile.privateMetrics?.totalReviews ?? 0;
 
   target.innerHTML = `
     <section class="card profile-card">
@@ -27,10 +23,10 @@ export function renderProfileView(target, profile) {
       <p class="muted">Criado em: ${escapeHtml(formatDateTime(profile.createdAt))}</p>
       <div class="metrics-grid">
         <article class="card metric-box">
-          <h3>Score geral</h3>
-          <p class="${escapeHtml(scoreTrendClass)}">${escapeHtml(formatSignedPercent(score))}</p>
-          <p class="muted">F&oacute;rmula: aprova&ccedil;&atilde;o - reprova&ccedil;&atilde;o</p>
-          <p class="muted">Tend&ecirc;ncia: ${escapeHtml(trendLabel(scoreTrend))}</p>
+          <h3>Estat&iacute;stica de aprova&ccedil;&atilde;o</h3>
+          <p><strong>M&eacute;dia de aprova&ccedil;&atilde;o dos seus posts: ${escapeHtml(formatPercent(approvalRate))}</strong></p>
+          <p class="muted">M&eacute;dia de n&atilde;o relevante: ${escapeHtml(formatPercent(rejectionRate))}</p>
+          <p class="muted">Avalia&ccedil;&otilde;es recebidas: ${escapeHtml(totalReviews)} (aprovar: ${escapeHtml(approvedCount)} | n&atilde;o relevante: ${escapeHtml(notRelevantCount)})</p>
         </article>
       </div>
     </section>

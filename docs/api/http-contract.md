@@ -62,7 +62,7 @@ From `src/common/validation/index.js`:
 
 - `src/middleware/auth.js`
   - requires Bearer token
-  - decodes JWT and assigns `req.user = { id, role, username }`
+  - decodes JWT and loads current user role from database before assigning `req.user = { id, role, username }`
 - `src/middleware/roles.js`
   - checks `req.user.role` against allowed roles
 - admin bootstrap

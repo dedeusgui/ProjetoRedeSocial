@@ -1,4 +1,9 @@
 import AppError from "../../../common/errors/AppError.js";
+import {
+  buildPostModerationMetrics,
+  buildPrivateMetricsFromAuthorSummary,
+  resolveTrend,
+} from "../../../common/metrics/moderationMetrics.js";
 import { buildAdminEmailSet, normalizeEmail } from "../../../common/security/adminAccess.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
@@ -22,6 +27,9 @@ class AdminService {
       role: user.role,
       approvalRate: user.privateMetrics?.approvalRate ?? 0,
       rejectionRate: user.privateMetrics?.rejectionRate ?? 0,
+      approvedCount: user.privateMetrics?.approvedCount ?? 0,
+      notRelevantCount: user.privateMetrics?.notRelevantCount ?? 0,
+      totalReviews: user.privateMetrics?.totalReviews ?? 0,
       postCount,
       createdAt: user.createdAt,
     };
@@ -39,36 +47,6 @@ class AdminService {
       createdAt <= minCreatedAt &&
       approvalRate >= MODERATOR_REQUIREMENTS.minApprovalRate
     );
-  }
-
-  resolveTrend(approved, notRelevant) {
-    if (approved === notRelevant) {
-      return "neutral";
-    }
-
-    if (approved > notRelevant) {
-      return "positive";
-    }
-
-    return "negative";
-  }
-
-  calculatePercentages(approved, notRelevant) {
-    const total = approved + notRelevant;
-    if (total === 0) {
-      return {
-        approvalRate: 0,
-        rejectionRate: 0,
-      };
-    }
-
-    const approvalRate = Number(((approved / total) * 100).toFixed(2));
-    const rejectionRate = Number(((notRelevant / total) * 100).toFixed(2));
-
-    return {
-      approvalRate,
-      rejectionRate,
-    };
   }
 
   async syncAdminUsers() {
@@ -185,23 +163,24 @@ class AdminService {
 
       return {
         postId,
-        trend: this.resolveTrend(summary.approved, summary.notRelevant),
+        trend: resolveTrend(summary.approved, summary.notRelevant),
+        ...buildPostModerationMetrics(summary.approved, summary.notRelevant),
       };
     });
     await this.adminRepository.updatePostTrends(trendUpdates);
 
-    const authorSummaryMap = await this.adminRepository.summarizeAuthorDecisions();
+    const authorSummaryMap = await this.adminRepository.summarizeAuthorPostMetrics();
     const metricUpdates = userIds.map((userId) => {
-      const summary = authorSummaryMap.get(String(userId)) ?? {
-        approved: 0,
-        notRelevant: 0,
-      };
-      const metrics = this.calculatePercentages(summary.approved, summary.notRelevant);
+      const summary = authorSummaryMap.get(String(userId)) ?? null;
+      const metrics = buildPrivateMetricsFromAuthorSummary(summary);
 
       return {
         userId,
         approvalRate: metrics.approvalRate,
         rejectionRate: metrics.rejectionRate,
+        approvedCount: metrics.approvedCount,
+        notRelevantCount: metrics.notRelevantCount,
+        totalReviews: metrics.totalReviews,
       };
     });
     await this.adminRepository.updateUserPrivateMetrics(metricUpdates);

@@ -38,5 +38,5 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 1. Page script only orchestrates flow.
 2. Rendering logic lives in `features` or `components`.
 3. API errors are mapped through `core/http-state.js`.
-4. No public metrics exposure outside allowed profile endpoint.
+4. Public post-level moderation percentages are allowed in feed/post; user aggregate metrics stay private to profile/admin screens.
 5. Direct URL access works without broken dependencies.
