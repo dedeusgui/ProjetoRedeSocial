@@ -13,6 +13,7 @@ import createCommentsModule from "./modules/comments/index.js";
 import createPostsModule from "./modules/posts/index.js";
 import createFeedModule from "./modules/feed/index.js";
 import createModerationModule from "./modules/moderation/index.js";
+import createAdminModule from "./modules/admin/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,9 @@ function createApp() {
   const commentsModule = createCommentsModule();
   const postsModule = createPostsModule({ commentService: commentsModule.service });
   const feedModule = createFeedModule();
+  const adminModule = createAdminModule({
+    adminEmails: env.adminEmails,
+  });
   const moderationModule = createModerationModule({
     postService: postsModule.service,
     userService: usersModule.service,
@@ -35,7 +39,9 @@ function createApp() {
   const authModule = createAuthModule({
     jwtSecret: env.jwtSecret,
     jwtExpiresInSeconds: env.jwtExpiresInSeconds,
+    adminEmails: env.adminEmails,
   });
+  app.locals.adminService = adminModule.service;
 
   app.get("/", (req, res) => {
     sendSuccess(res, {
@@ -49,6 +55,7 @@ function createApp() {
   app.use("/api/v1", postsModule.router);
   app.use("/api/v1", commentsModule.router);
   app.use("/api/v1", feedModule.router);
+  app.use("/api/v1", adminModule.router);
   app.use("/api/v1", moderationModule.router);
 
   app.use((req, res, next) => {
@@ -63,6 +70,7 @@ function createApp() {
 async function startServer() {
   await connectDB();
   const app = createApp();
+  await app.locals.adminService.syncAdminUsers();
 
   const server = app.listen(env.port, () => {
     console.log(`Server is running on port ${env.port}`);

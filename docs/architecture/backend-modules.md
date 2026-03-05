@@ -9,6 +9,7 @@
 | `posts` | `POST /posts`, `GET /posts/:id` | Create post, fetch post details with visible comments, update post trend | `PostRepository`, `CommentService` |
 | `comments` | `GET /posts/:id/comments`, `POST /posts/:id/comments` | Create visible comments and list visible comments by post | `CommentRepository` |
 | `feed` | `GET /feed` | Return chronological published posts with cursor pagination | `FeedRepository` |
+| `admin` | `GET /admin/moderator-eligibility`, `PATCH /admin/users/:id/moderator` | Sync bootstrap admins from environment and manage moderator eligibility/promotion | `AdminRepository`, `roles` middleware |
 | `moderation` | `POST /posts/:id/review` | Upsert review, recompute trend, recompute author private metrics | `ModerationRepository`, `PostService`, `UserService` |
 
 ## Composition Flow
@@ -19,8 +20,9 @@ Module construction is centralized in `src/server.js`:
 2. Create comments module.
 3. Create posts module with comments service.
 4. Create feed module.
-5. Create moderation module with posts + users services.
-6. Create auth module with JWT config.
+5. Create admin module with admin-email bootstrap config.
+6. Create moderation module with posts + users services.
+7. Create auth module with JWT config + admin-email bootstrap config.
 
 ## Shared Infrastructure
 
@@ -34,6 +36,8 @@ Module construction is centralized in `src/server.js`:
 
 - `feed`: strictly chronological ordering and cursor pagination.
 - `posts`: hidden posts are not returned by detail endpoint.
+- `admin`: `admin` role is bootstrap-managed through `ADMIN_EMAILS`; API can only grant/revoke `moderator`.
+- `admin`: moderator eligibility requires minimum posts, minimum account age, and minimum approval rate.
 - `moderation`: post author cannot review own post.
 - `moderation`: trend is derived from validation score `approvalRate - rejectionRate`:
   - `neutral` only when approval and rejection are exactly tied (50/50)

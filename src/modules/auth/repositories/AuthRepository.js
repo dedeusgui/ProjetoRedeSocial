@@ -12,6 +12,14 @@ class AuthRepository {
   async createUser(payload) {
     return User.create(payload);
   }
+
+  async updateRoleById(userId, role) {
+    return User.findByIdAndUpdate(
+      userId,
+      { $set: { role } },
+      { returnDocument: "after" },
+    );
+  }
 }
 
 export default AuthRepository;

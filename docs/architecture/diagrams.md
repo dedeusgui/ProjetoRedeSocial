@@ -10,16 +10,42 @@ flowchart TD
   API --> Posts[Posts Module]
   API --> Comments[Comments Module]
   API --> Feed[Feed Module]
+  API --> Admin[Admin Module]
   API --> Moderation[Moderation Module]
   Auth --> Mongo[(MongoDB)]
   Users --> Mongo
   Posts --> Mongo
   Comments --> Mongo
   Feed --> Mongo
+  Admin --> Mongo
   Moderation --> Mongo
   Moderation --> Posts
   Moderation --> Users
   Posts --> Comments
+```
+
+## Sequence: Admin Manages Moderators
+
+```mermaid
+sequenceDiagram
+  participant A as Admin
+  participant AC as AdminController
+  participant AS as AdminService
+  participant AR as AdminRepository
+  A->>AC: GET /api/v1/admin/moderator-eligibility
+  AC->>AS: listModeratorEligibility()
+  AS->>AR: findEligibleModeratorCandidates(...)
+  AS->>AR: listModerators()
+  AS->>AR: countPostsByAuthorIds(...)
+  AS-->>AC: requirements + eligibleUsers + moderators
+  AC-->>A: 200 { ok: true, data }
+
+  A->>AC: PATCH /api/v1/admin/users/:id/moderator { action }
+  AC->>AS: updateModeratorRole(userId, action)
+  AS->>AR: findById(userId)
+  AS->>AR: updateRoleById(...)
+  AS-->>AC: updated managed user
+  AC-->>A: 200 { ok: true, data }
 ```
 
 ## Sequence: Register/Login

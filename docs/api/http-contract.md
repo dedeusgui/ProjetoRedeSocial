@@ -65,6 +65,9 @@ From `src/common/validation/index.js`:
   - decodes JWT and assigns `req.user = { id, role, username }`
 - `src/middleware/roles.js`
   - checks `req.user.role` against allowed roles
+- admin bootstrap
+  - environment variable `ADMIN_EMAILS` (comma-separated emails) promotes matching users to `admin`
+  - admin role assignment is config-managed; API role-management only grants/revokes `moderator`
 
 ## Contract Drift Policy
 

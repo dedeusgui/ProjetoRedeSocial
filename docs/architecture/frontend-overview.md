@@ -34,7 +34,7 @@ Reference guide:
 - `feed.html`: chronological feed with post tendency labels.
 - `post.html`: post detail with comments and tendency labels.
 - `profile.html`: authenticated profile with consolidated private validation score and tendency.
-- `admin/reviews.html`: moderation review flow.
+- `admin/reviews.html`: moderation review flow + admin-only moderator management panel.
 
 ## Navigation Pattern
 

@@ -103,6 +103,32 @@ Example request:
 - Side effects:
   - creates comment with `status: "visible"`
 
+## Admin
+
+### `GET /api/v1/admin/moderator-eligibility`
+
+- Auth: required (`admin`)
+- Success: `200`
+- Returns:
+  - `requirements`:
+    - `minPosts`
+    - `minAccountAgeDays`
+    - `minApprovalRate`
+  - `eligibleUsers[]` (users eligible for moderator promotion)
+  - `moderators[]` (current moderators)
+
+### `PATCH /api/v1/admin/users/:id/moderator`
+
+- Auth: required (`admin`)
+- Path params:
+  - `id` must be a valid ObjectId
+- Body:
+  - `action` (required): `grant | revoke`
+- Success: `200`
+- Rules:
+  - `grant` requires user to satisfy eligibility requirements
+  - `admin` role cannot be assigned or removed by this endpoint
+
 ## Moderation
 
 ### `POST /api/v1/posts/:id/review`

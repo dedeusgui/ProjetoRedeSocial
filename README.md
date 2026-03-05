@@ -49,6 +49,7 @@ Módulos ativos:
 - `posts`
 - `comments`
 - `feed`
+- `admin`
 - `moderation`
 
 ## Stack técnica
@@ -84,6 +85,7 @@ src/
     posts/
     comments/
     feed/
+    admin/
     moderation/
   public/
     css/
@@ -128,6 +130,12 @@ src/
 - cálculo de tendência do post
 - recálculo de métricas privadas do autor
 
+### Admin
+
+- bootstrap de administradores via configuração (`ADMIN_EMAILS`)
+- listagem de usuários elegíveis para moderação
+- concessão e remoção de papel `moderator`
+
 ## Regras de negócio principais
 
 - feed público em ordem cronológica decrescente
@@ -135,6 +143,7 @@ src/
 - público vê apenas `trend` (`positive`, `neutral`, `negative`)
 - autor não pode revisar o próprio post
 - métricas privadas são retornadas somente em `/me/profile`
+- papel `admin` é controlado por configuração do projeto
 
 ## Contrato de resposta da API
 
@@ -170,6 +179,8 @@ Erro:
 | `GET` | `/posts/:id` | Não | - | Detalhe do post + comentários |
 | `GET` | `/posts/:id/comments` | Não | - | Lista comentários visíveis |
 | `POST` | `/posts/:id/comments` | Sim | `user+` | Cria comentário |
+| `GET` | `/admin/moderator-eligibility` | Sim | `admin` | Lista elegíveis e moderadores |
+| `PATCH` | `/admin/users/:id/moderator` | Sim | `admin` | Concede/remove `moderator` |
 | `POST` | `/posts/:id/review` | Sim | `moderator/admin` | Registra review |
 | `GET` | `/me/profile` | Sim | `user+` | Perfil autenticado + métricas privadas |
 
@@ -275,6 +286,7 @@ Arquivo: variáveis lidas em `src/config/env.js`.
 - `MONGO_URI` (padrão: `mongodb://localhost:27017/thesocial`)
 - `JWT_SECRET` (padrão de desenvolvimento: `change-me-in-production`)
 - `JWT_EXPIRES_IN_SECONDS` (padrão: `43200`)
+- `ADMIN_EMAILS` (opcional: emails separados por vírgula que recebem papel `admin`)
 
 ## Como executar localmente
 

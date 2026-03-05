@@ -414,6 +414,23 @@ select:focus-visible {
   margin: 0;
 }
 
+.admin-panel,
+.admin-panel-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-user-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.managed-user-card {
+  margin: 0;
+  padding: var(--space-3);
+}
+
 @media (max-width: 860px) {
   .app-header {
     flex-direction: column;

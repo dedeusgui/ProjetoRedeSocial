@@ -4,7 +4,7 @@ import AuthService from "./services/AuthService.js";
 import AuthController from "./controllers/AuthController.js";
 import { signJWT } from "../../common/security/jwt.js";
 
-function createAuthModule({ jwtSecret, jwtExpiresInSeconds }) {
+function createAuthModule({ jwtSecret, jwtExpiresInSeconds, adminEmails = [] }) {
   const authRepository = new AuthRepository();
   const tokenService = (payload, expiresInSeconds) =>
     signJWT(payload, jwtSecret, expiresInSeconds);
@@ -13,6 +13,7 @@ function createAuthModule({ jwtSecret, jwtExpiresInSeconds }) {
     authRepository,
     tokenService,
     jwtExpiresInSeconds,
+    adminEmails,
   );
   const authController = new AuthController(authService);
   const router = createAuthRoutes(authController);

@@ -31,6 +31,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `initNavbar()` for auth-aware nav state and logout binding.
 - Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
+- For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
 
 ## Review checklist for new pages
 1. Page script only orchestrates flow.

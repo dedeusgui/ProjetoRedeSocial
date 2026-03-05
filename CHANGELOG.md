@@ -2,6 +2,26 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-05
+
+### Added
+
+- Added `admin` backend module with layered structure (`routes/controllers/services/repositories`).
+- Added admin endpoints:
+  - `GET /api/v1/admin/moderator-eligibility`
+  - `PATCH /api/v1/admin/users/:id/moderator`
+- Added moderator-governance logic:
+  - balanced eligibility requirements (`minPosts=5`, `minAccountAgeDays=14`, `minApprovalRate=70`)
+  - admin-only grant/revoke flow for `moderator`
+- Added environment-driven admin bootstrap via `ADMIN_EMAILS`.
+- Added admin management UI inside `src/public/pages/admin/reviews.html` to list eligible users and active moderators with grant/revoke actions.
+
+### Changed
+
+- Enforced role authorization on moderation endpoint (`POST /api/v1/posts/:id/review`) using `roles("moderator", "admin")`.
+- Updated auth service to ensure users whose email is in `ADMIN_EMAILS` receive role `admin` on register/login.
+- Updated docs and architecture references to include the new admin module, routes, and role-governance contract.
+
 ## 2026-03-04
 
 ### Added

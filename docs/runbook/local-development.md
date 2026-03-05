@@ -13,6 +13,7 @@ Loaded in `src/config/env.js`:
 - `MONGO_URI` (default: `mongodb://localhost:27017/thesocial`)
 - `JWT_SECRET` (default development value exists; override for non-local use)
 - `JWT_EXPIRES_IN_SECONDS` (default: `43200`)
+- `ADMIN_EMAILS` (optional, comma-separated; matching users are promoted to `admin`)
 
 ## Install
 
@@ -45,6 +46,7 @@ Notes:
 3. Feed returns `items` and `pageInfo`.
 4. Auth-protected endpoint `/api/v1/me/profile` rejects missing token and accepts valid token.
 5. Moderation endpoint enforces role restrictions.
+6. Admin endpoints reject non-admin users and return eligibility data for admins.
 
 ## Common Issues
 

@@ -1,12 +1,18 @@
 import AppError from "../../../common/errors/AppError.js";
+import { buildAdminEmailSet, isAdminEmail } from "../../../common/security/adminAccess.js";
 import { requireFields } from "../../../common/validation/index.js";
 import { hashPassword, verifyPassword } from "../../../common/security/password.js";
 
 class AuthService {
-  constructor(authRepository, tokenService, tokenTtlSeconds) {
+  constructor(authRepository, tokenService, tokenTtlSeconds, adminEmails = []) {
     this.authRepository = authRepository;
     this.tokenService = tokenService;
     this.tokenTtlSeconds = tokenTtlSeconds;
+    this.adminEmailSet = buildAdminEmailSet(adminEmails);
+  }
+
+  shouldPromoteToAdmin(email) {
+    return isAdminEmail(email, this.adminEmailSet);
   }
 
   async register(payload) {
@@ -32,7 +38,7 @@ class AuthService {
       username,
       email,
       passwordHash: hashPassword(payload.password),
-      role: "user",
+      role: this.shouldPromoteToAdmin(email) ? "admin" : "user",
     });
 
     const token = this.tokenService(
@@ -59,10 +65,14 @@ class AuthService {
     requireFields(payload, ["email", "password"]);
 
     const email = payload.email.trim().toLowerCase();
-    const user = await this.authRepository.findByEmail(email);
+    let user = await this.authRepository.findByEmail(email);
 
     if (!user || !verifyPassword(payload.password, user.passwordHash)) {
       throw new AppError("Invalid email or password", "INVALID_CREDENTIALS", 401);
+    }
+
+    if (user.role !== "admin" && this.shouldPromoteToAdmin(email)) {
+      user = await this.authRepository.updateRoleById(user.id, "admin");
     }
 
     const token = this.tokenService(

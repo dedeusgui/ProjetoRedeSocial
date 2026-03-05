@@ -103,6 +103,9 @@ export const api = {
   post(path, body, options = {}) {
     return request("POST", path, { ...options, body });
   },
+  patch(path, body, options = {}) {
+    return request("PATCH", path, { ...options, body });
+  },
   auth: {
     register(payload) {
       return request("POST", "/auth/register", { body: payload });
@@ -139,6 +142,16 @@ export const api = {
           decision,
           reason,
         },
+      });
+    },
+  },
+  admin: {
+    listModeratorEligibility() {
+      return request("GET", "/admin/moderator-eligibility");
+    },
+    setModeratorRole(userId, action) {
+      return request("PATCH", `/admin/users/${userId}/moderator`, {
+        body: { action },
       });
     },
   },

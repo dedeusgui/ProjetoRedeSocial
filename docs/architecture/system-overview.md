@@ -35,6 +35,7 @@ Active modules:
 - `posts`
 - `comments`
 - `feed`
+- `admin`
 - `moderation`
 
 ## Request Lifecycle
