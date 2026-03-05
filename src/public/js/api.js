@@ -106,6 +106,9 @@ export const api = {
   patch(path, body, options = {}) {
     return request("PATCH", path, { ...options, body });
   },
+  delete(path, options = {}) {
+    return request("DELETE", path, options);
+  },
   auth: {
     register(payload) {
       return request("POST", "/auth/register", { body: payload });
@@ -144,8 +147,19 @@ export const api = {
         },
       });
     },
+    delete(postId) {
+      return request("DELETE", `/posts/${postId}`);
+    },
+  },
+  comments: {
+    delete(commentId) {
+      return request("DELETE", `/comments/${commentId}`);
+    },
   },
   admin: {
+    listUsers() {
+      return request("GET", "/admin/users");
+    },
     listModeratorEligibility() {
       return request("GET", "/admin/moderator-eligibility");
     },
@@ -153,6 +167,9 @@ export const api = {
       return request("PATCH", `/admin/users/${userId}/moderator`, {
         body: { action },
       });
+    },
+    deleteUser(userId) {
+      return request("DELETE", `/admin/users/${userId}`);
     },
   },
 };

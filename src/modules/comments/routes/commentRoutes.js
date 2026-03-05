@@ -1,5 +1,6 @@
 import { Router } from "express";
 import auth from "../../../middleware/auth.js";
+import roles from "../../../middleware/roles.js";
 import asyncHandler from "../../../common/http/asyncHandler.js";
 
 function createCommentRoutes(controller) {
@@ -7,6 +8,7 @@ function createCommentRoutes(controller) {
 
   router.get("/posts/:id/comments", asyncHandler(controller.getCommentsByPost));
   router.post("/posts/:id/comments", auth, asyncHandler(controller.createComment));
+  router.delete("/comments/:id", auth, roles("admin"), asyncHandler(controller.deleteCommentByAdmin));
 
   return router;
 }

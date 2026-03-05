@@ -47,6 +47,8 @@ Notes:
 4. Auth-protected endpoint `/api/v1/me/profile` rejects missing token and accepts valid token.
 5. Moderation endpoint enforces role restrictions.
 6. Admin endpoints reject non-admin users and return eligibility data for admins.
+7. Admin can list users and delete posts/comments through admin-only routes.
+8. Admin user deletion endpoint recalculates trends/private metrics after removal.
 
 ## Common Issues
 

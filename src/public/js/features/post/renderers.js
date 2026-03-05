@@ -12,7 +12,11 @@ function renderTags(tags) {
   `;
 }
 
-export function renderPostView(target, post) {
+export function renderPostView(
+  target,
+  post,
+  { canDeletePost = false, canDeleteComments = false } = {},
+) {
   if (!target) {
     return;
   }
@@ -32,6 +36,7 @@ export function renderPostView(target, post) {
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
       ${renderTags(tags)}
+      ${canDeletePost ? `<div class="review-actions"><button type="button" class="button-reject" data-delete-post-id="${escapeHtml(post.id ?? "")}">Excluir post</button></div>` : ""}
     </article>
     <section class="card">
       <h3 class="ink-underline">Coment&aacute;rios</h3>
@@ -55,7 +60,7 @@ export function renderPostView(target, post) {
   commentsList.innerHTML = comments
     .map(
       (comment) =>
-        `<article class="comment-item"><p><strong>@${escapeHtml(comment.author?.username ?? "desconhecido")}</strong> <span class="muted">${escapeHtml(formatDateTime(comment.createdAt))}</span></p><p>${escapeHtml(comment.content)}</p></article>`,
+        `<article class="comment-item"><p><strong>@${escapeHtml(comment.author?.username ?? "desconhecido")}</strong> <span class="muted">${escapeHtml(formatDateTime(comment.createdAt))}</span></p><p>${escapeHtml(comment.content)}</p>${canDeleteComments ? `<button type="button" class="button-reject button-link-inline" data-delete-comment-id="${escapeHtml(comment.id)}">Excluir coment&aacute;rio</button>` : ""}</article>`,
     )
     .join("");
 }

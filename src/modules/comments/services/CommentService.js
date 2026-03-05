@@ -1,3 +1,4 @@
+import AppError from "../../../common/errors/AppError.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
 class CommentService {
@@ -41,6 +42,21 @@ class CommentService {
       content: comment.content,
       createdAt: comment.createdAt,
     }));
+  }
+
+  async deleteCommentByAdmin(commentId) {
+    ensureObjectId(commentId, "commentId");
+
+    const deleted = await this.commentRepository.deleteById(commentId);
+    if (!deleted) {
+      throw new AppError("Comment not found", "NOT_FOUND", 404);
+    }
+
+    return {
+      id: deleted.id,
+      postId: deleted.postId,
+      deletedAt: new Date().toISOString(),
+    };
   }
 }
 

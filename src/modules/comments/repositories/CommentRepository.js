@@ -10,6 +10,10 @@ class CommentRepository {
       .sort({ createdAt: 1, _id: 1 })
       .populate("authorId", "username");
   }
+
+  async deleteById(commentId) {
+    return Comment.findByIdAndDelete(commentId);
+  }
 }
 
 export default CommentRepository;

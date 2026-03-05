@@ -5,6 +5,7 @@ class CommentController {
     this.commentService = commentService;
     this.createComment = this.createComment.bind(this);
     this.getCommentsByPost = this.getCommentsByPost.bind(this);
+    this.deleteCommentByAdmin = this.deleteCommentByAdmin.bind(this);
   }
 
   async createComment(req, res) {
@@ -20,6 +21,11 @@ class CommentController {
   async getCommentsByPost(req, res) {
     const comments = await this.commentService.listVisibleByPostId(req.params.id);
     return sendSuccess(res, comments);
+  }
+
+  async deleteCommentByAdmin(req, res) {
+    const result = await this.commentService.deleteCommentByAdmin(req.params.id);
+    return sendSuccess(res, result);
   }
 }
 

@@ -8,13 +8,21 @@ All notable changes to this project should be documented in this file.
 
 - Added `admin` backend module with layered structure (`routes/controllers/services/repositories`).
 - Added admin endpoints:
+  - `GET /api/v1/admin/users`
   - `GET /api/v1/admin/moderator-eligibility`
   - `PATCH /api/v1/admin/users/:id/moderator`
+  - `DELETE /api/v1/admin/users/:id`
+- Added admin-only deletion endpoints:
+  - `DELETE /api/v1/posts/:id`
+  - `DELETE /api/v1/comments/:id`
 - Added moderator-governance logic:
   - balanced eligibility requirements (`minPosts=5`, `minAccountAgeDays=14`, `minApprovalRate=70`)
   - admin-only grant/revoke flow for `moderator`
 - Added environment-driven admin bootstrap via `ADMIN_EMAILS`.
 - Added admin management UI inside `src/public/pages/admin/reviews.html` to list eligible users and active moderators with grant/revoke actions.
+- Added admin tools panel in `profile.html` to list users and their current roles for testing.
+- Added admin delete action in profile admin tools for removing non-admin users.
+- Added admin delete controls in feed and post pages for posts/comments.
 
 ### Changed
 

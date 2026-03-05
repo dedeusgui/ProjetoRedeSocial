@@ -82,6 +82,21 @@ class PostService {
 
     return updated;
   }
+
+  async deletePostByAdmin(postId) {
+    ensureObjectId(postId, "postId");
+    const deleted = await this.postRepository.deleteWithRelations(postId);
+
+    if (!deleted) {
+      throw new AppError("Post not found", "NOT_FOUND", 404);
+    }
+
+    return {
+      id: deleted.id,
+      title: deleted.title,
+      deletedAt: new Date().toISOString(),
+    };
+  }
 }
 
 export default PostService;

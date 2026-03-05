@@ -41,6 +41,36 @@ class AdminService {
     );
   }
 
+  resolveTrend(approved, notRelevant) {
+    if (approved === notRelevant) {
+      return "neutral";
+    }
+
+    if (approved > notRelevant) {
+      return "positive";
+    }
+
+    return "negative";
+  }
+
+  calculatePercentages(approved, notRelevant) {
+    const total = approved + notRelevant;
+    if (total === 0) {
+      return {
+        approvalRate: 0,
+        rejectionRate: 0,
+      };
+    }
+
+    const approvalRate = Number(((approved / total) * 100).toFixed(2));
+    const rejectionRate = Number(((notRelevant / total) * 100).toFixed(2));
+
+    return {
+      approvalRate,
+      rejectionRate,
+    };
+  }
+
   async syncAdminUsers() {
     const adminEmails = Array.from(this.adminEmailSet);
     return this.adminRepository.syncAdminRolesByEmails(adminEmails);
@@ -88,6 +118,18 @@ class AdminService {
     };
   }
 
+  async listUsersWithRoles() {
+    const users = await this.adminRepository.listUsersWithRoles();
+    const userIds = users.map((user) => user._id);
+    const postCountMap = await this.adminRepository.countPostsByAuthorIds(userIds);
+
+    return users.map((user) =>
+      this.formatManagedUser(
+        user,
+        postCountMap.get(String(user._id)) ?? 0,
+      ));
+  }
+
   async updateModeratorRole({ userId, action }) {
     ensureObjectId(userId, "id");
     requireFields({ action }, ["action"]);
@@ -126,6 +168,79 @@ class AdminService {
 
     const updated = await this.adminRepository.updateRoleById(userId, "user");
     return this.formatManagedUser(updated);
+  }
+
+  async recalculateDerivedStats() {
+    const [postIds, userIds] = await Promise.all([
+      this.adminRepository.listAllPostIds(),
+      this.adminRepository.listAllUserIds(),
+    ]);
+
+    const postSummaryMap = await this.adminRepository.summarizePostDecisions(postIds);
+    const trendUpdates = postIds.map((postId) => {
+      const summary = postSummaryMap.get(String(postId)) ?? {
+        approved: 0,
+        notRelevant: 0,
+      };
+
+      return {
+        postId,
+        trend: this.resolveTrend(summary.approved, summary.notRelevant),
+      };
+    });
+    await this.adminRepository.updatePostTrends(trendUpdates);
+
+    const authorSummaryMap = await this.adminRepository.summarizeAuthorDecisions();
+    const metricUpdates = userIds.map((userId) => {
+      const summary = authorSummaryMap.get(String(userId)) ?? {
+        approved: 0,
+        notRelevant: 0,
+      };
+      const metrics = this.calculatePercentages(summary.approved, summary.notRelevant);
+
+      return {
+        userId,
+        approvalRate: metrics.approvalRate,
+        rejectionRate: metrics.rejectionRate,
+      };
+    });
+    await this.adminRepository.updateUserPrivateMetrics(metricUpdates);
+  }
+
+  async deleteUserByAdmin({ userId, requesterId }) {
+    ensureObjectId(userId, "id");
+    ensureObjectId(requesterId, "requesterId");
+
+    if (String(userId) === String(requesterId)) {
+      throw new AppError("Admin cannot delete own account", "FORBIDDEN", 403);
+    }
+
+    const user = await this.adminRepository.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", "NOT_FOUND", 404);
+    }
+
+    if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
+      throw new AppError("Admin role is managed by project configuration", "FORBIDDEN", 403);
+    }
+
+    const postIds = await this.adminRepository.findPostIdsByAuthorId(userId);
+    await Promise.all([
+      this.adminRepository.deleteCommentsByAuthorId(userId),
+      this.adminRepository.deleteReviewsByReviewerId(userId),
+      this.adminRepository.deletePostRelationsByPostIds(postIds),
+      this.adminRepository.deleteUserById(userId),
+    ]);
+
+    await this.recalculateDerivedStats();
+
+    return {
+      id: String(user._id),
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      deletedAt: new Date().toISOString(),
+    };
   }
 }
 

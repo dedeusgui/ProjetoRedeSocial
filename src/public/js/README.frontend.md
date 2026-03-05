@@ -9,6 +9,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `components/`: reusable UI behaviors used across pages
 - `features/<domain>/renderers.js`: domain-specific rendering
 - `pages/`: page bootstrap + event binding + orchestration
+- `features/admin/renderers.js`: admin-oriented renderers (user/role list for testing)
 
 ## Responsibilities
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.

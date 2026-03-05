@@ -70,6 +70,16 @@ Example request:
 - Side effects:
   - creates post with `status: "published"` and `trend: "neutral"`
 
+### `DELETE /api/v1/posts/:id`
+
+- Auth: required (`admin`)
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Side effects:
+  - permanently deletes the post
+  - permanently deletes related comments and reviews
+
 ### `GET /api/v1/posts/:id`
 
 - Auth: none
@@ -103,7 +113,31 @@ Example request:
 - Side effects:
   - creates comment with `status: "visible"`
 
+### `DELETE /api/v1/comments/:id`
+
+- Auth: required (`admin`)
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Side effects:
+  - permanently deletes the comment
+
 ## Admin
+
+### `GET /api/v1/admin/users`
+
+- Auth: required (`admin`)
+- Success: `200`
+- Returns:
+  - list of users with:
+    - `id`
+    - `username`
+    - `email`
+    - `role`
+    - `approvalRate`
+    - `rejectionRate`
+    - `postCount`
+    - `createdAt`
 
 ### `GET /api/v1/admin/moderator-eligibility`
 
@@ -128,6 +162,20 @@ Example request:
 - Rules:
   - `grant` requires user to satisfy eligibility requirements
   - `admin` role cannot be assigned or removed by this endpoint
+
+### `DELETE /api/v1/admin/users/:id`
+
+- Auth: required (`admin`)
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Rules:
+  - admins cannot delete their own account
+  - config-managed admins cannot be deleted
+- Side effects:
+  - deletes user-authored posts, comments, and reviews
+  - deletes user-authored comments and reviews on other posts
+  - recomputes post trends and private metrics for remaining data
 
 ## Moderation
 

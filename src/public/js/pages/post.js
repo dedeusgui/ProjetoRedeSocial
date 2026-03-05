@@ -9,7 +9,10 @@ import { renderPostView } from "../features/post/renderers.js";
 
 const state = {
   postId: null,
+  viewerRole: null,
   isReviewSubmitting: false,
+  isDeletingPost: false,
+  isDeletingComment: false,
 };
 
 const elements = {
@@ -42,6 +45,14 @@ function resolveMessage(error) {
     error,
     "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para comentar.",
     "Erro inesperado ao comunicar com a API.",
+  );
+}
+
+function resolveDeleteMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Autentica\u00e7\u00e3o necess\u00e1ria para excluir conte\u00fado.",
+    "Falha ao excluir conte\u00fado.",
   );
 }
 
@@ -138,13 +149,30 @@ async function loadPost() {
 
   try {
     const post = await api.posts.getById(postId);
-    renderPostView(elements.view, post);
+    renderPostView(elements.view, post, {
+      canDeletePost: state.viewerRole === "admin",
+      canDeleteComments: state.viewerRole === "admin",
+    });
     refreshReviewPanel();
     statusFlash.show("Post carregado.", "success");
   } catch (error) {
     renderMissingPostState("Este post n\u00e3o pode ser exibido no momento.");
     refreshReviewPanel();
     statusFlash.show(resolveMessage(error), "error");
+  }
+}
+
+async function syncViewerRole() {
+  if (!hasSession()) {
+    state.viewerRole = null;
+    return;
+  }
+
+  try {
+    const profile = await api.users.meProfile();
+    state.viewerRole = profile.role ?? null;
+  } catch {
+    state.viewerRole = null;
   }
 }
 
@@ -209,6 +237,51 @@ async function handleReview(decision) {
   }
 }
 
+async function handleDeletePost() {
+  if (!state.postId || state.isDeletingPost) {
+    return;
+  }
+
+  if (!hasSession() || state.viewerRole !== "admin") {
+    statusFlash.show("Apenas administradores podem excluir posts.", "error");
+    return;
+  }
+
+  state.isDeletingPost = true;
+  statusFlash.show("Excluindo post...", "info");
+  try {
+    await api.posts.delete(state.postId);
+    window.location.href = "./feed.html";
+  } catch (error) {
+    statusFlash.show(resolveDeleteMessage(error), "error");
+  } finally {
+    state.isDeletingPost = false;
+  }
+}
+
+async function handleDeleteComment(commentId) {
+  if (!commentId || state.isDeletingComment) {
+    return;
+  }
+
+  if (!hasSession() || state.viewerRole !== "admin") {
+    statusFlash.show("Apenas administradores podem excluir coment\u00e1rios.", "error");
+    return;
+  }
+
+  state.isDeletingComment = true;
+  statusFlash.show("Excluindo coment\u00e1rio...", "info");
+  try {
+    await api.comments.delete(commentId);
+    await loadPost();
+    statusFlash.show("Coment\u00e1rio exclu\u00eddo.", "success");
+  } catch (error) {
+    statusFlash.show(resolveDeleteMessage(error), "error");
+  } finally {
+    state.isDeletingComment = false;
+  }
+}
+
 function bindEvents() {
   if (elements.commentForm) {
     elements.commentForm.addEventListener("submit", handleCommentSubmit);
@@ -225,12 +298,35 @@ function bindEvents() {
       handleReview("not_relevant");
     });
   }
+
+  if (elements.view) {
+    elements.view.addEventListener("click", (event) => {
+      const deletePostButton = event.target.closest("[data-delete-post-id]");
+      if (deletePostButton && elements.view.contains(deletePostButton)) {
+        handleDeletePost();
+        return;
+      }
+
+      const deleteCommentButton = event.target.closest("[data-delete-comment-id]");
+      if (!deleteCommentButton || !elements.view.contains(deleteCommentButton)) {
+        return;
+      }
+
+      const commentId = String(deleteCommentButton.dataset.deleteCommentId ?? "").trim();
+      if (!commentId) {
+        return;
+      }
+
+      handleDeleteComment(commentId);
+    });
+  }
 }
 
 async function init() {
   bindNavigation();
   renderSessionState();
   bindEvents();
+  await syncViewerRole();
   await loadPost();
 }
 

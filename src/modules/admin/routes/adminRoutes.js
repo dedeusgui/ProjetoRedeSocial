@@ -7,6 +7,13 @@ function createAdminRoutes(controller) {
   const router = Router();
 
   router.get(
+    "/admin/users",
+    auth,
+    roles("admin"),
+    asyncHandler(controller.getUsersWithRoles),
+  );
+
+  router.get(
     "/admin/moderator-eligibility",
     auth,
     roles("admin"),
@@ -18,6 +25,13 @@ function createAdminRoutes(controller) {
     auth,
     roles("admin"),
     asyncHandler(controller.updateModeratorRole),
+  );
+
+  router.delete(
+    "/admin/users/:id",
+    auth,
+    roles("admin"),
+    asyncHandler(controller.deleteUserByAdmin),
   );
 
   return router;

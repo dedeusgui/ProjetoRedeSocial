@@ -1,4 +1,6 @@
 import Post from "../../../models/post.js";
+import Comment from "../../../models/comment.js";
+import PostReview from "../../../models/post_review.js";
 
 class PostRepository {
   async create(payload) {
@@ -28,6 +30,20 @@ class PostRepository {
 
   async listByAuthorId(authorId) {
     return Post.find({ authorId }).select("_id");
+  }
+
+  async deleteWithRelations(postId) {
+    const deletedPost = await Post.findByIdAndDelete(postId);
+    if (!deletedPost) {
+      return null;
+    }
+
+    await Promise.all([
+      Comment.deleteMany({ postId }),
+      PostReview.deleteMany({ postId }),
+    ]);
+
+    return deletedPost;
   }
 }
 

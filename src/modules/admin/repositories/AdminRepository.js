@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Post from "../../../models/post.js";
 import User from "../../../models/user.js";
+import Comment from "../../../models/comment.js";
+import PostReview from "../../../models/post_review.js";
 
 class AdminRepository {
   async syncAdminRolesByEmails(adminEmails) {
@@ -73,6 +75,13 @@ class AdminRepository {
       .lean();
   }
 
+  async listUsersWithRoles() {
+    return User.find({})
+      .select("username email role privateMetrics createdAt updatedAt")
+      .sort({ createdAt: -1, username: 1 })
+      .lean();
+  }
+
   async findById(userId) {
     return User.findById(userId)
       .select("username email role privateMetrics createdAt")
@@ -87,6 +96,162 @@ class AdminRepository {
     )
       .select("username email role privateMetrics createdAt")
       .lean();
+  }
+
+  async deleteUserById(userId) {
+    return User.findByIdAndDelete(userId)
+      .select("username email role")
+      .lean();
+  }
+
+  async findPostIdsByAuthorId(authorId) {
+    const posts = await Post.find({ authorId }).select("_id").lean();
+    return posts.map((post) => post._id);
+  }
+
+  async deleteCommentsByAuthorId(authorId) {
+    return Comment.deleteMany({ authorId });
+  }
+
+  async deleteReviewsByReviewerId(reviewerId) {
+    return PostReview.deleteMany({ reviewerId });
+  }
+
+  async deletePostRelationsByPostIds(postIds) {
+    if (!postIds.length) {
+      return;
+    }
+
+    await Promise.all([
+      Comment.deleteMany({ postId: { $in: postIds } }),
+      PostReview.deleteMany({ postId: { $in: postIds } }),
+      Post.deleteMany({ _id: { $in: postIds } }),
+    ]);
+  }
+
+  async listAllPostIds() {
+    const posts = await Post.find({}).select("_id").lean();
+    return posts.map((post) => post._id);
+  }
+
+  async summarizePostDecisions(postIds) {
+    if (!postIds.length) {
+      return new Map();
+    }
+
+    const summary = await PostReview.aggregate([
+      {
+        $match: {
+          postId: { $in: postIds },
+        },
+      },
+      {
+        $group: {
+          _id: "$postId",
+          approved: {
+            $sum: {
+              $cond: [{ $eq: ["$decision", "approved"] }, 1, 0],
+            },
+          },
+          notRelevant: {
+            $sum: {
+              $cond: [{ $eq: ["$decision", "not_relevant"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    return new Map(
+      summary.map((entry) => [
+        String(entry._id),
+        {
+          approved: entry.approved,
+          notRelevant: entry.notRelevant,
+        },
+      ]),
+    );
+  }
+
+  async updatePostTrends(trendUpdates) {
+    if (!trendUpdates.length) {
+      return;
+    }
+
+    await Post.bulkWrite(
+      trendUpdates.map((entry) => ({
+        updateOne: {
+          filter: { _id: new mongoose.Types.ObjectId(String(entry.postId)) },
+          update: { $set: { trend: entry.trend } },
+        },
+      })),
+    );
+  }
+
+  async listAllUserIds() {
+    const users = await User.find({}).select("_id").lean();
+    return users.map((user) => user._id);
+  }
+
+  async summarizeAuthorDecisions() {
+    const summary = await PostReview.aggregate([
+      {
+        $lookup: {
+          from: "posts",
+          localField: "postId",
+          foreignField: "_id",
+          as: "post",
+        },
+      },
+      { $unwind: "$post" },
+      {
+        $group: {
+          _id: "$post.authorId",
+          approved: {
+            $sum: {
+              $cond: [{ $eq: ["$decision", "approved"] }, 1, 0],
+            },
+          },
+          notRelevant: {
+            $sum: {
+              $cond: [{ $eq: ["$decision", "not_relevant"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    return new Map(
+      summary.map((entry) => [
+        String(entry._id),
+        {
+          approved: entry.approved,
+          notRelevant: entry.notRelevant,
+        },
+      ]),
+    );
+  }
+
+  async updateUserPrivateMetrics(metricUpdates) {
+    if (!metricUpdates.length) {
+      return;
+    }
+
+    await User.bulkWrite(
+      metricUpdates.map((entry) => ({
+        updateOne: {
+          filter: { _id: new mongoose.Types.ObjectId(String(entry.userId)) },
+          update: {
+            $set: {
+              privateMetrics: {
+                approvalRate: entry.approvalRate,
+                rejectionRate: entry.rejectionRate,
+              },
+            },
+          },
+        },
+      })),
+    );
   }
 }
 

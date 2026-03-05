@@ -23,7 +23,7 @@ function renderTags(tags) {
   `;
 }
 
-export function createPostCard(post) {
+export function createPostCard(post, { canDeletePosts = false } = {}) {
   const article = document.createElement("article");
   article.className = "card post-card";
 
@@ -48,6 +48,7 @@ export function createPostCard(post) {
       <div class="review-actions review-actions-inline">
         <button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>
         <button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>
+        ${canDeletePosts ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Excluir post</button>` : ""}
       </div>
     </div>
   `;
@@ -58,13 +59,13 @@ export function createPostCard(post) {
   return article;
 }
 
-export function renderFeedList(target, items) {
+export function renderFeedList(target, items, options = {}) {
   if (!target) {
     return;
   }
 
   target.innerHTML = "";
   ensureChronologicalOrder(items).forEach((post) => {
-    target.appendChild(createPostCard(post));
+    target.appendChild(createPostCard(post, options));
   });
 }

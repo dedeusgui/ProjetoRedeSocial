@@ -112,11 +112,13 @@ src/
 - criação de post autenticado
 - detalhe de post + comentários visíveis
 - atualização de tendência por contrato interno
+- exclusão administrativa de post com limpeza de comentários/reviews vinculados
 
 ### Comments
 
 - criação de comentários autenticada
 - listagem de comentários visíveis por post
+- exclusão administrativa de comentário
 
 ### Feed
 
@@ -133,8 +135,10 @@ src/
 ### Admin
 
 - bootstrap de administradores via configuração (`ADMIN_EMAILS`)
+- listagem administrativa de usuários e respectivos papéis
 - listagem de usuários elegíveis para moderação
 - concessão e remoção de papel `moderator`
+- exclusão administrativa de usuários para testes (com recálculo de estatísticas derivadas)
 
 ## Regras de negócio principais
 
@@ -179,8 +183,12 @@ Erro:
 | `GET` | `/posts/:id` | Não | - | Detalhe do post + comentários |
 | `GET` | `/posts/:id/comments` | Não | - | Lista comentários visíveis |
 | `POST` | `/posts/:id/comments` | Sim | `user+` | Cria comentário |
+| `DELETE` | `/posts/:id` | Sim | `admin` | Exclui post |
+| `DELETE` | `/comments/:id` | Sim | `admin` | Exclui comentário |
+| `GET` | `/admin/users` | Sim | `admin` | Lista usuários e papéis |
 | `GET` | `/admin/moderator-eligibility` | Sim | `admin` | Lista elegíveis e moderadores |
 | `PATCH` | `/admin/users/:id/moderator` | Sim | `admin` | Concede/remove `moderator` |
+| `DELETE` | `/admin/users/:id` | Sim | `admin` | Exclui usuário e recalcula estatísticas |
 | `POST` | `/posts/:id/review` | Sim | `moderator/admin` | Registra review |
 | `GET` | `/me/profile` | Sim | `user+` | Perfil autenticado + métricas privadas |
 

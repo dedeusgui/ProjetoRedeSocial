@@ -14,9 +14,11 @@ const FEED_NOTICE_KEY = "thesocial_feed_notice";
 const state = {
   items: [],
   nextCursor: null,
+  viewerRole: null,
   isLoading: false,
   isCreating: false,
   isReviewing: false,
+  isDeletingPost: false,
 };
 
 const elements = {
@@ -66,7 +68,9 @@ function renderFeed() {
     return;
   }
 
-  renderFeedList(elements.list, state.items);
+  renderFeedList(elements.list, state.items, {
+    canDeletePosts: state.viewerRole === "admin",
+  });
 
   if (elements.loadMore) {
     elements.loadMore.hidden = !state.nextCursor;
@@ -169,6 +173,20 @@ async function submitCreatePost(event) {
   }
 }
 
+async function syncViewerRole() {
+  if (!hasSession()) {
+    state.viewerRole = null;
+    return;
+  }
+
+  try {
+    const profile = await api.users.meProfile();
+    state.viewerRole = profile.role ?? null;
+  } catch {
+    state.viewerRole = null;
+  }
+}
+
 async function submitFeedReview(postId, decision, actionsContainer) {
   if (state.isReviewing) {
     return;
@@ -204,6 +222,43 @@ async function submitFeedReview(postId, decision, actionsContainer) {
     reviewButtons.forEach((button) => {
       button.disabled = false;
     });
+  }
+}
+
+function resolveDeleteMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Autentica\u00e7\u00e3o necess\u00e1ria para excluir posts.",
+    "Falha ao excluir o post.",
+  );
+}
+
+async function deleteFeedPost(postId) {
+  if (state.isDeletingPost) {
+    return;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Fa\u00e7a login para excluir posts.", "error");
+    window.location.href = "./index.html";
+    return;
+  }
+
+  if (state.viewerRole !== "admin") {
+    statusFlash.show("Apenas administradores podem excluir posts.", "error");
+    return;
+  }
+
+  state.isDeletingPost = true;
+  statusFlash.show("Excluindo post...", "info");
+  try {
+    await api.posts.delete(postId);
+    await loadFeed();
+    statusFlash.show("Post exclu\u00eddo com sucesso.", "success");
+  } catch (error) {
+    statusFlash.show(resolveDeleteMessage(error), "error");
+  } finally {
+    state.isDeletingPost = false;
   }
 }
 
@@ -250,10 +305,24 @@ function bindEvents() {
       const actionsContainer = button.closest(".review-actions");
       submitFeedReview(postId, decision, actionsContainer);
     });
+
+    elements.list.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-delete-post-id]");
+      if (!button || !elements.list.contains(button)) {
+        return;
+      }
+
+      const postId = String(button.dataset.deletePostId ?? "").trim();
+      if (!postId) {
+        return;
+      }
+
+      deleteFeedPost(postId);
+    });
   }
 }
 
-function init() {
+async function init() {
   if (!elements.list) {
     return;
   }
@@ -273,8 +342,9 @@ function init() {
   if (!hasSession()) {
     createFlashStatus.clear();
   }
+  await syncViewerRole();
   bindEvents();
-  loadFeed();
+  await loadFeed();
 }
 
 init();
