@@ -1,15 +1,30 @@
 import { parseLimit } from "../../../common/validation/index.js";
 
+function normalizeSearch(value) {
+  if (Array.isArray(value)) {
+    return normalizeSearch(value[0]);
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
 class FeedService {
   constructor(feedRepository) {
     this.feedRepository = feedRepository;
   }
 
-  async getFeed({ cursor, limit }) {
+  async getFeed({ cursor, limit, search }) {
     const resolvedLimit = parseLimit(limit, 20, 50);
+    const resolvedSearch = normalizeSearch(search);
     const results = await this.feedRepository.findChronologicalFeed({
       cursor,
       limit: resolvedLimit,
+      search: resolvedSearch,
     });
 
     const hasMore = results.length > resolvedLimit;

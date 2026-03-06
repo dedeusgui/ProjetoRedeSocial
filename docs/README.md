@@ -19,6 +19,8 @@ This directory is the source of truth for architecture, API behavior, and delive
 - API
   - [api/http-contract.md](api/http-contract.md)
   - [api/endpoints.md](api/endpoints.md)
+- RFCs
+  - [rfcs/feed-post-search.md](rfcs/feed-post-search.md)
 - Engineering Workflows
   - [workflows/bugfix-process.md](workflows/bugfix-process.md)
   - [workflows/feature-process.md](workflows/feature-process.md)

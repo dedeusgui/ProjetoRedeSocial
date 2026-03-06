@@ -4,6 +4,11 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-06
 
+### Added
+
+- Added public feed search on `GET /api/v1/feed` with optional `search` filtering across post `title`, `content`, and `tags`.
+- Added feed-page search UI with reset support while preserving chronological pagination for matched posts.
+
 ### Fixed
 
 - Corrected author approval calculation to use `approvedVotes / totalVotes * 100`, clamped to `0..100` and rounded to the nearest integer.

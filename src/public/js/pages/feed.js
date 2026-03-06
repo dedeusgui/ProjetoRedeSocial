@@ -14,6 +14,7 @@ const FEED_NOTICE_KEY = "thesocial_feed_notice";
 const state = {
   items: [],
   nextCursor: null,
+  searchTerm: "",
   viewerRole: null,
   viewerId: null,
   isLoading: false,
@@ -25,6 +26,10 @@ const elements = {
   status: document.querySelector("[data-feed-status]"),
   list: document.querySelector("[data-feed-list]"),
   loadMore: document.querySelector("[data-feed-more]"),
+  searchForm: document.querySelector("[data-feed-search-form]"),
+  searchInput: document.querySelector("[data-feed-search-input]"),
+  searchSubmitButton: document.querySelector("[data-feed-search-submit]"),
+  searchResetButton: document.querySelector("[data-feed-search-reset]"),
   loginLink: document.querySelector("[data-login-link]"),
   profileLink: document.querySelector("[data-profile-link]"),
   openModalButton: document.querySelector("[data-open-post-modal]"),
@@ -55,6 +60,50 @@ function resolveMessage(error) {
   );
 }
 
+function hasActiveSearch() {
+  return state.searchTerm.length > 0;
+}
+
+function resolveLoadingMessage({ append = false } = {}) {
+  if (append) {
+    return hasActiveSearch() ? "Carregando mais resultados..." : "Carregando mais posts...";
+  }
+
+  return hasActiveSearch() ? `Buscando posts por "${state.searchTerm}"...` : "Carregando feed...";
+}
+
+function resolveEmptyFeedMessage() {
+  return hasActiveSearch()
+    ? `Nenhum post encontrado para "${state.searchTerm}".`
+    : "Nenhuma publicacao ainda.";
+}
+
+function resolveLoadedFeedMessage() {
+  if (state.items.length === 0) {
+    return resolveEmptyFeedMessage();
+  }
+
+  return hasActiveSearch()
+    ? `Resultados para "${state.searchTerm}" carregados.`
+    : "Feed atualizado.";
+}
+
+function syncSearchControls() {
+  if (elements.searchInput) {
+    elements.searchInput.value = state.searchTerm;
+    elements.searchInput.disabled = state.isLoading;
+  }
+
+  if (elements.searchSubmitButton) {
+    elements.searchSubmitButton.disabled = state.isLoading;
+  }
+
+  if (elements.searchResetButton) {
+    elements.searchResetButton.hidden = !hasActiveSearch();
+    elements.searchResetButton.disabled = state.isLoading;
+  }
+}
+
 function renderFeed() {
   if (!elements.list) {
     return;
@@ -62,7 +111,6 @@ function renderFeed() {
 
   if (state.items.length === 0) {
     elements.list.innerHTML = "";
-    statusFlash.show("Nenhuma publicacao ainda.", "info");
     if (elements.loadMore) {
       elements.loadMore.hidden = true;
     }
@@ -82,12 +130,13 @@ function renderFeed() {
 }
 
 async function loadFeed({ append = false } = {}) {
-  if (state.isLoading) {
+  if (state.isLoading || (append && !state.nextCursor)) {
     return;
   }
 
   state.isLoading = true;
-  statusFlash.show("Carregando feed...", "info");
+  syncSearchControls();
+  statusFlash.show(resolveLoadingMessage({ append }), "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
@@ -96,6 +145,7 @@ async function loadFeed({ append = false } = {}) {
     const data = await api.feed.list({
       cursor: append ? state.nextCursor : undefined,
       limit: FEED_LIMIT,
+      search: state.searchTerm || undefined,
     });
 
     const incoming = Array.isArray(data.items) ? data.items : [];
@@ -103,14 +153,12 @@ async function loadFeed({ append = false } = {}) {
     state.nextCursor = data.pageInfo?.nextCursor ?? null;
 
     renderFeed();
-    statusFlash.show(
-      state.items.length > 0 ? "Feed atualizado." : "Nenhuma publicacao ainda.",
-      "success",
-    );
+    statusFlash.show(resolveLoadedFeedMessage(), state.items.length > 0 ? "success" : "info");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
     if (!append) {
       state.items = [];
+      state.nextCursor = null;
       renderFeed();
     }
   } finally {
@@ -118,6 +166,7 @@ async function loadFeed({ append = false } = {}) {
     if (elements.loadMore) {
       elements.loadMore.disabled = false;
     }
+    syncSearchControls();
   }
 }
 
@@ -129,6 +178,11 @@ async function submitPostCreate(payload) {
 
 async function submitPostUpdate(postId, payload) {
   const updated = await api.posts.update(postId, payload);
+  if (hasActiveSearch()) {
+    await loadFeed();
+    return updated;
+  }
+
   const index = state.items.findIndex((item) => String(item.id) === String(postId));
   if (index >= 0) {
     const current = state.items[index];
@@ -291,6 +345,27 @@ function editFeedPost(postId) {
 }
 
 function bindEvents() {
+  if (elements.searchForm) {
+    elements.searchForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(elements.searchForm);
+      state.searchTerm = String(formData.get("search") ?? "").trim();
+      state.nextCursor = null;
+      loadFeed();
+    });
+  }
+
+  if (elements.searchResetButton) {
+    elements.searchResetButton.addEventListener("click", () => {
+      state.searchTerm = "";
+      state.nextCursor = null;
+      syncSearchControls();
+      loadFeed();
+      elements.searchInput?.focus();
+    });
+  }
+
   if (elements.loadMore) {
     elements.loadMore.addEventListener("click", () => {
       loadFeed({ append: true });
@@ -351,6 +426,7 @@ async function init() {
 
   bindNavigation();
   navbar.refresh();
+  syncSearchControls();
   try {
     const pendingNotice = window.sessionStorage.getItem(FEED_NOTICE_KEY);
     if (pendingNotice) {

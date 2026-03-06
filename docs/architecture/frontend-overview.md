@@ -31,7 +31,7 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological feed with post approval percentage.
+- `feed.html`: chronological feed with post approval percentage plus title/content/tag search.
 - `post.html`: post detail with comments and approval percentage.
 - `profile.html`: authenticated profile with private approval metrics; admins also see user/role testing panel.
 - `admin/reviews.html`: moderation review flow + admin-only moderator management panel.

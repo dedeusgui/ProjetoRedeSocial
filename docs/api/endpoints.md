@@ -51,8 +51,10 @@ Example request:
 - Query:
   - `cursor` (optional): `<createdAtMillis>_<postId>`
   - `limit` (optional): default `20`, max `50`
+  - `search` (optional): case-insensitive partial match on `title`, `content`, or `tags`
 - Success: `200`
 - Returns:
+  - matched published posts in reverse chronological order
   - `items[]` with post summary
     - includes `trend`
     - includes `moderationMetrics`:
@@ -63,6 +65,9 @@ Example request:
       - `notRelevantPercentage`
   - `pageInfo.nextCursor` (`string | null`)
   - `pageInfo.limit`
+- Notes:
+  - blank or missing `search` returns the normal unfiltered feed
+  - cursor pagination applies within the filtered result set when `search` is used
 
 ## Posts
 

@@ -123,8 +123,8 @@ export const api = {
     },
   },
   feed: {
-    list({ cursor, limit } = {}) {
-      return request("GET", "/feed", { query: { cursor, limit } });
+    list({ cursor, limit, search } = {}) {
+      return request("GET", "/feed", { query: { cursor, limit, search } });
     },
   },
   posts: {

@@ -29,6 +29,22 @@
         <p class="muted">
           As publica&ccedil;&otilde;es aparecem da mais recente para a mais antiga.
         </p>
+        <form class="feed-search" data-feed-search-form>
+          <label class="feed-search-field">
+            Buscar posts
+            <input
+              type="search"
+              name="search"
+              placeholder="Busque por t&iacute;tulo, conte&uacute;do ou tag"
+              maxlength="120"
+              data-feed-search-input
+            />
+          </label>
+          <div class="feed-search-actions">
+            <button type="submit" data-feed-search-submit>Buscar</button>
+            <button type="button" class="button-ghost" data-feed-search-reset hidden>Limpar</button>
+          </div>
+        </form>
       </section>
 
       <p class="muted status-line" data-feed-status></p>

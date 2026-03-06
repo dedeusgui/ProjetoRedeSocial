@@ -10,6 +10,7 @@ class FeedController {
     const result = await this.feedService.getFeed({
       cursor: req.query.cursor,
       limit: req.query.limit,
+      search: req.query.search,
     });
 
     return sendSuccess(res, result);
