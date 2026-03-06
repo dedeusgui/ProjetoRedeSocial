@@ -19,6 +19,7 @@ All notable changes to this project should be documented in this file.
 - Removed redundant "Nao relevante" post metric from feed/post rendering, leaving only approval percentage visible.
 - Removed redundant profile score display and aligned profile/admin UI labels with approval percentage semantics.
 - Updated architecture/API/frontend docs to describe approval percentage fields and current moderation behavior.
+- Removed redundant explanatory sections and load-success status copy across feed, post, profile, and admin pages while preserving error/loading feedback.
 
 ## 2026-03-05
 

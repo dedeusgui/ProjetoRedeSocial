@@ -52,5 +52,6 @@ Reference guide:
 - Session/token handling should go through `core/session.js`.
 - API error messages should be normalized through `core/http-state.js`.
 - Prefer shared `bindNavigation()` for internal navigation controls.
+- Live regions and helper text should be reserved for loading, error, and non-obvious action feedback, not for restating visible page context.
 - Ambient visual effects should live in shared CSS and stay behind content, subtle by default, and safe under `prefers-reduced-motion`.
 - Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts.

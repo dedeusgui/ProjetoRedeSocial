@@ -119,11 +119,15 @@ function renderSessionState() {
   commentHelpFlash.show(
     !commentsVisible
       ? "Comentarios ocultos. Clique em Abrir comentarios para voltar."
-      : isAuthenticated
-        ? "Seu comentario sera exibido na discussao deste post."
-        : "Faca login para comentar neste post.",
+      : !isAuthenticated
+        ? "Faca login para comentar neste post."
+        : "",
     "info",
   );
+
+  if (commentsVisible && isAuthenticated) {
+    commentHelpFlash.clear();
+  }
 }
 
 function getPostId() {
@@ -201,11 +205,11 @@ function refreshReviewActions({ preserveStatus = false } = {}) {
   }
 
   if (!isAuthenticated) {
-    setReviewStatus("Faca login para aprovar ou marcar como nao relevante.", "info");
+    setReviewStatus("", "info");
     return;
   }
 
-  setReviewStatus("Avalie o post com Aprovar ou Nao relevante.", "info");
+  setReviewStatus("", "info");
 }
 
 async function loadPost() {
@@ -230,7 +234,7 @@ async function loadPost() {
     resetCommentEditState();
     renderCurrentPost();
     renderSessionState();
-    statusFlash.show("Post carregado.", "success");
+    statusFlash.clear();
   } catch (error) {
     state.postData = null;
     state.postAuthorId = null;
@@ -416,7 +420,6 @@ function cancelCommentEdit(commentId) {
 
   resetCommentEditState();
   renderCurrentPost();
-  statusFlash.show("Edicao de comentario cancelada.", "info");
 }
 
 async function saveCommentEdit(commentId) {

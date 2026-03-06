@@ -2,6 +2,10 @@ export function createFlash(target) {
   if (target) {
     target.setAttribute("role", "status");
     target.setAttribute("aria-live", "polite");
+
+    if (!String(target.textContent ?? "").trim()) {
+      target.hidden = true;
+    }
   }
 
   function show(message, type = "info") {

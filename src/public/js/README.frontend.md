@@ -25,6 +25,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `data-*` selectors for DOM hooks.
 - For internal page-to-page actions, use `<button type="button" data-nav-href="...">` and shared navigation binding.
 - Always show user feedback for async actions: loading, success, or error.
+- Prefer concise status text and avoid keeping explanatory copy that duplicates what the screen already shows after render.
 - Keep each module small and single-purpose.
 - Keep API contract aligned with `{ ok, data/error }`.
 

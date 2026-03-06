@@ -65,7 +65,7 @@ async function loadProfile() {
     const profile = await api.users.meProfile();
     state.currentUserId = profile.id;
     renderProfileView(elements.profile, profile);
-    statusFlash.show("M\u00e9tricas privadas dispon\u00edveis no seu perfil.", "success");
+    statusFlash.clear();
 
     if (profile.role === "admin" && elements.adminTools) {
       elements.adminTools.hidden = false;
@@ -106,7 +106,7 @@ async function loadAdminUsers() {
     renderAdminUserList(elements.adminUsersList, users, {
       currentAdminId: state.currentUserId,
     });
-    adminUsersFlash.show("Usu\u00e1rios carregados.", "success");
+    adminUsersFlash.clear();
   } catch (error) {
     adminUsersFlash.show(resolveAdminUsersMessage(error), "error");
   }

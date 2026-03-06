@@ -159,7 +159,7 @@ async function loadAdminPanel() {
       elements.panel.hidden = false;
     }
     renderPanel(data);
-    statusFlash.show("Painel administrativo atualizado.", "success");
+    statusFlash.clear();
   } catch (error) {
     if (elements.panel) {
       elements.panel.hidden = true;

@@ -83,9 +83,7 @@ function resolveLoadedFeedMessage() {
     return resolveEmptyFeedMessage();
   }
 
-  return hasActiveSearch()
-    ? `Resultados para "${state.searchTerm}" carregados.`
-    : "Feed atualizado.";
+  return "";
 }
 
 function syncSearchControls() {
@@ -153,7 +151,13 @@ async function loadFeed({ append = false } = {}) {
     state.nextCursor = data.pageInfo?.nextCursor ?? null;
 
     renderFeed();
-    statusFlash.show(resolveLoadedFeedMessage(), state.items.length > 0 ? "success" : "info");
+
+    const nextMessage = resolveLoadedFeedMessage();
+    if (nextMessage) {
+      statusFlash.show(nextMessage, "info");
+    } else {
+      statusFlash.clear();
+    }
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
     if (!append) {
@@ -228,11 +232,11 @@ const postModalController = createPostModalController({
   submitPostUpdate,
   async onAfterSuccess({ mode, result }) {
     if (mode === "edit") {
-      statusFlash.show("Post atualizado com sucesso.", "success");
+      statusFlash.show("Post atualizado.", "success");
       return;
     }
 
-    statusFlash.show(`Post publicado: ${result?.title ?? "novo post"}`, "success");
+    statusFlash.show("Post publicado.", "success");
   },
 });
 
@@ -324,7 +328,7 @@ async function deleteFeedPost(postId) {
   try {
     await api.posts.delete(postId);
     await loadFeed();
-    statusFlash.show("Post excluido com sucesso.", "success");
+    statusFlash.show("Post excluido.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {
