@@ -41,6 +41,7 @@ export function createPostCard(
   const canDeletePost =
     ["moderator", "admin"].includes(viewerRole ?? "") ||
     (viewerId && String(viewerId) === String(post.author?.id ?? ""));
+  const canEditPost = viewerId && String(viewerId) === String(post.author?.id ?? "");
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
   const notRelevantPercentage = post.moderationMetrics?.notRelevantPercentage ?? 0;
 
@@ -58,6 +59,7 @@ export function createPostCard(
       <div class="review-actions review-actions-inline">
         ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>` : ""}
         ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>` : ""}
+        ${canEditPost ? `<button type="button" class="button-ghost" data-edit-post-id="${postIdAttr}">Editar post</button>` : ""}
         ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Excluir post</button>` : ""}
       </div>
     </div>

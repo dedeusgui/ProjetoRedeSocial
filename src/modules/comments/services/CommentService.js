@@ -9,11 +9,15 @@ class CommentService {
   async createComment({ postId, authorId, content }) {
     ensureObjectId(postId, "postId");
     requireFields({ content }, ["content"]);
+    const normalizedContent = String(content).trim();
+    if (normalizedContent.length > 2000) {
+      throw new AppError("Field content exceeds 2000 characters", "VALIDATION_ERROR", 400);
+    }
 
     const comment = await this.commentRepository.create({
       postId,
       authorId,
-      content: content.trim(),
+      content: normalizedContent,
       status: "visible",
     });
 
@@ -41,11 +45,54 @@ class CommentService {
       },
       content: comment.content,
       createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
     }));
   }
 
-  async deleteCommentByAdmin(commentId) {
+  async updateCommentByRequester(commentId, requester, payload) {
     ensureObjectId(commentId, "commentId");
+    requireFields(payload, ["content"]);
+    const content = String(payload.content).trim();
+    if (content.length > 2000) {
+      throw new AppError("Field content exceeds 2000 characters", "VALIDATION_ERROR", 400);
+    }
+
+    const comment = await this.commentRepository.findByIdOrNull(commentId);
+    if (!comment) {
+      throw new AppError("Comment not found", "NOT_FOUND", 404);
+    }
+
+    const isOwner = String(comment.authorId) === String(requester?.id ?? "");
+    if (!isOwner) {
+      throw new AppError("You do not have permission to edit this comment", "FORBIDDEN", 403);
+    }
+
+    const updated = await this.commentRepository.updateById(commentId, { content });
+    if (!updated) {
+      throw new AppError("Comment not found", "NOT_FOUND", 404);
+    }
+
+    return {
+      id: updated.id,
+      postId: updated.postId,
+      content: updated.content,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  async deleteCommentByRequester(commentId, requester) {
+    ensureObjectId(commentId, "commentId");
+
+    const comment = await this.commentRepository.findByIdOrNull(commentId);
+    if (!comment) {
+      throw new AppError("Comment not found", "NOT_FOUND", 404);
+    }
+
+    const isOwner = String(comment.authorId) === String(requester?.id ?? "");
+    const isPrivileged = ["moderator", "admin"].includes(requester?.role ?? "");
+    if (!isOwner && !isPrivileged) {
+      throw new AppError("You do not have permission to delete this comment", "FORBIDDEN", 403);
+    }
 
     const deleted = await this.commentRepository.deleteById(commentId);
     if (!deleted) {

@@ -1,6 +1,5 @@
 import { Router } from "express";
 import auth from "../../../middleware/auth.js";
-import roles from "../../../middleware/roles.js";
 import asyncHandler from "../../../common/http/asyncHandler.js";
 
 function createCommentRoutes(controller) {
@@ -8,12 +7,8 @@ function createCommentRoutes(controller) {
 
   router.get("/posts/:id/comments", asyncHandler(controller.getCommentsByPost));
   router.post("/posts/:id/comments", auth, asyncHandler(controller.createComment));
-  router.delete(
-    "/comments/:id",
-    auth,
-    roles("moderator", "admin"),
-    asyncHandler(controller.deleteCommentByAdmin),
-  );
+  router.patch("/comments/:id", auth, asyncHandler(controller.updateComment));
+  router.delete("/comments/:id", auth, asyncHandler(controller.deleteComment));
 
   return router;
 }

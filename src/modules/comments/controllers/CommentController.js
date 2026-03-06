@@ -5,7 +5,8 @@ class CommentController {
     this.commentService = commentService;
     this.createComment = this.createComment.bind(this);
     this.getCommentsByPost = this.getCommentsByPost.bind(this);
-    this.deleteCommentByAdmin = this.deleteCommentByAdmin.bind(this);
+    this.updateComment = this.updateComment.bind(this);
+    this.deleteComment = this.deleteComment.bind(this);
   }
 
   async createComment(req, res) {
@@ -23,8 +24,20 @@ class CommentController {
     return sendSuccess(res, comments);
   }
 
-  async deleteCommentByAdmin(req, res) {
-    const result = await this.commentService.deleteCommentByAdmin(req.params.id);
+  async updateComment(req, res) {
+    const result = await this.commentService.updateCommentByRequester(
+      req.params.id,
+      req.user,
+      req.body,
+    );
+    return sendSuccess(res, result);
+  }
+
+  async deleteComment(req, res) {
+    const result = await this.commentService.deleteCommentByRequester(
+      req.params.id,
+      req.user,
+    );
     return sendSuccess(res, result);
   }
 }

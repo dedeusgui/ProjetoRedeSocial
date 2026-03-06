@@ -56,6 +56,51 @@ class PostService {
     };
   }
 
+  validateEditablePostFields(payload) {
+    const nextTitle = payload.title !== undefined ? String(payload.title).trim() : null;
+    const nextContent = payload.content !== undefined ? String(payload.content).trim() : null;
+
+    if (nextTitle !== null && nextTitle.length === 0) {
+      throw new AppError("Field title cannot be empty", "VALIDATION_ERROR", 400);
+    }
+
+    if (nextContent !== null && nextContent.length === 0) {
+      throw new AppError("Field content cannot be empty", "VALIDATION_ERROR", 400);
+    }
+
+    if (nextTitle !== null && nextTitle.length > 120) {
+      throw new AppError("Field title exceeds 120 characters", "VALIDATION_ERROR", 400);
+    }
+
+    if (nextContent !== null && nextContent.length > 5000) {
+      throw new AppError("Field content exceeds 5000 characters", "VALIDATION_ERROR", 400);
+    }
+
+    if (payload.tags !== undefined && !Array.isArray(payload.tags)) {
+      throw new AppError("Field tags must be an array", "VALIDATION_ERROR", 400);
+    }
+  }
+
+  normalizePostUpdatePayload(payload) {
+    const updates = {};
+
+    if (payload.title !== undefined) {
+      updates.title = String(payload.title).trim();
+    }
+
+    if (payload.content !== undefined) {
+      updates.content = String(payload.content).trim();
+    }
+
+    if (payload.tags !== undefined) {
+      updates.tags = payload.tags
+        .map((tag) => String(tag).trim())
+        .filter((tag) => tag.length > 0);
+    }
+
+    return updates;
+  }
+
   async getPostWithComments(postId) {
     ensureObjectId(postId, "postId");
 
@@ -122,6 +167,44 @@ class PostService {
     const summary = await this.postRepository.summarizeAuthorModeration(authorId);
     const privateMetrics = buildPrivateMetricsFromAuthorSummary(summary);
     await this.userService.updatePrivateMetrics(authorId, privateMetrics);
+  }
+
+  async updatePostByRequester(postId, requester, payload) {
+    ensureObjectId(postId, "postId");
+    const post = await this.postRepository.findByIdOrNull(postId);
+    if (!post) {
+      throw new AppError("Post not found", "NOT_FOUND", 404);
+    }
+
+    const isOwner = String(post.authorId) === String(requester?.id);
+    if (!isOwner) {
+      throw new AppError("You do not have permission to edit this post", "FORBIDDEN", 403);
+    }
+
+    const source = payload ?? {};
+    this.validateEditablePostFields(source);
+    const updates = this.normalizePostUpdatePayload(source);
+    const hasUpdates = Object.keys(updates).length > 0;
+    if (!hasUpdates) {
+      throw new AppError(
+        "Provide at least one field to update: title, content or tags",
+        "VALIDATION_ERROR",
+        400,
+      );
+    }
+
+    const updated = await this.postRepository.updateById(postId, updates);
+    if (!updated) {
+      throw new AppError("Post not found", "NOT_FOUND", 404);
+    }
+
+    return {
+      id: updated.id,
+      title: updated.title,
+      content: updated.content,
+      tags: updated.tags,
+      updatedAt: updated.updatedAt,
+    };
   }
 
   async deletePostByRequester(postId, requester) {

@@ -36,6 +36,9 @@ All notable changes to this project should be documented in this file.
 - Updated feed/post/profile/admin UIs to display new moderation metrics and owner-or-admin post deletion controls.
 - Updated auth service to ensure users whose email is in `ADMIN_EMAILS` receive role `admin` on register/login.
 - Updated docs and architecture references to include the new admin module, routes, and role-governance contract.
+- Replaced post edit `prompt` UX with a shared modal controller (`create | edit`) on feed/post pages, including state reset on close/cancel.
+- Replaced comment edit `prompt` UX with inline editing in post details (`Salvar`/`Cancelar`, `Esc` cancela, `Ctrl+Enter` salva) without page reload.
+- Updated API docs to include existing edit endpoints `PATCH /api/v1/posts/:id` and `PATCH /api/v1/comments/:id`.
 
 ## 2026-03-04
 

@@ -7,6 +7,7 @@ function createPostRoutes(controller) {
 
   router.post("/posts", auth, asyncHandler(controller.createPost));
   router.get("/posts/:id", asyncHandler(controller.getPostById));
+  router.patch("/posts/:id", auth, asyncHandler(controller.updatePost));
   router.delete("/posts/:id", auth, asyncHandler(controller.deletePost));
 
   return router;

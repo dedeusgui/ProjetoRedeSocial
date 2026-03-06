@@ -147,11 +147,17 @@ export const api = {
         },
       });
     },
+    update(postId, payload) {
+      return request("PATCH", `/posts/${postId}`, { body: payload });
+    },
     delete(postId) {
       return request("DELETE", `/posts/${postId}`);
     },
   },
   comments: {
+    update(commentId, payload) {
+      return request("PATCH", `/comments/${commentId}`, { body: payload });
+    },
     delete(commentId) {
       return request("DELETE", `/comments/${commentId}`);
     },

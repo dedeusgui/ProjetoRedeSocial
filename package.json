@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "build": "xcopy /E /I /Y src dist",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test:smoke": "node scripts/smoke-permissions.mjs"
   },
   "dependencies": {
     "cors": "^2.8.6",

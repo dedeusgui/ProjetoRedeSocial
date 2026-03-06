@@ -38,14 +38,14 @@
       </div>
     </main>
 
-    <dialog class="modal" data-create-post-modal>
+    <dialog class="modal" data-post-modal>
       <section class="card modal-card">
         <div class="row modal-header">
-          <h2 class="ink-underline">Publicar post</h2>
-          <button type="button" class="button-ghost" data-close-post-modal>Fechar</button>
+          <h2 class="ink-underline" data-post-modal-title>Publicar post</h2>
+          <button type="button" class="button-ghost" data-post-modal-cancel>Fechar</button>
         </div>
         <p class="muted">Escreva com clareza e contexto.</p>
-        <form data-create-post-form>
+        <form data-post-modal-form>
           <label>
             T&iacute;tulo
             <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="120" />
@@ -63,9 +63,9 @@
             Tags
             <input name="tags" placeholder="node, backend, estudo" />
           </label>
-          <button type="submit">Publicar</button>
+          <button type="submit" data-post-modal-submit>Publicar</button>
         </form>
-        <p class="muted status-line" data-create-post-status></p>
+        <p class="muted status-line" data-post-modal-status></p>
       </section>
     </dialog>
     <script type="module" src="../js/pages/feed.js"></script>

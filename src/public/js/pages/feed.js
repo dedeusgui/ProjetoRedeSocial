@@ -2,11 +2,11 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
-import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
 import { renderFeedList } from "../features/feed/renderers.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
+import { createPostModalController } from "../features/posts/post-modal.js";
 
 const FEED_LIMIT = 20;
 const FEED_NOTICE_KEY = "thesocial_feed_notice";
@@ -17,7 +17,6 @@ const state = {
   viewerRole: null,
   viewerId: null,
   isLoading: false,
-  isCreating: false,
   isReviewing: false,
   isDeletingPost: false,
 };
@@ -30,14 +29,15 @@ const elements = {
   profileLink: document.querySelector("[data-profile-link]"),
   openModalButton: document.querySelector("[data-open-post-modal]"),
   logoutButton: document.querySelector("[data-logout]"),
-  modal: document.querySelector("[data-create-post-modal]"),
-  closeModalButton: document.querySelector("[data-close-post-modal]"),
-  createForm: document.querySelector("[data-create-post-form]"),
-  createStatus: document.querySelector("[data-create-post-status]"),
+  modal: document.querySelector("[data-post-modal]"),
+  modalTitle: document.querySelector("[data-post-modal-title]"),
+  modalCancelButton: document.querySelector("[data-post-modal-cancel]"),
+  modalSubmitButton: document.querySelector("[data-post-modal-submit]"),
+  postModalForm: document.querySelector("[data-post-modal-form]"),
+  postModalStatus: document.querySelector("[data-post-modal-status]"),
 };
 
 const statusFlash = createFlash(elements.status);
-const createFlashStatus = createFlash(elements.createStatus);
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
@@ -50,7 +50,7 @@ const navbar = initNavbar({
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para publicar no feed.",
+    "Autenticacao necessaria. Faca login para publicar no feed.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
@@ -62,7 +62,7 @@ function renderFeed() {
 
   if (state.items.length === 0) {
     elements.list.innerHTML = "";
-    statusFlash.show("Nenhuma publica\u00e7\u00e3o ainda.", "info");
+    statusFlash.show("Nenhuma publicacao ainda.", "info");
     if (elements.loadMore) {
       elements.loadMore.hidden = true;
     }
@@ -104,9 +104,7 @@ async function loadFeed({ append = false } = {}) {
 
     renderFeed();
     statusFlash.show(
-      state.items.length > 0
-        ? "Feed atualizado."
-        : "Nenhuma publica\u00e7\u00e3o ainda.",
+      state.items.length > 0 ? "Feed atualizado." : "Nenhuma publicacao ainda.",
       "success",
     );
   } catch (error) {
@@ -123,58 +121,66 @@ async function loadFeed({ append = false } = {}) {
   }
 }
 
-function openModal() {
-  if (!elements.modal) {
-    return;
-  }
-
-  const isAuthenticated = requireSession({
-    onFail: () => {
-      statusFlash.show("Fa\u00e7a login para publicar no feed.", "error");
-      window.location.href = "./index.html";
-    },
-  });
-
-  if (!isAuthenticated) {
-    return;
-  }
-
-  elements.modal.showModal();
-  createFlashStatus.clear();
+async function submitPostCreate(payload) {
+  const created = await api.posts.create(payload);
+  await loadFeed();
+  return created;
 }
 
-function closeModal() {
-  if (elements.modal?.open) {
-    elements.modal.close();
+async function submitPostUpdate(postId, payload) {
+  const updated = await api.posts.update(postId, payload);
+  const index = state.items.findIndex((item) => String(item.id) === String(postId));
+  if (index >= 0) {
+    const current = state.items[index];
+    state.items[index] = {
+      ...current,
+      title: updated.title ?? current.title,
+      content: updated.content ?? current.content,
+      tags: Array.isArray(updated.tags) ? updated.tags : current.tags,
+      updatedAt: updated.updatedAt ?? current.updatedAt,
+    };
+    renderFeed();
   }
+  return updated;
 }
 
-async function submitCreatePost(event) {
-  event.preventDefault();
-  if (state.isCreating || !elements.createForm) {
-    return;
-  }
+const postModalController = createPostModalController({
+  modal: elements.modal,
+  form: elements.postModalForm,
+  title: elements.modalTitle,
+  submitButton: elements.modalSubmitButton,
+  cancelButton: elements.modalCancelButton,
+  statusTarget: elements.postModalStatus,
+  openCreateButton: elements.openModalButton,
+  resolveErrorMessage: resolveMessage,
+  onBeforeOpenCreate() {
+    const isAuthenticated = requireSession({
+      onFail: () => {
+        statusFlash.show("Faca login para publicar no feed.", "error");
+        window.location.href = "./index.html";
+      },
+    });
 
-  const formData = new FormData(elements.createForm);
-  const title = String(formData.get("title") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
-  const tags = parseCsvTags(formData.get("tags"));
+    return isAuthenticated;
+  },
+  onBeforeOpenEdit() {
+    const isAuthenticated = hasSession();
+    if (!isAuthenticated) {
+      statusFlash.show("Faca login para editar posts.", "error");
+    }
+    return isAuthenticated;
+  },
+  submitPostCreate,
+  submitPostUpdate,
+  async onAfterSuccess({ mode, result }) {
+    if (mode === "edit") {
+      statusFlash.show("Post atualizado com sucesso.", "success");
+      return;
+    }
 
-  state.isCreating = true;
-  createFlashStatus.show("Publicando post...", "info");
-
-  try {
-    const created = await api.posts.create({ title, content, tags });
-    elements.createForm.reset();
-    closeModal();
-    await loadFeed();
-    statusFlash.show(`Post publicado: ${created.title}`, "success");
-  } catch (error) {
-    createFlashStatus.show(resolveMessage(error), "error");
-  } finally {
-    state.isCreating = false;
-  }
-}
+    statusFlash.show(`Post publicado: ${result?.title ?? "novo post"}`, "success");
+  },
+});
 
 async function syncViewerRole() {
   if (!hasSession()) {
@@ -199,8 +205,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Fa\u00e7a login para avaliar um post.", "error");
-    window.location.href = "./index.html";
+    statusFlash.show("Faca login para avaliar um post.", "error");
     return;
   }
 
@@ -212,7 +217,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   reviewButtons.forEach((button) => {
     button.disabled = true;
   });
-  statusFlash.show("Salvando avalia\u00e7\u00e3o...", "info");
+  statusFlash.show("Salvando avaliacao...", "info");
 
   try {
     const result = await api.posts.review(postId, decision, null);
@@ -220,7 +225,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
     statusFlash.show(reviewSavedMessage(result), "success");
   } catch (error) {
     statusFlash.show(
-      resolveModerationApiMessage(error, "Falha ao salvar avalia\u00e7\u00e3o."),
+      resolveModerationApiMessage(error, "Falha ao salvar avaliacao."),
       "error",
     );
   } finally {
@@ -234,7 +239,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
 function resolveDeleteMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autentica\u00e7\u00e3o necess\u00e1ria para excluir posts.",
+    "Autenticacao necessaria para excluir posts.",
     "Falha ao excluir o post.",
   );
 }
@@ -245,7 +250,7 @@ async function deleteFeedPost(postId) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Fa\u00e7a login para excluir posts.", "error");
+    statusFlash.show("Faca login para excluir posts.", "error");
     window.location.href = "./index.html";
     return;
   }
@@ -253,7 +258,10 @@ async function deleteFeedPost(postId) {
   const post = state.items.find((item) => String(item.id) === String(postId));
   const isOwner = String(state.viewerId ?? "") === String(post?.author?.id ?? "");
   if (!["moderator", "admin"].includes(state.viewerRole ?? "") && !isOwner) {
-    statusFlash.show("Apenas autor do post, moderadores ou administradores podem excluir posts.", "error");
+    statusFlash.show(
+      "Apenas autor do post, moderadores ou administradores podem excluir posts.",
+      "error",
+    );
     return;
   }
 
@@ -262,7 +270,7 @@ async function deleteFeedPost(postId) {
   try {
     await api.posts.delete(postId);
     await loadFeed();
-    statusFlash.show("Post exclu\u00eddo com sucesso.", "success");
+    statusFlash.show("Post excluido com sucesso.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {
@@ -270,31 +278,23 @@ async function deleteFeedPost(postId) {
   }
 }
 
+function editFeedPost(postId) {
+  const post = state.items.find((item) => String(item.id) === String(postId));
+  const isOwner = String(state.viewerId ?? "") === String(post?.author?.id ?? "");
+
+  if (!isOwner) {
+    statusFlash.show("Apenas o autor pode editar este post.", "error");
+    return;
+  }
+
+  postModalController.openPostModalEdit(post);
+}
+
 function bindEvents() {
   if (elements.loadMore) {
     elements.loadMore.addEventListener("click", () => {
       loadFeed({ append: true });
     });
-  }
-
-  if (elements.openModalButton) {
-    elements.openModalButton.addEventListener("click", openModal);
-  }
-
-  if (elements.closeModalButton) {
-    elements.closeModalButton.addEventListener("click", closeModal);
-  }
-
-  if (elements.modal) {
-    elements.modal.addEventListener("click", (event) => {
-      if (event.target === elements.modal) {
-        closeModal();
-      }
-    });
-  }
-
-  if (elements.createForm) {
-    elements.createForm.addEventListener("submit", submitCreatePost);
   }
 
   if (elements.list) {
@@ -312,6 +312,20 @@ function bindEvents() {
 
       const actionsContainer = button.closest(".review-actions");
       submitFeedReview(postId, decision, actionsContainer);
+    });
+
+    elements.list.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-edit-post-id]");
+      if (!button || !elements.list.contains(button)) {
+        return;
+      }
+
+      const postId = String(button.dataset.editPostId ?? "").trim();
+      if (!postId) {
+        return;
+      }
+
+      editFeedPost(postId);
     });
 
     elements.list.addEventListener("click", (event) => {
@@ -347,9 +361,6 @@ async function init() {
     // noop: sessionStorage can be unavailable in restricted environments
   }
 
-  if (!hasSession()) {
-    createFlashStatus.clear();
-  }
   await syncViewerRole();
   bindEvents();
   await loadFeed();

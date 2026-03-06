@@ -376,6 +376,29 @@ select:focus-visible {
   gap: var(--space-1);
 }
 
+.comment-body {
+  white-space: pre-wrap;
+}
+
+.comment-edit-form {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.comment-edit-input {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.comments-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.comments-panel-header {
+  justify-content: space-between;
+}
+
 .moderation-panel {
   display: grid;
   gap: var(--space-2);

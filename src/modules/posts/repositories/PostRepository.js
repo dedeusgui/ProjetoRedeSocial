@@ -16,6 +16,14 @@ class PostRepository {
     return Post.findById(id);
   }
 
+  async updateById(postId, payload) {
+    return Post.findByIdAndUpdate(
+      postId,
+      { $set: payload },
+      { returnDocument: "after" },
+    );
+  }
+
   async updateTrend(postId, trend) {
     return Post.findByIdAndUpdate(
       postId,

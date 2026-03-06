@@ -11,6 +11,18 @@ class CommentRepository {
       .populate("authorId", "username");
   }
 
+  async findByIdOrNull(commentId) {
+    return Comment.findById(commentId);
+  }
+
+  async updateById(commentId, payload) {
+    return Comment.findByIdAndUpdate(
+      commentId,
+      { $set: payload },
+      { returnDocument: "after" },
+    );
+  }
+
   async deleteById(commentId) {
     return Comment.findByIdAndDelete(commentId);
   }

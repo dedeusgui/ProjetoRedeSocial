@@ -91,6 +91,19 @@ Example request:
   - permanently deletes related comments and reviews
   - recomputes post-author private metrics
 
+### `PATCH /api/v1/posts/:id`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Body (at least one field required):
+  - `title` (optional string, non-empty, max `120`)
+  - `content` (optional string, non-empty, max `5000`)
+  - `tags` (optional array of strings)
+- Success: `200`
+- Rules:
+  - only post author can edit
+
 ### `GET /api/v1/posts/:id`
 
 - Auth: none
@@ -138,6 +151,17 @@ Example request:
 - Success: `200`
 - Side effects:
   - permanently deletes the comment
+
+### `PATCH /api/v1/comments/:id`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Body:
+  - `content` (required string, non-empty, max `2000`)
+- Success: `200`
+- Rules:
+  - only comment author can edit
 
 ## Admin
 
