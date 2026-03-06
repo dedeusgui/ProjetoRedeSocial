@@ -1,10 +1,7 @@
 import {
   escapeHtml,
   formatDateTime,
-  formatSignedPercent,
-  resolveTrendFromScore,
-  trendClass,
-  trendLabel,
+  formatPercent,
 } from "../../core/formatters.js";
 
 export function renderProfileView(target, profile) {
@@ -12,8 +9,7 @@ export function renderProfileView(target, profile) {
     return;
   }
 
-  const score = Number(profile.privateMetrics?.score ?? 0);
-  const trend = resolveTrendFromScore(score);
+  const approvalPercentage = Number(profile.privateMetrics?.score ?? 0);
   const totalReviews = profile.privateMetrics?.totalReviews ?? 0;
 
   target.innerHTML = `
@@ -25,8 +21,7 @@ export function renderProfileView(target, profile) {
       <div class="metrics-grid">
         <article class="card metric-box">
           <h3>Avalia&ccedil;&atilde;o geral</h3>
-          <p><strong>Sua pontua&ccedil;&atilde;o: <span class="${trendClass(trend)}">${escapeHtml(formatSignedPercent(score))}</span></strong></p>
-          <p class="muted">Tend&ecirc;ncia atual: <span class="${trendClass(trend)}">${escapeHtml(trendLabel(trend))}</span></p>
+          <p><strong>Aprova&ccedil;&atilde;o: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
           <p class="muted">Avalia&ccedil;&otilde;es recebidas: ${escapeHtml(totalReviews)}</p>
         </article>
       </div>

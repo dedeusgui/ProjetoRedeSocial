@@ -59,8 +59,8 @@ Example request:
       - `approvedCount`
       - `notRelevantCount`
       - `totalReviews`
-      - `likePercentage`
-      - `dislikePercentage`
+      - `approvalPercentage`
+      - `notRelevantPercentage`
   - `pageInfo.nextCursor` (`string | null`)
   - `pageInfo.limit`
 
@@ -117,8 +117,8 @@ Example request:
     - `approvedCount`
     - `notRelevantCount`
     - `totalReviews`
-    - `likePercentage`
-    - `dislikePercentage`
+    - `approvalPercentage`
+    - `notRelevantPercentage`
 - Error:
   - `404 NOT_FOUND` if post does not exist or is hidden
 
@@ -175,7 +175,7 @@ Example request:
     - `username`
     - `email`
     - `role`
-    - `score`
+    - `score` (`0-100`, approval percentage for authored-post reviews)
     - `totalReviews`
     - `postCount`
     - `createdAt`
@@ -188,9 +188,9 @@ Example request:
   - `requirements`:
     - `minPosts`
     - `minAccountAgeDays`
-    - `minScore`
-  - `eligibleUsers[]` (users eligible for moderator promotion; includes unified score and review volume)
-  - `moderators[]` (current moderators; includes unified score and review volume)
+    - `minScore` (minimum approval percentage threshold)
+  - `eligibleUsers[]` (users eligible for moderator promotion; includes approval percentage and review volume)
+  - `moderators[]` (current moderators; includes approval percentage and review volume)
 
 ### `PATCH /api/v1/admin/users/:id/moderator`
 
@@ -232,8 +232,8 @@ Example request:
 - Rules:
   - one review per `(postId, reviewerId)` pair is upserted
 - Side effects:
-  - recomputes post trend and moderation metrics (like/dislike percentages + counters)
-  - recomputes author private metrics using per-post average percentages
+  - recomputes post trend and moderation metrics (approval percentage + counters)
+  - recomputes author private metrics using `approvedVotes / totalVotes * 100`
 
 ## Users
 
@@ -244,7 +244,7 @@ Example request:
 - Returns:
   - user identity and role
   - private metrics:
-    - `score` (unified reputation score in range `-100` to `+100` using `(approvedCount - notRelevantCount) / totalReviews * 100`)
+    - `score` (approval percentage in range `0` to `100` using `approvedCount / totalReviews * 100`)
     - `totalReviews`
 
 ## Representative Error Examples

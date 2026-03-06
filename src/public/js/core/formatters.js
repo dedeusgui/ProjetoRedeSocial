@@ -42,33 +42,12 @@ function toFiniteNumber(value, fallback = 0) {
 export function normalizePercentage(value) {
   const safeValue = toFiniteNumber(value, 0);
   const clampedValue = Math.max(0, Math.min(100, safeValue));
-  return Number(clampedValue.toFixed(2));
-}
-
-export function computeValidationScore(approvalRate, rejectionRate) {
-  const safeApprovalRate = normalizePercentage(approvalRate);
-  const safeRejectionRate = normalizePercentage(rejectionRate);
-  return Number((safeApprovalRate - safeRejectionRate).toFixed(2));
-}
-
-export function resolveTrendFromScore(score) {
-  const safeScore = toFiniteNumber(score, 0);
-
-  if (safeScore === 0) return "neutral";
-  if (safeScore > 0) return "positive";
-  return "negative";
+  return Math.round(clampedValue);
 }
 
 export function formatPercent(value) {
   const safeValue = normalizePercentage(value);
   return `${safeValue}%`;
-}
-
-export function formatSignedPercent(value) {
-  const safeValue = toFiniteNumber(value, 0);
-  const roundedValue = Number(safeValue.toFixed(2));
-  const sign = roundedValue > 0 ? "+" : "";
-  return `${sign}${roundedValue}%`;
 }
 
 export function trendLabel(trend) {

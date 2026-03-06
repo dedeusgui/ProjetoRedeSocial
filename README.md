@@ -8,7 +8,7 @@ Este projeto implementa uma API REST + frontend estático com foco em:
 
 - feed cronológico (sem recomendação algorítmica)
 - interação binária em posts (`approved` e `not_relevant`)
-- percentual público de aprovação/não relevante por post
+- percentual público de aprovação por post
 - métricas agregadas do usuário em contexto autenticado
 - governança por papéis (`user`, `moderator`, `admin`)
 
@@ -143,7 +143,7 @@ src/
 ## Regras de negócio principais
 
 - feed público em ordem cronológica decrescente
-- público vê percentual de aprovação e de não relevante por post
+- público vê percentual de aprovação por post
 - autor não pode revisar o próprio post
 - métricas privadas são retornadas somente em `/me/profile`
 - papel `admin` é controlado por configuração do projeto
@@ -244,8 +244,8 @@ Observações:
 - `email: string` (único)
 - `passwordHash: string`
 - `role: "user" | "moderator" | "admin"`
-- `privateMetrics.approvalRate: number (0-100)`
-- `privateMetrics.rejectionRate: number (0-100)`
+- `privateMetrics.score: number (0-100, percentual de aprovação)`
+- `privateMetrics.totalReviews: number`
 - `createdAt: Date`
 - `updatedAt: Date`
 

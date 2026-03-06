@@ -31,9 +31,9 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological feed with post tendency labels and like/dislike percentages.
-- `post.html`: post detail with comments, tendency labels, and like/dislike percentages.
-- `profile.html`: authenticated profile with private metrics; admins also see user/role testing panel.
+- `feed.html`: chronological feed with post approval percentage.
+- `post.html`: post detail with comments and approval percentage.
+- `profile.html`: authenticated profile with private approval metrics; admins also see user/role testing panel.
 - `admin/reviews.html`: moderation review flow + admin-only moderator management panel.
 
 ## Navigation Pattern
@@ -51,4 +51,4 @@ Reference guide:
 - Session/token handling should go through `core/session.js`.
 - API error messages should be normalized through `core/http-state.js`.
 - Prefer shared `bindNavigation()` for internal navigation controls.
-- Post-level like/dislike percentages are allowed in feed/post pages; user aggregate metrics stay private to profile/admin contexts.
+- Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts.

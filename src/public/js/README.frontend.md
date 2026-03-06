@@ -15,7 +15,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.
 - `features/*/renderers.js`: receive data and return/update DOM.
 - `core/session.js`: token lifecycle and auth checks.
-- `core/formatters.js`: shared formatting plus derived view metrics (for example profile validation score and tendency labels).
+- `core/formatters.js`: shared formatting utilities for percentages, dates, and localized labels used by renderers.
 - `core/http-state.js`: normalize API error messages for UI.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.
@@ -38,5 +38,5 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 1. Page script only orchestrates flow.
 2. Rendering logic lives in `features` or `components`.
 3. API errors are mapped through `core/http-state.js`.
-4. Public post-level moderation percentages are allowed in feed/post; user aggregate metrics stay private to profile/admin screens.
+4. Public post-level approval percentage is allowed in feed/post; user aggregate metrics stay private to profile/admin screens.
 5. Direct URL access works without broken dependencies.

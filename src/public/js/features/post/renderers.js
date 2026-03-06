@@ -93,7 +93,6 @@ export function renderPostView(
   const comments = Array.isArray(post.comments) ? post.comments : [];
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
-  const notRelevantPercentage = post.moderationMetrics?.notRelevantPercentage ?? 0;
 
   target.innerHTML = `
     <article class="card post-card">
@@ -103,7 +102,6 @@ export function renderPostView(
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
-      <p class="muted">Nao relevante: ${escapeHtml(formatPercent(notRelevantPercentage))}</p>
       ${renderTags(tags)}
       <div class="review-actions">
         ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${escapeHtml(post.id ?? "")}">Aprovar</button>` : ""}

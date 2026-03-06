@@ -2,6 +2,15 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-06
+
+### Fixed
+
+- Corrected author approval calculation to use `approvedVotes / totalVotes * 100`, clamped to `0..100` and rounded to the nearest integer.
+- Removed redundant "Nao relevante" post metric from feed/post rendering, leaving only approval percentage visible.
+- Removed redundant profile score display and aligned profile/admin UI labels with approval percentage semantics.
+- Updated architecture/API/frontend docs to describe approval percentage fields and current moderation behavior.
+
 ## 2026-03-05
 
 ### Added

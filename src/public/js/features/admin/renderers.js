@@ -1,4 +1,4 @@
-import { escapeHtml, formatDateTime, formatSignedPercent } from "../../core/formatters.js";
+import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
 
 export function renderAdminUserList(target, users, { currentAdminId = null } = {}) {
   if (!target) {
@@ -20,7 +20,7 @@ export function renderAdminUserList(target, users, { currentAdminId = null } = {
         <article class="card managed-user-card">
           <p><strong>@${escapeHtml(user.username)}</strong> <span class="muted">(${escapeHtml(user.email)})</span></p>
           <p class="muted">Papel: ${escapeHtml(user.role)}</p>
-          <p class="muted">Posts: ${escapeHtml(user.postCount)} | Score: ${escapeHtml(formatSignedPercent(user.score ?? 0))}</p>
+          <p class="muted">Posts: ${escapeHtml(user.postCount)} | Aprova&ccedil;&atilde;o: ${escapeHtml(formatPercent(user.score ?? 0))}</p>
           <p class="muted">Avalia\u00e7\u00f5es recebidas: ${escapeHtml(user.totalReviews ?? 0)}</p>
           <p class="muted">Criado em: ${escapeHtml(formatDateTime(user.createdAt))}</p>
           ${canDelete ? `<button type="button" class="button-reject button-link-inline" data-admin-delete-user-id="${escapeHtml(user.id)}">Excluir usu\u00e1rio</button>` : ""}

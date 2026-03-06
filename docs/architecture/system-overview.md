@@ -6,7 +6,7 @@ The system is a social network API and static frontend focused on knowledge shar
 
 - chronological feed (no recommendation algorithm)
 - binary moderation decisions on posts (`approved`, `not_relevant`)
-- post-level like/dislike percentages are public in feed and post detail
+- post-level approval percentage is public in feed and post detail
 - user aggregate metrics remain private to authenticated profile/admin endpoints
 
 ## Runtime Architecture

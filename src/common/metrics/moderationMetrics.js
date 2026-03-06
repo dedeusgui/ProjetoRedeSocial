@@ -1,7 +1,3 @@
-function toRoundedPercentage(value) {
-  return Number(Number(value).toFixed(2));
-}
-
 function toFiniteNumber(value, fallback = 0) {
   const numberValue = Number(value);
   if (!Number.isFinite(numberValue)) {
@@ -9,6 +5,25 @@ function toFiniteNumber(value, fallback = 0) {
   }
 
   return numberValue;
+}
+
+function clampPercentage(value) {
+  return Math.max(0, Math.min(100, value));
+}
+
+// Approval is now a true ratio: approved votes divided by total votes.
+// The result is always clamped to the valid percentage range and rounded
+// to the nearest integer so the same rule is reused across posts and users.
+export function calculateApprovalPercentage(approvedCount, notRelevantCount) {
+  const approved = Math.max(0, toFiniteNumber(approvedCount, 0));
+  const notRelevant = Math.max(0, toFiniteNumber(notRelevantCount, 0));
+  const totalVotes = approved + notRelevant;
+
+  if (totalVotes === 0) {
+    return 0;
+  }
+
+  return Math.round(clampPercentage((approved / totalVotes) * 100));
 }
 
 export function resolveTrend(approvedCount, notRelevantCount) {
@@ -24,8 +39,8 @@ export function resolveTrend(approvedCount, notRelevantCount) {
 }
 
 export function buildPostModerationMetrics(approvedCount, notRelevantCount) {
-  const approved = Number(approvedCount) || 0;
-  const notRelevant = Number(notRelevantCount) || 0;
+  const approved = Math.max(0, toFiniteNumber(approvedCount, 0));
+  const notRelevant = Math.max(0, toFiniteNumber(notRelevantCount, 0));
   const totalReviews = approved + notRelevant;
 
   if (totalReviews === 0) {
@@ -42,34 +57,24 @@ export function buildPostModerationMetrics(approvedCount, notRelevantCount) {
     approvedCount: approved,
     notRelevantCount: notRelevant,
     totalReviews,
-    approvalPercentage: toRoundedPercentage((approved / totalReviews) * 100),
-    notRelevantPercentage: toRoundedPercentage((notRelevant / totalReviews) * 100),
+    approvalPercentage: calculateApprovalPercentage(approved, notRelevant),
+    notRelevantPercentage: calculateApprovalPercentage(notRelevant, approved),
   };
 }
 
 export function computeUnifiedAuthorScore(approvedCount, notRelevantCount) {
-  const approved = Number(approvedCount) || 0;
-  const notRelevant = Number(notRelevantCount) || 0;
-  const totalReviews = approved + notRelevant;
-
-  if (totalReviews === 0) {
-    return 0;
-  }
-
-  return toRoundedPercentage(((approved - notRelevant) / totalReviews) * 100);
+  return calculateApprovalPercentage(approvedCount, notRelevantCount);
 }
 
 export function resolveUnifiedScoreFromPrivateMetrics(privateMetrics = null) {
   const storedScore = toFiniteNumber(privateMetrics?.score, Number.NaN);
   if (Number.isFinite(storedScore)) {
-    return toRoundedPercentage(Math.max(-100, Math.min(100, storedScore)));
+    return Math.round(clampPercentage(storedScore));
   }
 
   const legacyApprovalRate = toFiniteNumber(privateMetrics?.approvalRate, 0);
   const legacyRejectionRate = toFiniteNumber(privateMetrics?.rejectionRate, 0);
-  return toRoundedPercentage(
-    Math.max(-100, Math.min(100, legacyApprovalRate - legacyRejectionRate)),
-  );
+  return calculateApprovalPercentage(legacyApprovalRate, legacyRejectionRate);
 }
 
 export function buildPrivateMetricsFromAuthorSummary(summary = null) {

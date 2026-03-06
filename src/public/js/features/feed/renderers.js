@@ -43,7 +43,6 @@ export function createPostCard(
     (viewerId && String(viewerId) === String(post.author?.id ?? ""));
   const canEditPost = viewerId && String(viewerId) === String(post.author?.id ?? "");
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
-  const notRelevantPercentage = post.moderationMetrics?.notRelevantPercentage ?? 0;
 
   article.innerHTML = `
     <header class="post-header">
@@ -52,7 +51,6 @@ export function createPostCard(
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
-    <p class="muted">N&atilde;o relevante: ${escapeHtml(formatPercent(notRelevantPercentage))}</p>
     ${renderTags(tags)}
     <div class="feed-card-actions">
       <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discuss&atilde;o</button>
