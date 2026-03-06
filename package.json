@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "Rede social com Node.js, Express e MongoDB",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "build": "xcopy /E /I /Y src dist",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test:smoke": "node scripts/smoke-permissions.mjs"
   },
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "mongoose": "^9.2.3",
+    "mongoose": "^9.2.4",
     "nodemon": "^3.1.14"
   }
 }

@@ -1,9 +1,87 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>The Social Network | Comunidade de Posts</title>
+    <link rel="stylesheet" href="../css/style.css" />
   </head>
-  <body></body>
+  <body>
+    <main class="page">
+      <header class="card app-header">
+        <div class="header-copy">
+          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+          <h1 class="ink-underline">The Social Network</h1>
+          <p class="muted">Compartilhe posts e discuss&otilde;es com foco no conte&uacute;do.</p>
+          <p class="tone-note">Feed em ordem cronol&oacute;gica.</p>
+        </div>
+        <nav class="row app-nav">
+          <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>Meu perfil</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link aria-current="page">Entrar</button>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
+
+      <section class="card hero-panel">
+        <h2 class="ink-underline">Uma comunidade para compartilhar ideias</h2>
+        <p>
+          Publique, comente e acompanhe discuss&otilde;es em um fluxo simples e direto.
+        </p>
+        <p class="muted">As publica&ccedil;&otilde;es aparecem por data, sem ranking por relev&acirc;ncia.</p>
+      </section>
+
+      <section class="card" data-session-card>
+        <h2 class="ink-underline">Sess&atilde;o</h2>
+        <p class="muted status-line" data-session-status>Fa&ccedil;a login para publicar no feed.</p>
+        <div class="row" data-session-actions-anon>
+          <button type="button" class="button-link" data-nav-href="./feed.html">Ir para o feed</button>
+        </div>
+        <div class="row" data-session-actions-auth hidden>
+          <button type="button" class="button-link" data-nav-href="./feed.html">Ir para o feed</button>
+          <button type="button" class="button-link" data-nav-href="./profile.html" data-private-metrics-cta>Ver m&eacute;tricas privadas</button>
+        </div>
+      </section>
+
+      <div class="auth-grid" data-auth-anon>
+        <section class="card">
+          <h2 class="ink-underline">Entrar</h2>
+          <p class="muted">Acesse sua conta para continuar.</p>
+          <form data-login-form>
+            <label>
+              Email
+              <input name="email" type="email" placeholder="voce@email.com" required />
+            </label>
+            <label>
+              Senha
+              <input name="password" type="password" placeholder="Sua senha" required />
+            </label>
+            <button type="submit">Entrar</button>
+          </form>
+          <p class="muted status-line" data-auth-status></p>
+        </section>
+
+        <section class="card">
+          <h2 class="ink-underline">Criar conta</h2>
+          <p class="muted">Crie sua conta para publicar e participar das discuss&otilde;es.</p>
+          <form data-register-form>
+            <label>
+              Usu&aacute;rio
+              <input name="username" placeholder="seu_usuario" required maxlength="40" />
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" placeholder="voce@email.com" required />
+            </label>
+            <label>
+              Senha
+              <input name="password" type="password" placeholder="M&iacute;nimo 6 caracteres" required minlength="6" />
+            </label>
+            <button type="submit">Criar conta</button>
+          </form>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="../js/pages/index.js"></script>
+  </body>
 </html>

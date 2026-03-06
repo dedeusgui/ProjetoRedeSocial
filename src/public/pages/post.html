@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post | The Social Network</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="card app-header">
+        <div class="header-copy">
+          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+          <h1 class="ink-underline">Post</h1>
+          <p class="muted">Detalhes do post e discuss&atilde;o.</p>
+          <p class="tone-note">Coment&aacute;rios em ordem cronol&oacute;gica.</p>
+        </div>
+        <nav class="row app-nav">
+          <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>Meu perfil</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
+
+      <p class="muted status-line" data-post-status></p>
+      <div data-post-view></div>
+
+      <section class="card" data-comment-compose>
+        <h2 class="ink-underline">Adicionar coment&aacute;rio</h2>
+        <form data-comment-form>
+          <label>
+            Coment&aacute;rio
+            <textarea name="content" rows="4" placeholder="Seu coment&aacute;rio" required></textarea>
+          </label>
+          <button type="submit">Enviar coment&aacute;rio</button>
+        </form>
+        <p class="muted status-line" data-comment-help></p>
+      </section>
+    </main>
+    <dialog class="modal" data-post-modal>
+      <section class="card modal-card">
+        <div class="row modal-header">
+          <h2 class="ink-underline" data-post-modal-title>Publicar post</h2>
+          <button type="button" class="button-ghost" data-post-modal-cancel>Fechar</button>
+        </div>
+        <form data-post-modal-form>
+          <label>
+            T&iacute;tulo
+            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="120" />
+          </label>
+          <label>
+            Conte&uacute;do
+            <textarea
+              name="content"
+              rows="6"
+              placeholder="Explique a ideia de forma objetiva."
+              required
+            ></textarea>
+          </label>
+          <label>
+            Tags
+            <input name="tags" placeholder="node, backend, estudo" />
+          </label>
+          <button type="submit" data-post-modal-submit>Publicar</button>
+        </form>
+        <p class="muted status-line" data-post-modal-status></p>
+      </section>
+    </dialog>
+    <script type="module" src="../js/pages/post.js"></script>
+  </body>
+</html>

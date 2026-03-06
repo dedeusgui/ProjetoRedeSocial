@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil | The Social Network</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="card app-header">
+        <div class="header-copy">
+          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+          <h1 class="ink-underline">Meu perfil</h1>
+          <p class="muted">M&eacute;tricas privadas vis&iacute;veis apenas para voc&ecirc;.</p>
+        </div>
+        <nav class="row app-nav">
+          <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" aria-current="page" data-profile-link hidden>Meu perfil</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
+          <button type="button" data-logout hidden>Sair</button>
+        </nav>
+      </header>
+      <p class="muted" data-profile-status></p>
+      <div data-profile></div>
+      <section class="card admin-panel" data-admin-tools hidden>
+        <div class="row">
+          <h2 class="ink-underline">Ferramentas de admin</h2>
+          <button type="button" class="button-ghost" data-admin-users-refresh>Atualizar usu&aacute;rios</button>
+        </div>
+        <p class="muted status-line" data-admin-users-status></p>
+        <div class="admin-user-grid" data-admin-users-list></div>
+      </section>
+    </main>
+    <script type="module" src="../js/pages/profile.js"></script>
+  </body>
+</html>
