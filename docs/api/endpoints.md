@@ -225,7 +225,7 @@ Example request:
 
 ### `POST /api/v1/posts/:id/review`
 
-- Auth: required (`moderator` or `admin`)
+- Auth: required (`user` or higher)
 - Path params:
   - `id` must be a valid ObjectId
 - Body:
@@ -233,7 +233,6 @@ Example request:
   - `reason` (optional)
 - Success: `201`
 - Rules:
-  - post author cannot review own post
   - one review per `(postId, reviewerId)` pair is upserted
 - Side effects:
   - recomputes post trend and moderation metrics (like/dislike percentages + counters)

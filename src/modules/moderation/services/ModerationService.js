@@ -13,6 +13,7 @@ class ModerationService {
 
   async createReview({ postId, reviewerId, decision, reason }) {
     ensureObjectId(postId, "postId");
+    ensureObjectId(reviewerId, "reviewerId");
     requireFields({ decision }, ["decision"]);
 
     if (!["approved", "not_relevant"].includes(decision)) {
@@ -20,9 +21,6 @@ class ModerationService {
     }
 
     const post = await this.postService.getPostForModeration(postId);
-    if (String(post.authorId) === String(reviewerId)) {
-      throw new AppError("Authors cannot review their own posts", "FORBIDDEN", 403);
-    }
 
     const review = await this.moderationRepository.upsertReview({
       postId,

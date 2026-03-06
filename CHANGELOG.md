@@ -39,6 +39,7 @@ All notable changes to this project should be documented in this file.
 - Replaced post edit `prompt` UX with a shared modal controller (`create | edit`) on feed/post pages, including state reset on close/cancel.
 - Replaced comment edit `prompt` UX with inline editing in post details (`Salvar`/`Cancelar`, `Esc` cancela, `Ctrl+Enter` salva) without page reload.
 - Updated API docs to include existing edit endpoints `PATCH /api/v1/posts/:id` and `PATCH /api/v1/comments/:id`.
+- Updated moderation authorization/rules so any authenticated user (`user` or higher), including the post author, can submit `POST /api/v1/posts/:id/review`.
 
 ## 2026-03-04
 

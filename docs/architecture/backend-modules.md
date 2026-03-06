@@ -39,7 +39,7 @@ Module construction is centralized in `src/server.js`:
 - `posts`: authenticated post deletion is allowed only for post author or admin.
 - `admin`: `admin` role is bootstrap-managed through `ADMIN_EMAILS`; API can only grant/revoke `moderator`.
 - `admin`: moderator eligibility requires minimum posts, minimum account age, and minimum approval rate (90%).
-- `moderation`: post author cannot review own post.
+- `moderation`: any authenticated user can review posts, including own posts.
 - `moderation`: trend is derived from validation score `approvalRate - rejectionRate`:
   - `neutral` only when approval and rejection are exactly tied (50/50)
   - `positive` when approval is greater than rejection
