@@ -7,6 +7,7 @@ The frontend is static and served from `src/public` by Express:
 - pages: `src/public/pages`
 - scripts: `src/public/js`
 - styles: `src/public/css/style.css`
+- shared visual background: global CSS starfield layers with reduced-motion fallback
 
 The frontend consumes backend endpoints at `/api/v1`.
 
@@ -51,4 +52,5 @@ Reference guide:
 - Session/token handling should go through `core/session.js`.
 - API error messages should be normalized through `core/http-state.js`.
 - Prefer shared `bindNavigation()` for internal navigation controls.
+- Ambient visual effects should live in shared CSS and stay behind content, subtle by default, and safe under `prefers-reduced-motion`.
 - Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts.

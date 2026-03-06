@@ -9,6 +9,10 @@ All notable changes to this project should be documented in this file.
 - Added public feed search on `GET /api/v1/feed` with optional `search` filtering across post `title`, `content`, and `tags`.
 - Added feed-page search UI with reset support while preserving chronological pagination for matched posts.
 
+### Changed
+
+- Reworked the shared frontend background into a subtle animated starfield across all pages, with slow CSS drift/twinkle and `prefers-reduced-motion` fallback.
+
 ### Fixed
 
 - Corrected author approval calculation to use `approvedVotes / totalVotes * 100`, clamped to `0..100` and rounded to the nearest integer.
