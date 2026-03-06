@@ -40,6 +40,8 @@ All notable changes to this project should be documented in this file.
 - Replaced comment edit `prompt` UX with inline editing in post details (`Salvar`/`Cancelar`, `Esc` cancela, `Ctrl+Enter` salva) without page reload.
 - Updated API docs to include existing edit endpoints `PATCH /api/v1/posts/:id` and `PATCH /api/v1/comments/:id`.
 - Updated moderation authorization/rules so any authenticated user (`user` or higher), including the post author, can submit `POST /api/v1/posts/:id/review`.
+- Replaced split private profile metrics (`approvalRate/rejectionRate` and per-decision counts) with a unified `score` metric plus `totalReviews`.
+- Updated admin moderator eligibility from `minApprovalRate` to `minScore` and aligned admin/profile UI cards with unified score display.
 
 ## 2026-03-04
 

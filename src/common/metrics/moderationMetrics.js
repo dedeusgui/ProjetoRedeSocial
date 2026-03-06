@@ -2,6 +2,15 @@ function toRoundedPercentage(value) {
   return Number(Number(value).toFixed(2));
 }
 
+function toFiniteNumber(value, fallback = 0) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    return fallback;
+  }
+
+  return numberValue;
+}
+
 export function resolveTrend(approvedCount, notRelevantCount) {
   if (approvedCount === notRelevantCount) {
     return "neutral";
@@ -38,24 +47,46 @@ export function buildPostModerationMetrics(approvedCount, notRelevantCount) {
   };
 }
 
+export function computeUnifiedAuthorScore(approvedCount, notRelevantCount) {
+  const approved = Number(approvedCount) || 0;
+  const notRelevant = Number(notRelevantCount) || 0;
+  const totalReviews = approved + notRelevant;
+
+  if (totalReviews === 0) {
+    return 0;
+  }
+
+  return toRoundedPercentage(((approved - notRelevant) / totalReviews) * 100);
+}
+
+export function resolveUnifiedScoreFromPrivateMetrics(privateMetrics = null) {
+  const storedScore = toFiniteNumber(privateMetrics?.score, Number.NaN);
+  if (Number.isFinite(storedScore)) {
+    return toRoundedPercentage(Math.max(-100, Math.min(100, storedScore)));
+  }
+
+  const legacyApprovalRate = toFiniteNumber(privateMetrics?.approvalRate, 0);
+  const legacyRejectionRate = toFiniteNumber(privateMetrics?.rejectionRate, 0);
+  return toRoundedPercentage(
+    Math.max(-100, Math.min(100, legacyApprovalRate - legacyRejectionRate)),
+  );
+}
+
 export function buildPrivateMetricsFromAuthorSummary(summary = null) {
   const postCount = Number(summary?.postCount) || 0;
 
   if (postCount === 0) {
     return {
-      approvalRate: 0,
-      rejectionRate: 0,
-      approvedCount: 0,
-      notRelevantCount: 0,
+      score: 0,
       totalReviews: 0,
     };
   }
 
+  const approvedCount = Number(summary?.approvedCount) || 0;
+  const notRelevantCount = Number(summary?.notRelevantCount) || 0;
+
   return {
-    approvalRate: toRoundedPercentage(summary.avgApprovalPercentage ?? 0),
-    rejectionRate: toRoundedPercentage(summary.avgNotRelevantPercentage ?? 0),
-    approvedCount: Number(summary.approvedCount) || 0,
-    notRelevantCount: Number(summary.notRelevantCount) || 0,
+    score: computeUnifiedAuthorScore(approvedCount, notRelevantCount),
     totalReviews: Number(summary.totalReviews) || 0,
   };
 }

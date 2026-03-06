@@ -2,6 +2,7 @@ import AppError from "../../../common/errors/AppError.js";
 import {
   buildPostModerationMetrics,
   buildPrivateMetricsFromAuthorSummary,
+  resolveUnifiedScoreFromPrivateMetrics,
   resolveTrend,
 } from "../../../common/metrics/moderationMetrics.js";
 import { buildAdminEmailSet, normalizeEmail } from "../../../common/security/adminAccess.js";
@@ -10,7 +11,7 @@ import { ensureObjectId, requireFields } from "../../../common/validation/index.
 const MODERATOR_REQUIREMENTS = Object.freeze({
   minPosts: 5,
   minAccountAgeDays: 14,
-  minApprovalRate: 70,
+  minScore: 40,
 });
 
 class AdminService {
@@ -25,10 +26,7 @@ class AdminService {
       username: user.username,
       email: user.email,
       role: user.role,
-      approvalRate: user.privateMetrics?.approvalRate ?? 0,
-      rejectionRate: user.privateMetrics?.rejectionRate ?? 0,
-      approvedCount: user.privateMetrics?.approvedCount ?? 0,
-      notRelevantCount: user.privateMetrics?.notRelevantCount ?? 0,
+      score: resolveUnifiedScoreFromPrivateMetrics(user.privateMetrics),
       totalReviews: user.privateMetrics?.totalReviews ?? 0,
       postCount,
       createdAt: user.createdAt,
@@ -36,7 +34,7 @@ class AdminService {
   }
 
   isEligibleForModerator(user, postCount) {
-    const approvalRate = user.privateMetrics?.approvalRate ?? 0;
+    const score = resolveUnifiedScoreFromPrivateMetrics(user.privateMetrics);
     const createdAt = user.createdAt ? new Date(user.createdAt).getTime() : Number.NaN;
     const minCreatedAt = Date.now() - MODERATOR_REQUIREMENTS.minAccountAgeDays * 24 * 60 * 60 * 1000;
 
@@ -45,7 +43,7 @@ class AdminService {
       postCount >= MODERATOR_REQUIREMENTS.minPosts &&
       Number.isFinite(createdAt) &&
       createdAt <= minCreatedAt &&
-      approvalRate >= MODERATOR_REQUIREMENTS.minApprovalRate
+      score >= MODERATOR_REQUIREMENTS.minScore
     );
   }
 
@@ -62,7 +60,7 @@ class AdminService {
     const [candidates, moderators] = await Promise.all([
       this.adminRepository.findEligibleModeratorCandidates({
         minCreatedAt,
-        minApprovalRate: MODERATOR_REQUIREMENTS.minApprovalRate,
+        minScore: MODERATOR_REQUIREMENTS.minScore,
       }),
       this.adminRepository.listModerators(),
     ]);
@@ -176,10 +174,7 @@ class AdminService {
 
       return {
         userId,
-        approvalRate: metrics.approvalRate,
-        rejectionRate: metrics.rejectionRate,
-        approvedCount: metrics.approvedCount,
-        notRelevantCount: metrics.notRelevantCount,
+        score: metrics.score,
         totalReviews: metrics.totalReviews,
       };
     });

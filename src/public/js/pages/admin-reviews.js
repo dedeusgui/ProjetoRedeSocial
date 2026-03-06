@@ -2,7 +2,7 @@ import { api, ApiError } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
-import { escapeHtml, formatDateTime, formatPercent } from "../core/formatters.js";
+import { escapeHtml, formatDateTime, formatSignedPercent } from "../core/formatters.js";
 import { hasSession } from "../core/session.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 
@@ -73,8 +73,8 @@ function renderUserCards(target, users, emptyMessage, actionLabel, actionKind, b
         <article class="card managed-user-card">
           <p><strong>@${escapeHtml(user.username)}</strong> <span class="muted">(${escapeHtml(user.email)})</span></p>
           <p class="muted">Papel: ${escapeHtml(user.role)}</p>
-          <p class="muted">Taxa de aprova\u00e7\u00e3o: ${formatPercent(user.approvalRate)} | Posts: ${user.postCount}</p>
-          <p class="muted">Avalia\u00e7\u00f5es recebidas: ${escapeHtml(user.totalReviews ?? 0)} (aprovar: ${escapeHtml(user.approvedCount ?? 0)} | n\u00e3o relevante: ${escapeHtml(user.notRelevantCount ?? 0)})</p>
+          <p class="muted">Score: ${formatSignedPercent(user.score ?? 0)} | Posts: ${user.postCount}</p>
+          <p class="muted">Avalia\u00e7\u00f5es recebidas: ${escapeHtml(user.totalReviews ?? 0)}</p>
           <p class="muted">Criado em: ${formatDateTime(user.createdAt)}</p>
           <button
             type="button"
@@ -99,7 +99,7 @@ function renderRequirements(requirements) {
   elements.requirements.textContent =
     `Requisitos atuais: ${requirements.minPosts} posts, ` +
     `conta com ${requirements.minAccountAgeDays}+ dias e ` +
-    `aprova\u00e7\u00e3o >= ${requirements.minApprovalRate}%.`;
+    `score >= ${formatSignedPercent(requirements.minScore)}.`;
 }
 
 function renderPanel(data) {

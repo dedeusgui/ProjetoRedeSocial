@@ -29,11 +29,11 @@ class AdminRepository {
     };
   }
 
-  async findEligibleModeratorCandidates({ minCreatedAt, minApprovalRate }) {
+  async findEligibleModeratorCandidates({ minCreatedAt, minScore }) {
     return User.find({
       role: "user",
       createdAt: { $lte: minCreatedAt },
-      "privateMetrics.approvalRate": { $gte: minApprovalRate },
+      "privateMetrics.score": { $gte: minScore },
     })
       .select("username email role privateMetrics createdAt")
       .sort({ createdAt: 1, username: 1 })
@@ -210,8 +210,6 @@ class AdminRepository {
         $group: {
           _id: "$authorId",
           postCount: { $sum: 1 },
-          avgApprovalPercentage: { $avg: "$moderationMetrics.approvalPercentage" },
-          avgNotRelevantPercentage: { $avg: "$moderationMetrics.notRelevantPercentage" },
           approvedCount: { $sum: "$moderationMetrics.approvedCount" },
           notRelevantCount: { $sum: "$moderationMetrics.notRelevantCount" },
           totalReviews: { $sum: "$moderationMetrics.totalReviews" },
@@ -224,8 +222,6 @@ class AdminRepository {
         String(entry._id),
         {
           postCount: entry.postCount,
-          avgApprovalPercentage: entry.avgApprovalPercentage,
-          avgNotRelevantPercentage: entry.avgNotRelevantPercentage,
           approvedCount: entry.approvedCount,
           notRelevantCount: entry.notRelevantCount,
           totalReviews: entry.totalReviews,
@@ -246,10 +242,7 @@ class AdminRepository {
           update: {
             $set: {
               privateMetrics: {
-                approvalRate: entry.approvalRate,
-                rejectionRate: entry.rejectionRate,
-                approvedCount: entry.approvedCount,
-                notRelevantCount: entry.notRelevantCount,
+                score: entry.score,
                 totalReviews: entry.totalReviews,
               },
             },

@@ -7,10 +7,7 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ["user", "moderator", "admin"], default: "user" },
     privateMetrics: {
-      approvalRate: { type: Number, default: 0, min: 0, max: 100 },
-      rejectionRate: { type: Number, default: 0, min: 0, max: 100 },
-      approvedCount: { type: Number, default: 0, min: 0 },
-      notRelevantCount: { type: Number, default: 0, min: 0 },
+      score: { type: Number, default: 0, min: -100, max: 100 },
       totalReviews: { type: Number, default: 0, min: 0 },
     },
   },

@@ -66,8 +66,6 @@ class PostRepository {
         $group: {
           _id: "$authorId",
           postCount: { $sum: 1 },
-          avgApprovalPercentage: { $avg: "$moderationMetrics.approvalPercentage" },
-          avgNotRelevantPercentage: { $avg: "$moderationMetrics.notRelevantPercentage" },
           approvedCount: { $sum: "$moderationMetrics.approvedCount" },
           notRelevantCount: { $sum: "$moderationMetrics.notRelevantCount" },
           totalReviews: { $sum: "$moderationMetrics.totalReviews" },
@@ -78,8 +76,6 @@ class PostRepository {
     if (!summary.length) {
       return {
         postCount: 0,
-        avgApprovalPercentage: 0,
-        avgNotRelevantPercentage: 0,
         approvedCount: 0,
         notRelevantCount: 0,
         totalReviews: 0,

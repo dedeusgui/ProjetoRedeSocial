@@ -175,10 +175,7 @@ Example request:
     - `username`
     - `email`
     - `role`
-    - `approvalRate`
-    - `rejectionRate`
-    - `approvedCount`
-    - `notRelevantCount`
+    - `score`
     - `totalReviews`
     - `postCount`
     - `createdAt`
@@ -191,9 +188,9 @@ Example request:
   - `requirements`:
     - `minPosts`
     - `minAccountAgeDays`
-    - `minApprovalRate`
-  - `eligibleUsers[]` (users eligible for moderator promotion; includes approval/rejection rates and decision counters)
-  - `moderators[]` (current moderators; includes approval/rejection rates and decision counters)
+    - `minScore`
+  - `eligibleUsers[]` (users eligible for moderator promotion; includes unified score and review volume)
+  - `moderators[]` (current moderators; includes unified score and review volume)
 
 ### `PATCH /api/v1/admin/users/:id/moderator`
 
@@ -247,10 +244,7 @@ Example request:
 - Returns:
   - user identity and role
   - private metrics:
-    - `approvalRate` (average approval percentage across authored posts)
-    - `rejectionRate` (average not-relevant percentage across authored posts)
-    - `approvedCount`
-    - `notRelevantCount`
+    - `score` (unified reputation score in range `-100` to `+100` using `(approvedCount - notRelevantCount) / totalReviews * 100`)
     - `totalReviews`
 
 ## Representative Error Examples

@@ -1,4 +1,5 @@
 import AppError from "../../../common/errors/AppError.js";
+import { resolveUnifiedScoreFromPrivateMetrics } from "../../../common/metrics/moderationMetrics.js";
 
 class UserService {
   constructor(userRepository) {
@@ -18,11 +19,8 @@ class UserService {
       email: user.email,
       role: user.role,
       privateMetrics: {
-        approvalRate: user.privateMetrics.approvalRate,
-        rejectionRate: user.privateMetrics.rejectionRate,
-        approvedCount: user.privateMetrics.approvedCount ?? 0,
-        notRelevantCount: user.privateMetrics.notRelevantCount ?? 0,
-        totalReviews: user.privateMetrics.totalReviews ?? 0,
+        score: resolveUnifiedScoreFromPrivateMetrics(user.privateMetrics),
+        totalReviews: user.privateMetrics?.totalReviews ?? 0,
       },
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
