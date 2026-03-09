@@ -1,156 +1,117 @@
-﻿# The Social Network
+﻿# Projeto Rede Social
 
-Rede social anti-ego, anti-algoritmo e centrada em conhecimento.
+Projeto acadêmico de curta duração, desenvolvido para um curso técnico com o objetivo de consolidar práticas de backend, organização de código e integração entre API REST e frontend estático. O repositório também foi estruturado para funcionar como item de portfólio no GitHub, evidenciando decisões técnicas, clareza de arquitetura e documentação consistente.
+
+> Aplicação web full-stack com Node.js, Express e MongoDB, projetada para demonstrar fundamentos de arquitetura, design de APIs, autenticação e organização modular.
 
 ## Visão geral
 
-Este projeto implementa uma API REST + frontend estático com foco em:
+A proposta do sistema é simular uma rede social voltada ao compartilhamento de conhecimento, priorizando simplicidade de regras e clareza técnica. Em vez de buscar escala ou complexidade de produto, o projeto explora fundamentos relevantes do desenvolvimento web:
 
-- feed cronológico (sem recomendação algorítmica)
-- interação binária em posts (`approved` e `not_relevant`)
+- autenticação e autorização
+- organização modular no backend
+- persistência com MongoDB
+- integração entre API e interface web
+- documentação técnica alinhada ao código
+
+O conceito central da aplicação é um feed cronológico, sem recomendação algorítmica, com interações de moderação simples e métricas privadas para o usuário autenticado.
+
+## O que este projeto demonstra
+
+Mais do que entregar uma interface funcional, este repositório foi pensado para evidenciar conhecimento prático em pontos importantes do desenvolvimento web:
+
+- modelagem de API REST com contrato de resposta consistente
+- autenticação com JWT e controle de acesso por papéis
+- separação de responsabilidades entre rotas, controllers, services e repositories
+- persistência e consulta de dados com MongoDB e Mongoose
+- frontend sem framework, consumindo a API de forma organizada
+- documentação técnica complementar para arquitetura, contratos e fluxo de trabalho
+
+## Objetivo do projeto
+
+Este projeto foi construído com dois objetivos principais:
+
+1. servir como entrega acadêmica de curto prazo, demonstrando domínio dos conceitos trabalhados no curso
+2. funcionar como item de portfólio, evidenciando estrutura de projeto, boas separações de responsabilidade e preocupação com documentação
+
+Por esse motivo, a implementação procura manter um padrão profissional de organização, sem deixar de reconhecer que se trata de um projeto de estudo, com escopo controlado e sem objetivo de produção.
+
+## Principais funcionalidades
+
+- cadastro e login de usuários
+- autenticação com JWT
+- criação, listagem, edição e visualização de posts
+- comentários em posts
+- feed público em ordem cronológica
+- moderação binária de posts (`approved` e `not_relevant`)
 - percentual público de aprovação por post
-- métricas agregadas do usuário em contexto autenticado
-- governança por papéis (`user`, `moderator`, `admin`)
+- métricas privadas no perfil autenticado
+- gerenciamento básico de papéis administrativos
 
-## Engineering docs hub
+## Destaques técnicos
 
-For implementation workflows, architecture references, and API contracts, use:
+- `Express 5` como base da API e do servidor que entrega o frontend estático
+- `MongoDB + Mongoose` para modelagem de usuários, posts, comentários e reviews
+- `JWT Bearer` para autenticação de rotas privadas
+- envelope de resposta padronizado no formato `{ ok, data/error }`
+- paginação por cursor no feed para listagem cronológica
+- busca no feed por título, conteúdo e tags
+- `RBAC` simples com papéis `user`, `moderator` e `admin`
+- arquitetura de monólito modular com composição centralizada no backend
 
-- [`docs/README.md`](docs/README.md)
-- [`AGENTS.md`](AGENTS.md) (agent/dev collaboration policy and decision gate)
+## Stack utilizada
 
-## Agent collaboration policy
+### Backend
 
-Antes de implementar qualquer mudança, consulte:
-
-1. [`AGENTS.md`](AGENTS.md)
-2. [`docs/README.md`](docs/README.md)
-
-Regras principais:
-
-- documentação primeiro, implementação depois
-- decisões de alto impacto devem ser confirmadas com o dev
-- agentes devem trazer opções concretas com recomendação e tradeoff
-- projeto acadêmico com execução profissional: decisões rastreáveis e docs atualizados no mesmo PR
-
-## Estado atual (implementado)
-
-A base foi evoluída para **monólito modular** com camadas por módulo:
-
-- `routes` (HTTP)
-- `controllers` (entrada/saída)
-- `services` (regras de negócio)
-- `repositories` (persistência)
-
-Módulos ativos:
-
-- `auth`
-- `users`
-- `posts`
-- `comments`
-- `feed`
-- `admin`
-- `moderation`
-
-## Stack técnica
-
-- Node.js (ESM)
+- Node.js
 - Express 5
-- MongoDB + Mongoose
-- Frontend em HTML/CSS/JS puro
+- MongoDB
+- Mongoose
 
-## Estrutura do projeto
+### Frontend
 
-```text
-src/
-  common/
-    errors/
-    http/
-    security/
-    validation/
-  config/
-    db.js
-    env.js
-  middleware/
-    auth.js
-    roles.js
-  models/
-    user.js
-    post.js
-    post_review.js
-    comment.js
-  modules/
-    auth/
-    users/
-    posts/
-    comments/
-    feed/
-    admin/
-    moderation/
-  public/
-    css/
-    js/
-    pages/
-  server.js
-```
+- HTML
+- CSS
+- JavaScript puro
 
-## Responsabilidade por módulo
+## Visão do produto
 
-### Auth
+Do ponto de vista funcional, a aplicação se apoia em três ideias centrais:
 
-- cadastro (`register`)
-- login (`login`)
-- emissão de JWT Bearer
+1. feed em ordem cronológica, sem algoritmo de recomendação
+2. moderação simples por avaliação binária de posts
+3. separação entre informação pública do post e métricas privadas do usuário
 
-### Users
+Esse recorte ajuda a manter o projeto enxuto, coerente e adequado ao contexto acadêmico, ao mesmo tempo em que permite exercitar decisões técnicas relevantes.
 
-- leitura de perfil autenticado (`/me/profile`)
-- manutenção de métricas privadas do usuário
+## Arquitetura resumida
 
-### Posts
+O projeto adota uma estrutura de monólito modular. No backend, cada módulo segue a mesma divisão de responsabilidades:
 
-- criação de post autenticado
-- detalhe de post + comentários visíveis
-- atualização de tendência por contrato interno
-- exclusão de post por autor, moderador ou admin, com limpeza de comentários/reviews vinculados
+- `routes`: definição das rotas HTTP
+- `controllers`: tradução entre requisição, resposta e serviços
+- `services`: regras de negócio e orquestração
+- `repositories`: acesso e persistência de dados
 
-### Comments
+Os módulos ativos atualmente cobrem:
 
-- criação de comentários autenticada
-- listagem de comentários visíveis por post
-- exclusão de comentário por moderador ou admin
+- autenticação
+- usuários
+- posts
+- comentários
+- feed
+- moderação
+- administração
 
-### Feed
+No frontend, a aplicação é servida de forma estática pelo próprio backend, com separação entre páginas, componentes reutilizáveis e scripts por domínio.
 
-- listagem cronológica de posts publicados
-- paginação por cursor (`createdAt + id`)
+Essa organização foi escolhida para manter o código simples de navegar, mas suficientemente estruturado para demonstrar critérios reais de projeto.
 
-### Moderation
+## Contrato da API
 
-- registro de review em post
-- regras de autorização para usuário autenticado
-- cálculo de tendência do post
-- recálculo de métricas privadas do autor
+A API utiliza o prefixo `/api/v1` e segue um envelope padrão de resposta.
 
-### Admin
-
-- bootstrap de administradores via configuração (`ADMIN_EMAILS`)
-- listagem administrativa de usuários e respectivos papéis
-- listagem de usuários elegíveis para moderação
-- concessão e remoção de papel `moderator`
-- exclusão administrativa de usuários para testes (com recálculo de estatísticas derivadas)
-
-## Regras de negócio principais
-
-- feed público em ordem cronológica decrescente
-- público vê percentual de aprovação por post
-- autor não pode revisar o próprio post
-- métricas privadas são retornadas somente em `/me/profile`
-- papel `admin` é controlado por configuração do projeto
-
-## Contrato de resposta da API
-
-Sucesso:
+### Sucesso
 
 ```json
 {
@@ -159,7 +120,7 @@ Sucesso:
 }
 ```
 
-Erro:
+### Erro
 
 ```json
 {
@@ -171,136 +132,59 @@ Erro:
 }
 ```
 
-## Endpoints (`/api/v1`)
+Rotas protegidas utilizam:
 
-| Método | Rota | Auth | Role | Descrição |
-|---|---|---|---|---|
-| `POST` | `/auth/register` | Não | - | Cria usuário e retorna token |
-| `POST` | `/auth/login` | Não | - | Autentica e retorna token |
-| `GET` | `/feed` | Não | - | Feed cronológico com cursor |
-| `POST` | `/posts` | Sim | `user+` | Cria post |
-| `GET` | `/posts/:id` | Não | - | Detalhe do post + comentários |
-| `GET` | `/posts/:id/comments` | Não | - | Lista comentários visíveis |
-| `POST` | `/posts/:id/comments` | Sim | `user+` | Cria comentário |
-| `DELETE` | `/posts/:id` | Sim | `user+` | Exclui post (autor/mod/admin) |
-| `DELETE` | `/comments/:id` | Sim | `moderator/admin` | Exclui comentário |
-| `GET` | `/admin/users` | Sim | `admin` | Lista usuários e papéis |
-| `GET` | `/admin/moderator-eligibility` | Sim | `admin` | Lista elegíveis e moderadores |
-| `PATCH` | `/admin/users/:id/moderator` | Sim | `admin` | Concede/remove `moderator` |
-| `DELETE` | `/admin/users/:id` | Sim | `admin` | Exclui usuário e recalcula estatísticas |
-| `POST` | `/posts/:id/review` | Sim | `user+` | Registra review |
-| `GET` | `/me/profile` | Sim | `user+` | Perfil autenticado + métricas privadas |
-
-Observações:
-
-- Header de autenticação: `Authorization: Bearer <token>`
-- Endpoint raiz: `GET /` retorna metadados da API
-
-## Exemplos de payload
-
-### Registro
-
-```json
-{
-  "username": "ana",
-  "email": "ana@email.com",
-  "password": "123456"
-}
+```http
+Authorization: Bearer <token>
 ```
 
-### Login
+## Exemplo do que a API cobre
 
-```json
-{
-  "email": "ana@email.com",
-  "password": "123456"
-}
+Sem listar toda a referência técnica no README principal, a API inclui fluxos como:
+
+- registro e login
+- leitura de feed público
+- criação, edição e exclusão de posts
+- comentários por post
+- avaliação de moderação
+- leitura de perfil autenticado
+- administração de usuários e papéis
+
+Os detalhes completos de rotas, payloads e regras ficam na documentação em `docs/`.
+
+## Estrutura do projeto
+
+```text
+src/
+  common/
+  config/
+  middleware/
+  models/
+  modules/
+  public/
+  server.js
 ```
 
-### Criação de post
+### Organização geral
 
-```json
-{
-  "title": "Como estudar Node.js",
-  "content": "Resumo prático...",
-  "tags": ["node", "backend"]
-}
-```
+- `src/modules`: domínios principais da aplicação
+- `src/public`: páginas, scripts e estilos do frontend
+- `src/common`: utilitários compartilhados, validações e tratamento HTTP
+- `src/config`: configurações de ambiente e conexão
 
-### Review de post
+## Fluxo de execução
 
-```json
-{
-  "decision": "approved",
-  "reason": "Conteúdo claro e útil"
-}
-```
-
-## Modelos de dados (MongoDB)
-
-### User
-
-- `username: string` (único)
-- `email: string` (único)
-- `passwordHash: string`
-- `role: "user" | "moderator" | "admin"`
-- `privateMetrics.score: number (0-100, percentual de aprovação)`
-- `privateMetrics.totalReviews: number`
-- `createdAt: Date`
-- `updatedAt: Date`
-
-### Post
-
-- `authorId: ObjectId(User)`
-- `title: string`
-- `content: string`
-- `tags: string[]`
-- `status: "published" | "hidden" | "pending_review"`
-- `trend: "positive" | "neutral" | "negative"`
-- `createdAt: Date`
-- `updatedAt: Date`
-
-### PostReview
-
-- `postId: ObjectId(Post)`
-- `reviewerId: ObjectId(User)`
-- `decision: "approved" | "not_relevant"`
-- `reason: string | null`
-- `createdAt: Date`
-- `updatedAt: Date`
-
-### Comment
-
-- `postId: ObjectId(Post)`
-- `authorId: ObjectId(User)`
-- `content: string`
-- `status: "visible" | "hidden"`
-- `createdAt: Date`
-- `updatedAt: Date`
-
-## Segurança
-
-- autenticação JWT Bearer (assinatura HMAC SHA-256)
-- middleware global de autenticação para rotas privadas
-- middleware de papéis para rotas de moderação
-- validação de campos obrigatórios e `ObjectId`
-
-## Variáveis de ambiente
-
-Arquivo: variáveis lidas em `src/config/env.js`.
-
-- `PORT` (padrão: `3000`)
-- `MONGO_URI` (padrão: `mongodb://localhost:27017/thesocial`)
-- `JWT_SECRET` (padrão de desenvolvimento: `change-me-in-production`)
-- `JWT_EXPIRES_IN_SECONDS` (padrão: `43200`)
-- `ADMIN_EMAILS` (opcional: emails separados por vírgula que recebem papel `admin`)
+- `src/server.js` inicializa a aplicação
+- o Express registra middlewares, rotas e arquivos estáticos
+- os módulos de backend são compostos no bootstrap da aplicação
+- o frontend consome a API em `/api/v1`
 
 ## Como executar localmente
 
 ### Pré-requisitos
 
 - Node.js 18+
-- MongoDB rodando localmente (ou remoto via `MONGO_URI`)
+- MongoDB local ou remoto configurado via `MONGO_URI`
 
 ### Instalação
 
@@ -314,61 +198,61 @@ npm install
 npm run dev
 ```
 
-### Build e start
+Por padrão, a aplicação utiliza:
 
-> O script `build` usa `xcopy` (ambiente Windows).
+- `PORT=3000`
+- `MONGO_URI=mongodb://localhost:27017/thesocial`
+
+### Build e execução
 
 ```bash
 npm run build
 npm start
 ```
 
-## Frontend estático
+Observação: o script `build` utiliza `xcopy`, portanto o fluxo atual foi preparado com foco em ambiente Windows.
 
-Páginas disponíveis em `src/public/pages`:
+## Páginas disponíveis
 
-- `index.html` (registro/login)
-- `feed.html`
-- `post.html`
-- `profile.html`
-- `admin/reviews.html`
+O frontend atual possui as seguintes telas principais:
 
-Arquitetura frontend em `src/public/js`:
+- `index.html`: entrada de autenticação
+- `feed.html`: listagem cronológica de posts
+- `post.html`: detalhe do post e comentários
+- `profile.html`: perfil autenticado e métricas privadas
+- `admin/reviews.html`: fluxo de moderação e administração
 
-- `api.js` (cliente HTTP + facade de endpoints)
-- `core/` (sessão, formatadores e tratamento de estado/erro)
-- `components/` (navbar, navegação por `data-nav-href`, feedback visual)
-- `features/*/renderers.js` (renderização por domínio)
-- `pages/*.js` (orquestração por página)
+## Por que este projeto é relevante para portfólio
 
-O frontend consome a API em `/api/v1` por meio dessa estrutura modular.
-A navegação interna entre páginas usa botões com `data-nav-href`, tratados por `src/public/js/components/navigation.js`.
+Mesmo sendo um projeto acadêmico de curto prazo, ele demonstra pontos que costumam ser relevantes em avaliação técnica:
 
-## Padrões de contribuição
+- organização de backend além de um CRUD simples
+- preocupação com separação de camadas
+- consistência de contrato HTTP
+- controle de autenticação e autorização
+- integração de frontend e backend no mesmo repositório
+- documentação alinhada ao código
 
-Toda contribuição deve preservar:
+## Escopo e posicionamento
 
-- feed estritamente cronológico
-- ausência de métricas públicas de validação
-- separação de responsabilidade entre módulos
-- contrato de resposta `{ ok, data/error }`
-- controle de acesso por autenticação e papel
+Este repositório não pretende representar uma rede social completa, nem um produto pronto para uso comercial. O foco está em:
 
-## Não-objetivos do produto
+- aprendizado prático
+- consolidação de conceitos técnicos
+- demonstração de estrutura de projeto
+- apresentação profissional de um trabalho acadêmico
 
-Este projeto não é:
+Em outras palavras, o valor do projeto está menos em complexidade de negócio e mais em clareza de implementação, consistência arquitetural e documentação.
 
-- clone de Instagram
-- clone de LinkedIn
-- clone de TikTok
-- plataforma de competição por status
-- plataforma de exibição de popularidade por números públicos
+## Documentação complementar
 
-## Governança do README
+Os detalhes técnicos mais completos ficam centralizados na pasta `docs/`.
 
-Se houver conflito entre implementação e documentação:
+- [docs/README.md](docs/README.md)
+- [docs/architecture/system-overview.md](docs/architecture/system-overview.md)
+- [docs/api/http-contract.md](docs/api/http-contract.md)
+- [AGENTS.md](AGENTS.md)
 
-1. atualizar a implementação para aderir ao README, **ou**
-2. revisar conscientemente o README antes da mudança.
+## Observação final
 
-Este arquivo deve sempre refletir o estado real do código.
+O README principal foi pensado para apresentar o projeto de forma objetiva e profissional. Quando houver divergência entre este arquivo e a implementação, a documentação técnica em `docs/` e o código devem ser tratados como referência para revisão e alinhamento.
