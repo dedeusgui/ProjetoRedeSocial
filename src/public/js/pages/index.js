@@ -1,8 +1,9 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
-import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
+import { HOME_NOTICE_KEY } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import { resolveApiMessage } from "../core/http-state.js";
+import { hasSession } from "../core/session.js";
 import { saveSessionToken } from "../core/session.js";
 
 const FEED_NOTICE_KEY = "thesocial_feed_notice";
@@ -12,24 +13,9 @@ const elements = {
   registerForm: document.querySelector("[data-register-form]"),
   loginForm: document.querySelector("[data-login-form]"),
   authStatus: document.querySelector("[data-auth-status]"),
-  sessionStatus: document.querySelector("[data-session-status]"),
-  sessionActionsAnon: document.querySelector("[data-session-actions-anon]"),
-  sessionActionsAuth: document.querySelector("[data-session-actions-auth]"),
-  privateMetricsCta: document.querySelector("[data-private-metrics-cta]"),
-  loginLink: document.querySelector("[data-login-link]"),
-  profileLink: document.querySelector("[data-profile-link]"),
-  logoutButton: document.querySelector("[data-logout]"),
 };
 
 const authFlash = createFlash(elements.authStatus);
-const sessionFlash = createFlash(elements.sessionStatus);
-
-const navbar = initNavbar({
-  loginLink: elements.loginLink,
-  profileLink: elements.profileLink,
-  logoutButton: elements.logoutButton,
-  logoutRedirectUrl: "./index.html",
-});
 
 function toggleHidden(element, hidden) {
   if (element) {
@@ -38,19 +24,9 @@ function toggleHidden(element, hidden) {
 }
 
 function renderAuthExperience() {
-  const isAuthenticated = navbar.refresh();
+  const isAuthenticated = hasSession();
 
   toggleHidden(elements.authAnon, isAuthenticated);
-  toggleHidden(elements.sessionActionsAnon, isAuthenticated);
-  toggleHidden(elements.sessionActionsAuth, !isAuthenticated);
-  toggleHidden(elements.privateMetricsCta, !isAuthenticated);
-
-  sessionFlash.show(
-    isAuthenticated
-      ? "Sessao ativa. Voce pode publicar no feed e ver metricas privadas."
-      : "Faca login para publicar no feed.",
-    "info",
-  );
 
   if (!isAuthenticated) {
     authFlash.clear();
@@ -67,7 +43,7 @@ function consumeHomeNotice() {
     }
 
     window.sessionStorage.removeItem(HOME_NOTICE_KEY);
-    sessionFlash.show(notice, "info");
+    authFlash.show(notice, "info");
   } catch {
     // noop: sessionStorage can be unavailable in restricted environments
   }

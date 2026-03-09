@@ -2,6 +2,13 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-09
+
+### Fixed
+
+- Removed the redundant session summary card from `src/public/pages/index.html` and cleaned the home-page script so it no longer queries or toggles session/nav elements that are absent on that page.
+- Preserved home notices by rendering redirect/logout messages through the existing auth status area after the session card removal.
+
 ## 2026-03-06
 
 ### Added
