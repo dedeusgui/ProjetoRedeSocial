@@ -11,7 +11,6 @@ const AUTH_REQUIRED_NOTICE = "Autenticacao necessaria para acessar seu perfil.";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
-  profileLink: document.querySelector("[data-profile-link]"),
   logoutButton: document.querySelector("[data-logout]"),
   status: document.querySelector("[data-profile-status]"),
   profile: document.querySelector("[data-profile]"),
@@ -30,7 +29,6 @@ const state = {
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
-  profileLink: elements.profileLink,
   logoutButton: elements.logoutButton,
   logoutRedirectUrl: "./index.html",
 });

@@ -6,6 +6,8 @@ All notable changes to this project should be documented in this file.
 
 ### Fixed
 
+- Removed the self-referential `Feed` button from `src/public/pages/feed.html` and the self-referential `Meu perfil` button from `src/public/pages/profile.html`.
+- Cleaned `src/public/js/pages/profile.js` so the profile page no longer queries/passes a navbar profile-link hook that was removed from its own markup.
 - Removed the redundant session summary card from `src/public/pages/index.html` and cleaned the home-page script so it no longer queries or toggles session/nav elements that are absent on that page.
 - Preserved home notices by rendering redirect/logout messages through the existing auth status area after the session card removal.
 
