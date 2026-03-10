@@ -54,6 +54,7 @@ const elements = {
   postMediaInput: document.querySelector("[data-post-media-input]"),
   selectedPostMedia: document.querySelector("[data-selected-post-media]"),
   existingPostMedia: document.querySelector("[data-existing-post-media]"),
+  questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -351,6 +352,7 @@ const postModalController = createPostModalController({
   mediaInput: elements.postMediaInput,
   selectedMediaTarget: elements.selectedPostMedia,
   existingMediaTarget: elements.existingPostMedia,
+  questionnaireTarget: elements.questionnaireEditor,
   resolveErrorMessage: resolveMessage,
   onBeforeOpenCreate() {
     const isAuthenticated = requireSession({

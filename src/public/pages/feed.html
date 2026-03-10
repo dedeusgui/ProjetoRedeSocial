@@ -95,7 +95,7 @@
         <form data-post-modal-form>
           <label>
             T&iacute;tulo
-            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="120" />
+            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="100" />
           </label>
           <label>
             Conte&uacute;do
@@ -104,6 +104,7 @@
               rows="6"
               placeholder="Explique a ideia de forma objetiva."
               required
+              maxlength="3000"
             ></textarea>
           </label>
           <label>
@@ -123,6 +124,7 @@
           </label>
           <section class="modal-media-section" data-existing-post-media hidden></section>
           <section class="modal-media-section" data-selected-post-media></section>
+          <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
           <button type="submit" data-post-modal-submit>Publicar</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>

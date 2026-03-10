@@ -1,4 +1,5 @@
 import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
+import { formatQuestionnaire } from "../../../common/posts/questionnaire.js";
 import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { parseLimit } from "../../../common/validation/index.js";
 
@@ -32,6 +33,7 @@ class FeedService {
       content: post.content,
       tags: post.tags,
       media: formatPostMediaCollection(post.media),
+      questionnaire: formatQuestionnaire(post.questionnaire),
       trend: post.trend,
       moderationMetrics: {
         approvedCount: post.moderationMetrics?.approvedCount ?? 0,

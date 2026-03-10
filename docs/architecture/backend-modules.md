@@ -6,9 +6,9 @@
 |---|---|---|---|
 | `auth` | `POST /auth/register`, `POST /auth/login` | Create users, validate credentials, issue JWT | `AuthRepository`, JWT signer |
 | `users` | `GET /me/profile`, `POST/DELETE /me/avatar`, `GET/POST/DELETE /me/followed-tags` | Return authenticated profile/private metrics, manage owner avatar uploads/removal, persist followed tags, update metrics, and format public author summaries | `UserRepository`, local disk storage |
-| `posts` | `POST /posts`, `GET /posts/:id`, `PATCH /posts/:id`, `POST /posts/:id/media`, `DELETE /posts/:id/media/:mediaId`, `DELETE /posts/:id` | Create/edit post, persist image metadata, manage post image uploads/removals, fetch post details with visible comments and public author summaries, update post moderation metrics, delete posts by owner/moderator/admin with private metric recalculation and file cleanup | `PostRepository`, `CommentService`, `UserService`, local disk storage |
+| `posts` | `POST /posts`, `GET /posts/:id`, `PATCH /posts/:id`, `POST /posts/:id/media`, `DELETE /posts/:id/media/:mediaId`, `DELETE /posts/:id` | Create/edit post, persist optional questionnaire data and image metadata, manage post image uploads/removals, fetch post details with visible comments and public author summaries, update post moderation metrics, delete posts by owner/moderator/admin with private metric recalculation and file cleanup | `PostRepository`, `CommentService`, `UserService`, local disk storage |
 | `comments` | `GET /posts/:id/comments`, `POST /posts/:id/comments`, `DELETE /comments/:id` | Create visible comments, list visible comments by post with public author summaries, edit comments by owner, delete comments by owner/moderator/admin | `CommentRepository` |
-| `feed` | `GET /feed`, `GET /feed/following` | Return chronological published posts with cursor pagination and optional search, including public author summaries; return a chronological followed-tags feed for authenticated users | `FeedRepository`, `UserService` |
+| `feed` | `GET /feed`, `GET /feed/following` | Return chronological published posts with cursor pagination and optional search, including public author summaries, optional questionnaire payload, and media; return a chronological followed-tags feed for authenticated users | `FeedRepository`, `UserService` |
 | `admin` | `GET /admin/users`, `GET /admin/moderator-eligibility`, `PATCH /admin/users/:id/moderator`, `DELETE /admin/users/:id` | Sync bootstrap admins from environment, list users/roles, manage moderator eligibility/promotion, and delete users for testing with stat recalculation | `AdminRepository`, `roles` middleware |
 | `moderation` | `POST /posts/:id/review` | Upsert review, recompute post trend + approval percentages, recompute author private metrics | `ModerationRepository`, `PostService` |
 
@@ -38,10 +38,15 @@ Module construction is centralized in `src/server.js`:
 - `feed`: followed-tag filtering matches any followed tag, keeps public feed behavior unchanged, and never introduces recommendation ranking.
 - `feed`: public search is limited to published posts and matches `title`, `content`, and `tags`.
 - `feed`: public author data in feed responses is limited to avatar URL, username, and derived reputation tier.
+- `feed`: questionnaire posts stay in normal chronological ordering; the feed may preview only the first questionnaire question while the full answer flow lives on post detail.
 - `posts`: hidden posts are not returned by detail endpoint.
 - `posts`: post images are stored on local disk and only image metadata/URLs are stored in MongoDB.
 - `posts`: a post can have at most 4 images.
+- `posts`: a post can also include one optional questionnaire stored directly on the post document.
+- `posts`: questionnaires are limited to 10 questions, each with 2 to 6 options and exactly one correct answer.
+- `posts`: post `title` is limited to 100 characters and `content` is limited to 3000 characters on create/edit; questionnaire title is limited to 120 characters.
 - `posts`: only the post author can add or remove post images.
+- `posts`: only the post author can create, edit, or remove a questionnaire because it follows post ownership rules.
 - `posts`: authenticated post deletion is allowed for post author, moderator, or admin.
 - `posts`: post detail author data is limited to avatar URL, username, and derived reputation tier.
 - `comments`: authenticated comment deletion is allowed for comment author, moderator, or admin.

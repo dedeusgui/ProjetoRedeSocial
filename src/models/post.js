@@ -21,6 +21,27 @@ const PostMediaSchema = new mongoose.Schema(
   },
 );
 
+const PostQuestionSchema = new mongoose.Schema(
+  {
+    prompt: { type: String, required: true, trim: true },
+    options: { type: [String], default: [], required: true },
+    correctOptionIndex: { type: Number, required: true, min: 0 },
+  },
+  {
+    _id: false,
+  },
+);
+
+const PostQuestionnaireSchema = new mongoose.Schema(
+  {
+    title: { type: String, trim: true, default: null },
+    questions: { type: [PostQuestionSchema], default: [], required: true },
+  },
+  {
+    _id: false,
+  },
+);
+
 const PostSchema = new mongoose.Schema(
   {
     authorId: {
@@ -33,6 +54,7 @@ const PostSchema = new mongoose.Schema(
     content: { type: String, required: true, trim: true },
     tags: { type: [String], default: [] },
     media: { type: [PostMediaSchema], default: [] },
+    questionnaire: { type: PostQuestionnaireSchema, default: null },
     status: {
       type: String,
       enum: ["published", "hidden", "pending_review"],

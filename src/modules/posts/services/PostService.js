@@ -8,11 +8,15 @@ import {
   formatPostMediaCollection,
 } from "../../../common/media/postMedia.js";
 import { buildPrivateMetricsFromAuthorSummary } from "../../../common/metrics/moderationMetrics.js";
+import {
+  formatQuestionnaire,
+  validateQuestionnaireShape,
+} from "../../../common/posts/questionnaire.js";
 import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
-const POST_TITLE_MAX_LENGTH = 120;
-const POST_CONTENT_MAX_LENGTH = 5000;
+const POST_TITLE_MAX_LENGTH = 100;
+const POST_CONTENT_MAX_LENGTH = 3000;
 
 class PostService {
   constructor(postRepository, commentService, userService) {
@@ -38,6 +42,7 @@ class PostService {
       content: post.content,
       tags: post.tags,
       media: formatPostMediaCollection(post.media),
+      questionnaire: formatQuestionnaire(post.questionnaire),
       status: post.status,
       trend: post.trend,
       moderationMetrics: this.formatModerationMetrics(post),
@@ -101,11 +106,14 @@ class PostService {
   async createPost(authorId, payload) {
     requireFields(payload, ["title", "content"]);
 
+    this.validateEditablePostFields(payload);
+
     const tags = Array.isArray(payload.tags)
       ? payload.tags
           .map((tag) => String(tag).trim())
           .filter((tag) => tag.length > 0)
       : [];
+    const questionnaire = validateQuestionnaireShape(payload.questionnaire);
 
     const post = await this.postRepository.create({
       authorId,
@@ -113,6 +121,7 @@ class PostService {
       content: payload.content.trim(),
       tags,
       media: [],
+      questionnaire: questionnaire ?? null,
       status: "published",
       trend: "neutral",
       moderationMetrics: {
@@ -174,6 +183,10 @@ class PostService {
         field: "tags",
       });
     }
+
+    if (payload.questionnaire !== undefined) {
+      validateQuestionnaireShape(payload.questionnaire);
+    }
   }
 
   normalizePostUpdatePayload(payload) {
@@ -191,6 +204,10 @@ class PostService {
       updates.tags = payload.tags
         .map((tag) => String(tag).trim())
         .filter((tag) => tag.length > 0);
+    }
+
+    if (payload.questionnaire !== undefined) {
+      updates.questionnaire = validateQuestionnaireShape(payload.questionnaire);
     }
 
     return updates;
@@ -213,6 +230,7 @@ class PostService {
       content: post.content,
       tags: post.tags,
       media: formatPostMediaCollection(post.media),
+      questionnaire: formatQuestionnaire(post.questionnaire),
       trend: post.trend,
       moderationMetrics: this.formatModerationMetrics(post),
       createdAt: post.createdAt,
@@ -297,6 +315,7 @@ class PostService {
       content: updated.content,
       tags: updated.tags,
       media: formatPostMediaCollection(updated.media),
+      questionnaire: formatQuestionnaire(updated.questionnaire),
       updatedAt: updated.updatedAt,
     };
   }

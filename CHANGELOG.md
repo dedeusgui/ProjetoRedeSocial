@@ -25,6 +25,12 @@ All notable changes to this project should be documented in this file.
 - Added feed-page `Tags que sigo` mode with manual tag follow form and visible followed-tag list.
 - Added follow/unfollow actions on tag chips in both the feed and post detail views.
 - Added RFC `docs/rfcs/follow-tags-feed.md` for the implemented feature.
+- Added optional post questionnaires with:
+  - single-choice questions and one correct answer per question
+  - questionnaire authoring in the shared post create/edit modal
+  - first-question preview on feed cards
+  - full questionnaire self-check flow on post detail for signed-in users
+- Added RFC `docs/rfcs/post-questionnaires.md` for the implemented feature.
 
 ### Changed
 
@@ -32,18 +38,23 @@ All notable changes to this project should be documented in this file.
 - Extended feed/post/comment author payloads to include avatar URLs and derived reputation tiers.
 - Enlarged the profile-page username header and repositioned profile identity content around the new avatar controls.
 - Extended post and feed responses to include uploaded post `media[]`.
+- Extended post create/update/feed/detail payloads to include optional `questionnaire` data.
 - Updated post deletion flow to clean up uploaded files from disk.
 - Extended the user model with canonical lowercase `followedTags` storage.
 - Kept personalization chronological by filtering followed tags without changing the default public feed behavior.
 - Updated feed and post renderers to expose tag-based follow controls for authenticated users.
 - Improved user-facing validation/auth/upload error messages with clearer PT-BR descriptions and actionable upload limits/details.
+- Tightened post title/content validation to `100` / `3000` characters and enforced the same limits on both post create and edit flows.
+- Improved shared post/comment wrapping and spacing so long text no longer breaks feed/post layouts, with clearer separation between post detail and comments.
 
 ### Docs
 
 - Updated architecture, API, frontend, and RFC docs to describe private-profile avatar management and the limited public author summary contract.
 - Updated architecture and API docs to describe post media upload storage, routes, and response changes.
 - Updated architecture, API, and frontend docs to describe followed tags and the new personalized feed flow.
+- Updated architecture, API, frontend, and RFC docs to describe optional post questionnaires and their current self-check tradeoff.
 - Corrected endpoint docs for post/comment deletion authorization to match current code behavior.
+- Updated post validation limits and backend-module rules in the docs to match the current implementation.
 
 ### Fixed
 

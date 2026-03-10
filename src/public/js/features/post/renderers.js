@@ -1,5 +1,6 @@
 import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
+import { renderQuestionnaireDetail } from "../questionnaire/renderers.js";
 
 function normalizeTagForFollow(tag) {
   return String(tag ?? "")
@@ -153,6 +154,7 @@ export function renderPostView(
     commentEdit = null,
     canManageTagFollows = false,
     followedTagSet = new Set(),
+    questionnaireSession = null,
   } = {},
 ) {
   if (!target) {
@@ -176,6 +178,11 @@ export function renderPostView(
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
       ${renderPostMedia(post.media, post.title)}
+      ${renderQuestionnaireDetail(post.questionnaire, {
+        canAnswer: canReviewPosts,
+        answers: questionnaireSession?.answers ?? {},
+        result: questionnaireSession?.submittedResult ?? null,
+      })}
       ${renderTags(tags, { canManageTagFollows, followedTagSet })}
       <div class="review-actions">
         ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${escapeHtml(post.id ?? "")}">Aprovar</button>` : ""}

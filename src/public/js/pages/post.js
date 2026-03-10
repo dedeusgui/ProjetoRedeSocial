@@ -20,6 +20,11 @@ const state = {
   isDeletingPost: false,
   isDeletingComment: false,
   isManagingTags: false,
+  questionnaireSignature: null,
+  questionnaireSession: {
+    answers: {},
+    submittedResult: null,
+  },
   commentEdit: {
     editingCommentId: null,
     draft: "",
@@ -45,6 +50,7 @@ const elements = {
   postMediaInput: document.querySelector("[data-post-media-input]"),
   selectedPostMedia: document.querySelector("[data-selected-post-media]"),
   existingPostMedia: document.querySelector("[data-existing-post-media]"),
+  questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -122,6 +128,25 @@ function resetCommentEditState() {
   state.commentEdit.isSaving = false;
 }
 
+function buildQuestionnaireSignature(questionnaire) {
+  if (!questionnaire) {
+    return null;
+  }
+
+  try {
+    return JSON.stringify(questionnaire);
+  } catch {
+    return null;
+  }
+}
+
+function resetQuestionnaireSession() {
+  state.questionnaireSession = {
+    answers: {},
+    submittedResult: null,
+  };
+}
+
 function renderSessionState() {
   const isAuthenticated = navbar.refresh();
   const commentsVisible = state.commentsOpen;
@@ -197,6 +222,7 @@ function renderCurrentPost() {
     commentEdit: state.commentEdit,
     canManageTagFollows: hasSession(),
     followedTagSet: new Set(state.followedTags),
+    questionnaireSession: state.questionnaireSession,
   });
 
   refreshReviewActions();
@@ -248,6 +274,8 @@ async function loadPost() {
   if (!postId) {
     state.postData = null;
     state.postAuthorId = null;
+    state.questionnaireSignature = null;
+    resetQuestionnaireSession();
     resetCommentEditState();
     renderMissingPostState("ID do post ausente na URL.");
     statusFlash.show("Não foi possível abrir o post.", "error");
@@ -258,6 +286,11 @@ async function loadPost() {
 
   try {
     const post = await api.posts.getById(postId);
+    const nextQuestionnaireSignature = buildQuestionnaireSignature(post.questionnaire);
+    if (state.questionnaireSignature !== nextQuestionnaireSignature) {
+      state.questionnaireSignature = nextQuestionnaireSignature;
+      resetQuestionnaireSession();
+    }
     state.postData = post;
     state.postAuthorId = post.author?.id ?? null;
     resetCommentEditState();
@@ -267,6 +300,8 @@ async function loadPost() {
   } catch (error) {
     state.postData = null;
     state.postAuthorId = null;
+    state.questionnaireSignature = null;
+    resetQuestionnaireSession();
     resetCommentEditState();
     renderMissingPostState("Este post não pode ser exibido no momento.");
     statusFlash.show(resolveMessage(error), "error");
@@ -443,6 +478,7 @@ const postModalController = createPostModalController({
   mediaInput: elements.postMediaInput,
   selectedMediaTarget: elements.selectedPostMedia,
   existingMediaTarget: elements.existingPostMedia,
+  questionnaireTarget: elements.questionnaireEditor,
   resolveErrorMessage: resolveMessage,
   onBeforeOpenEdit() {
     const isOwner = String(state.viewerId ?? "") === String(state.postAuthorId ?? "");
@@ -486,6 +522,65 @@ function handleEditPost() {
   }
 
   postModalController.openPostModalEdit(state.postData);
+}
+
+function setQuestionnaireAnswer(questionIndex, optionIndex) {
+  state.questionnaireSession.answers = {
+    ...state.questionnaireSession.answers,
+    [questionIndex]: optionIndex,
+  };
+}
+
+function resetQuestionnaireAnswers() {
+  resetQuestionnaireSession();
+  renderCurrentPost();
+}
+
+function submitQuestionnaireAnswers() {
+  const questions = Array.isArray(state.postData?.questionnaire?.questions)
+    ? state.postData.questionnaire.questions
+    : [];
+  if (questions.length === 0) {
+    return;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Faca login para responder ao questionario.", "error");
+    return;
+  }
+
+  const missingQuestionIndex = questions.findIndex(
+    (_, questionIndex) => state.questionnaireSession.answers[questionIndex] === undefined,
+  );
+  if (missingQuestionIndex !== -1) {
+    statusFlash.show(
+      `Responda a pergunta ${missingQuestionIndex + 1} antes de conferir o resultado.`,
+      "error",
+    );
+    return;
+  }
+
+  const perQuestion = questions.map((question, questionIndex) => {
+    const selectedOptionIndex = Number.parseInt(
+      state.questionnaireSession.answers[questionIndex],
+      10,
+    );
+    const correctOptionIndex = Number.parseInt(question.correctOptionIndex, 10);
+
+    return {
+      selectedOptionIndex,
+      correctOptionIndex,
+      isCorrect: selectedOptionIndex === correctOptionIndex,
+    };
+  });
+
+  state.questionnaireSession.submittedResult = {
+    correctCount: perQuestion.filter((entry) => entry.isCorrect).length,
+    totalQuestions: questions.length,
+    perQuestion,
+  };
+  renderCurrentPost();
+  statusFlash.show("Respostas conferidas.", "success");
 }
 
 function startCommentEdit(commentId) {
@@ -620,6 +715,12 @@ function bindEvents() {
         return;
       }
 
+      const resetQuestionnaireButton = event.target.closest("[data-reset-questionnaire]");
+      if (resetQuestionnaireButton && elements.view.contains(resetQuestionnaireButton)) {
+        resetQuestionnaireAnswers();
+        return;
+      }
+
       const reviewButton = event.target.closest("[data-review-action]");
       if (reviewButton && elements.view.contains(reviewButton)) {
         const decision = String(reviewButton.dataset.reviewAction ?? "").trim();
@@ -687,6 +788,35 @@ function bindEvents() {
       if (openCommentsButton && elements.view.contains(openCommentsButton)) {
         setCommentsOpen(true);
       }
+    });
+
+    elements.view.addEventListener("change", (event) => {
+      const answerInput = event.target.closest("[data-questionnaire-answer]");
+      if (!answerInput || !elements.view.contains(answerInput)) {
+        return;
+      }
+
+      const questionIndex = String(answerInput.dataset.questionnaireAnswer ?? "").trim();
+      const optionIndex = String(answerInput.value ?? "").trim();
+      if (questionIndex === "" || optionIndex === "") {
+        return;
+      }
+
+      setQuestionnaireAnswer(questionIndex, optionIndex);
+      if (state.questionnaireSession.submittedResult) {
+        state.questionnaireSession.submittedResult = null;
+        renderCurrentPost();
+      }
+    });
+
+    elements.view.addEventListener("submit", (event) => {
+      const questionnaireForm = event.target.closest("[data-questionnaire-form]");
+      if (!questionnaireForm || !elements.view.contains(questionnaireForm)) {
+        return;
+      }
+
+      event.preventDefault();
+      submitQuestionnaireAnswers();
     });
 
     elements.view.addEventListener("input", (event) => {

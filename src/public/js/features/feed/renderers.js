@@ -4,6 +4,7 @@ import {
   formatPercent,
 } from "../../core/formatters.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
+import { renderQuestionnairePreview } from "../questionnaire/renderers.js";
 
 export function ensureChronologicalOrder(items) {
   return [...items].sort((a, b) => {
@@ -126,6 +127,7 @@ export function createPostCard(
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
     ${renderFeedMedia(post.media, post.title)}
+    ${renderQuestionnairePreview(post.questionnaire)}
     ${renderTags(tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">
       <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discussão</button>

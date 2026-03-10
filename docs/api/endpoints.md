@@ -64,6 +64,13 @@ Example request:
         - `tier` (`low | medium | high`)
         - `label`
     - includes `media[]`
+    - includes optional `questionnaire`
+      - `title` (`string | null`)
+      - `questionCount`
+      - `questions[]`
+        - `prompt`
+        - `options[]`
+        - `correctOptionIndex`
     - includes `trend`
     - includes `moderationMetrics`:
       - `approvedCount`
@@ -98,12 +105,18 @@ Example request:
 
 - Auth: required (`user` or higher)
 - Body:
-  - `title` (required)
-  - `content` (required)
+  - `title` (required string, non-empty, max `100`)
+  - `content` (required string, non-empty, max `3000`)
   - `tags` (optional array of strings)
+  - `questionnaire` (optional object)
+    - `title` (optional string, max `120`)
+    - `questions` (required array when questionnaire is present, `1..10`)
+      - `prompt` (required string, max `240`)
+      - `options` (required array, `2..6` non-empty strings, max `140` chars each)
+      - `correctOptionIndex` (required integer matching exactly one option)
 - Success: `201`
 - Returns:
-  - created post summary including `media[]` (empty on initial JSON create)
+  - created post summary including `media[]` and optional `questionnaire`
 - Side effects:
   - creates post with `status: "published"` and `trend: "neutral"`
   - initializes moderation metrics counters/percentages with zeros
@@ -128,14 +141,17 @@ Example request:
 - Path params:
   - `id` must be a valid ObjectId
 - Body (at least one field required):
-  - `title` (optional string, non-empty, max `120`)
-  - `content` (optional string, non-empty, max `5000`)
+  - `title` (optional string, non-empty, max `100`)
+  - `content` (optional string, non-empty, max `3000`)
   - `tags` (optional array of strings)
+  - `questionnaire` (optional object or `null`)
+    - same structure and limits as `POST /api/v1/posts`
+    - send `null` to remove the questionnaire from the post
 - Success: `200`
 - Rules:
   - only post author can edit
 - Returns:
-  - updated post summary including `media[]`
+  - updated post summary including `media[]` and optional `questionnaire`
 
 ### `POST /api/v1/posts/:id/media`
 
@@ -187,6 +203,13 @@ Example request:
       - `tier` (`low | medium | high`)
       - `label`
   - `media[]` with uploaded post image metadata
+  - optional `questionnaire`
+    - `title` (`string | null`)
+    - `questionCount`
+    - `questions[]`
+      - `prompt`
+      - `options[]`
+      - `correctOptionIndex`
   - embedded `comments` list with visible comments only
     - each `comment.author` includes:
       - `id`
@@ -203,6 +226,9 @@ Example request:
     - `notRelevantPercentage`
 - Error:
   - `404 NOT_FOUND` if post does not exist or is hidden
+- Notes:
+  - questionnaire answers are checked client-side in v1, so `correctOptionIndex` is included in the response payload
+  - the current frontend only allows signed-in users to submit questionnaire answers
 
 ## Comments
 

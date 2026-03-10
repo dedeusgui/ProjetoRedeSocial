@@ -1,5 +1,6 @@
 import { createFlash } from "../../components/flash.js";
 import { escapeHtml, parseCsvTags } from "../../core/formatters.js";
+import { createQuestionnaireEditor } from "./questionnaire-editor.js";
 
 export function createPostModalController({
   modal,
@@ -12,6 +13,7 @@ export function createPostModalController({
   mediaInput = null,
   selectedMediaTarget = null,
   existingMediaTarget = null,
+  questionnaireTarget = null,
   resolveErrorMessage = null,
   submitPostCreate,
   submitPostUpdate,
@@ -23,12 +25,16 @@ export function createPostModalController({
   onBeforeOpenEdit = null,
 } = {}) {
   const statusFlash = createFlash(statusTarget);
+  const questionnaireEditor = createQuestionnaireEditor({
+    target: questionnaireTarget,
+  });
   const state = {
     mode: "create",
     editingPostId: null,
     isSubmitting: false,
     isRemovingMedia: false,
     existingMedia: [],
+    hadExistingQuestionnaire: false,
   };
 
   function setModalUi() {
@@ -56,11 +62,27 @@ export function createPostModalController({
     }
 
     const formData = new FormData(form);
-    return {
+    const payload = {
       title: String(formData.get("title") ?? "").trim(),
       content: String(formData.get("content") ?? "").trim(),
       tags: parseCsvTags(formData.get("tags")),
     };
+
+    const questionnaire = questionnaireEditor.getPayload();
+    if (state.mode === "create") {
+      if (questionnaire) {
+        payload.questionnaire = questionnaire;
+      }
+      return payload;
+    }
+
+    if (questionnaire) {
+      payload.questionnaire = questionnaire;
+    } else if (state.hadExistingQuestionnaire) {
+      payload.questionnaire = null;
+    }
+
+    return payload;
   }
 
   function getSelectedFiles() {
@@ -153,6 +175,7 @@ export function createPostModalController({
       mediaInput.disabled = state.isSubmitting || state.isRemovingMedia;
     }
 
+    questionnaireEditor.setDisabled(state.isSubmitting || state.isRemovingMedia);
     renderSelectedMedia();
     renderExistingMedia();
   }
@@ -180,6 +203,8 @@ export function createPostModalController({
     }
 
     state.existingMedia = Array.isArray(post?.media) ? [...post.media] : [];
+    state.hadExistingQuestionnaire = Boolean(post?.questionnaire);
+    questionnaireEditor.setQuestionnaire(post?.questionnaire ?? null);
     syncMediaControls();
   }
 
@@ -192,11 +217,13 @@ export function createPostModalController({
     state.isSubmitting = false;
     state.isRemovingMedia = false;
     state.existingMedia = [];
+    state.hadExistingQuestionnaire = false;
     setMode("create");
     statusFlash.clear();
     if (mediaInput) {
       mediaInput.value = "";
     }
+    questionnaireEditor.reset();
     syncMediaControls();
   }
 
@@ -243,6 +270,7 @@ export function createPostModalController({
     fillFormFromPost(post);
     statusFlash.clear();
     state.existingMedia = Array.isArray(post?.media) ? [...post.media] : [];
+    state.hadExistingQuestionnaire = Boolean(post?.questionnaire);
     syncMediaControls();
     modal.showModal();
   }
