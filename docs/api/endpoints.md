@@ -56,6 +56,7 @@ Example request:
 - Returns:
   - matched published posts in reverse chronological order
   - `items[]` with post summary
+    - includes `media[]`
     - includes `trend`
     - includes `moderationMetrics`:
       - `approvedCount`
@@ -94,6 +95,8 @@ Example request:
   - `content` (required)
   - `tags` (optional array of strings)
 - Success: `201`
+- Returns:
+  - created post summary including `media[]` (empty on initial JSON create)
 - Side effects:
   - creates post with `status: "published"` and `trend: "neutral"`
   - initializes moderation metrics counters/percentages with zeros
@@ -108,6 +111,7 @@ Example request:
   - only post author, `moderator`, or `admin` can delete
 - Side effects:
   - permanently deletes the post
+  - removes uploaded post images from local storage
   - permanently deletes related comments and reviews
   - recomputes post-author private metrics
 
@@ -123,6 +127,42 @@ Example request:
 - Success: `200`
 - Rules:
   - only post author can edit
+- Returns:
+  - updated post summary including `media[]`
+
+### `POST /api/v1/posts/:id/media`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Content type:
+  - `multipart/form-data`
+- Body:
+  - `media` (required file field, one or more images)
+- Success: `201`
+- Returns:
+  - `id`
+  - `media[]`
+  - `updatedAt`
+- Rules:
+  - only post author can upload media
+  - a post can have up to `4` images total
+  - allowed formats: JPG, PNG, WebP
+  - max size: `5 MB` per image
+
+### `DELETE /api/v1/posts/:id/media/:mediaId`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+  - `mediaId` is the stored media item id
+- Success: `200`
+- Returns:
+  - `id`
+  - `media[]`
+  - `updatedAt`
+- Rules:
+  - only post author can remove media
 
 ### `GET /api/v1/posts/:id`
 
@@ -132,6 +172,7 @@ Example request:
 - Success: `200`
 - Returns:
   - post detail
+  - `media[]` with uploaded post image metadata
   - embedded `comments` list with visible comments only
   - includes `moderationMetrics`:
     - `approvedCount`
@@ -310,9 +351,10 @@ Missing required field:
   "ok": false,
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Missing required fields: title",
+    "message": "Preencha os campos obrigatórios: título.",
     "details": {
-      "missing": ["title"]
+      "missing": ["title"],
+      "missingLabels": ["título"]
     }
   }
 }
@@ -325,7 +367,7 @@ Missing bearer token:
   "ok": false,
   "error": {
     "code": "UNAUTHENTICATED",
-    "message": "Authentication required"
+    "message": "Autenticação necessária."
   }
 }
 ```

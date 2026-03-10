@@ -27,6 +27,30 @@ function formatTagLabel(tag) {
   return normalized || String(tag ?? "").trim();
 }
 
+function renderFeedMedia(media, fallbackText) {
+  const firstMedia = Array.isArray(media) ? media[0] : null;
+  if (!firstMedia?.url) {
+    return "";
+  }
+
+  const extraCount = Math.max(0, (Array.isArray(media) ? media.length : 0) - 1);
+  return `
+    <figure class="post-media-preview">
+      <img
+        class="post-media-image"
+        src="${escapeHtml(firstMedia.url)}"
+        alt="${escapeHtml(firstMedia.originalName ?? fallbackText ?? "Imagem do post")}"
+        loading="lazy"
+      />
+      ${
+        extraCount > 0
+          ? `<figcaption class="muted">+${escapeHtml(String(extraCount))} imagem(ns)</figcaption>`
+          : ""
+      }
+    </figure>
+  `;
+}
+
 function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
   if (!Array.isArray(tags) || tags.length === 0) {
     return "<p class='muted post-tags'>Sem tags.</p>";
@@ -96,6 +120,7 @@ export function createPostCard(
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
+    ${renderFeedMedia(post.media, post.title)}
     ${renderTags(tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">
       <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discuss&atilde;o</button>

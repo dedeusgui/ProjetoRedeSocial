@@ -1,3 +1,4 @@
+import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
 import { parseLimit } from "../../../common/validation/index.js";
 
 function normalizeSearch(value) {
@@ -32,6 +33,7 @@ class FeedService {
       title: post.title,
       content: post.content,
       tags: post.tags,
+      media: formatPostMediaCollection(post.media),
       trend: post.trend,
       moderationMetrics: {
         approvedCount: post.moderationMetrics?.approvedCount ?? 0,

@@ -32,8 +32,8 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological public feed with search plus an authenticated `Tags que sigo` mode, manual tag follow form, and tag follow/unfollow actions.
-- `post.html`: post detail with comments, approval percentage, and tag follow/unfollow actions.
+- `feed.html`: chronological public feed with search, authenticated `Tags que sigo` mode, manual tag follow form, tag follow/unfollow actions, and post create/edit image upload.
+- `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, and post edit image upload/removal.
 - `profile.html`: authenticated profile with private approval metrics; admins also see user/role testing panel.
 - `admin/reviews.html`: moderation review flow + admin-only moderator management panel.
 
@@ -55,4 +55,5 @@ Reference guide:
 - Live regions and helper text should be reserved for loading, error, and non-obvious action feedback, not for restating visible page context.
 - Ambient visual effects should live in shared CSS and stay behind content, subtle by default, and safe under `prefers-reduced-motion`.
 - Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts.
+- Feed cards may show the first uploaded post image, while post detail can show the full image gallery.
 - Feed personalization must stay chronological; `Tags que sigo` filters by followed tags but does not replace the public feed with ranked results.

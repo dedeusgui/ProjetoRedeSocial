@@ -24,6 +24,32 @@ class PostRepository {
     );
   }
 
+  async appendMedia(postId, mediaItems) {
+    return Post.findByIdAndUpdate(
+      postId,
+      {
+        $push: {
+          media: {
+            $each: mediaItems,
+          },
+        },
+      },
+      { returnDocument: "after" },
+    );
+  }
+
+  async removeMedia(postId, mediaId) {
+    return Post.findByIdAndUpdate(
+      postId,
+      {
+        $pull: {
+          media: { id: mediaId },
+        },
+      },
+      { returnDocument: "after" },
+    );
+  }
+
   async updateTrend(postId, trend) {
     return Post.findByIdAndUpdate(
       postId,

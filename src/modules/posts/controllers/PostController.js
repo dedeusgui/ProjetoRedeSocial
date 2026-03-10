@@ -6,6 +6,8 @@ class PostController {
     this.createPost = this.createPost.bind(this);
     this.getPostById = this.getPostById.bind(this);
     this.updatePost = this.updatePost.bind(this);
+    this.uploadPostMedia = this.uploadPostMedia.bind(this);
+    this.deletePostMedia = this.deletePostMedia.bind(this);
     this.deletePost = this.deletePost.bind(this);
   }
 
@@ -24,6 +26,24 @@ class PostController {
       req.params.id,
       req.user,
       req.body,
+    );
+    return sendSuccess(res, result);
+  }
+
+  async uploadPostMedia(req, res) {
+    const result = await this.postService.addMediaByRequester(
+      req.params.id,
+      req.user,
+      req.files,
+    );
+    return sendSuccess(res, result, 201);
+  }
+
+  async deletePostMedia(req, res) {
+    const result = await this.postService.removeMediaByRequester(
+      req.params.id,
+      req.params.mediaId,
+      req.user,
     );
     return sendSuccess(res, result);
   }

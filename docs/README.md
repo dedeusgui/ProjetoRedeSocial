@@ -22,6 +22,7 @@ This directory is the source of truth for architecture, API behavior, and delive
 - RFCs
   - [rfcs/feed-post-search.md](rfcs/feed-post-search.md)
   - [rfcs/follow-tags-feed.md](rfcs/follow-tags-feed.md)
+  - [rfcs/post-image-uploads.md](rfcs/post-image-uploads.md)
 - Engineering Workflows
   - [workflows/bugfix-process.md](workflows/bugfix-process.md)
   - [workflows/feature-process.md](workflows/feature-process.md)

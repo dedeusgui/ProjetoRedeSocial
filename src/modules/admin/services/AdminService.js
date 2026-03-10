@@ -111,16 +111,23 @@ class AdminService {
     requireFields({ action }, ["action"]);
 
     if (!["grant", "revoke"].includes(action)) {
-      throw new AppError("Invalid action", "VALIDATION_ERROR", 400);
+      throw new AppError("A ação informada é inválida.", "VALIDATION_ERROR", 400, {
+        field: "action",
+        allowedValues: ["grant", "revoke"],
+      });
     }
 
     const user = await this.adminRepository.findById(userId);
     if (!user) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
-      throw new AppError("Admin role is managed by project configuration", "FORBIDDEN", 403);
+      throw new AppError(
+        "O papel de administrador é controlado pela configuração do projeto.",
+        "FORBIDDEN",
+        403,
+      );
     }
 
     if (action === "grant") {
@@ -131,7 +138,11 @@ class AdminService {
       const postCountMap = await this.adminRepository.countPostsByAuthorIds([user._id]);
       const postCount = postCountMap.get(String(user._id)) ?? 0;
       if (!this.isEligibleForModerator(user, postCount)) {
-        throw new AppError("User does not meet moderator requirements", "FORBIDDEN", 403);
+        throw new AppError(
+          "O usuário não atende aos requisitos para moderador.",
+          "FORBIDDEN",
+          403,
+        );
       }
 
       const updated = await this.adminRepository.updateRoleById(userId, "moderator");
@@ -186,16 +197,20 @@ class AdminService {
     ensureObjectId(requesterId, "requesterId");
 
     if (String(userId) === String(requesterId)) {
-      throw new AppError("Admin cannot delete own account", "FORBIDDEN", 403);
+      throw new AppError("Um administrador não pode excluir a própria conta.", "FORBIDDEN", 403);
     }
 
     const user = await this.adminRepository.findById(userId);
     if (!user) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
-      throw new AppError("Admin role is managed by project configuration", "FORBIDDEN", 403);
+      throw new AppError(
+        "O papel de administrador é controlado pela configuração do projeto.",
+        "FORBIDDEN",
+        403,
+      );
     }
 
     const postIds = await this.adminRepository.findPostIdsByAuthorId(userId);

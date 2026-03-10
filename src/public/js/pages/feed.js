@@ -51,6 +51,9 @@ const elements = {
   modalSubmitButton: document.querySelector("[data-post-modal-submit]"),
   postModalForm: document.querySelector("[data-post-modal-form]"),
   postModalStatus: document.querySelector("[data-post-modal-status]"),
+  postMediaInput: document.querySelector("[data-post-media-input]"),
+  selectedPostMedia: document.querySelector("[data-selected-post-media]"),
+  existingPostMedia: document.querySelector("[data-existing-post-media]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -67,7 +70,7 @@ const navbar = initNavbar({
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para publicar no feed.",
+    "Autenticação necessária. Faça login para publicar no feed.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
@@ -75,7 +78,7 @@ function resolveMessage(error) {
 function resolveFollowTagMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para seguir tags.",
+    "Autenticação necessária. Faça login para seguir tags.",
     "Falha ao atualizar as tags seguidas.",
   );
 }
@@ -83,7 +86,7 @@ function resolveFollowTagMessage(error) {
 function resolveFeedLoadMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para acessar seu feed de tags.",
+    "Autenticação necessária. Faça login para acessar seu feed de tags.",
     "Erro inesperado ao carregar o feed.",
   );
 }
@@ -117,12 +120,12 @@ function hasActiveSearch() {
 function resolveLoadingMessage({ append = false } = {}) {
   if (isFollowingMode()) {
     if (append) {
-      return "Carregando mais posts das tags que voce segue...";
+      return "Carregando mais posts das tags que você segue...";
     }
 
     return hasActiveSearch()
-      ? `Buscando nas tags que voce segue por "${state.searchTerm}"...`
-      : "Carregando feed das tags que voce segue...";
+      ? `Buscando nas tags que você segue por "${state.searchTerm}"...`
+      : "Carregando feed das tags que você segue...";
   }
 
   if (append) {
@@ -139,13 +142,13 @@ function resolveEmptyFeedMessage() {
 
   if (isFollowingMode()) {
     return hasActiveSearch()
-      ? `Nenhum post encontrado nas tags que voce segue para "${state.searchTerm}".`
-      : "Nenhum post encontrado nas tags que voce segue.";
+      ? `Nenhum post encontrado nas tags que você segue para "${state.searchTerm}".`
+      : "Nenhum post encontrado nas tags que você segue.";
   }
 
   return hasActiveSearch()
     ? `Nenhum post encontrado para "${state.searchTerm}".`
-    : "Nenhuma publicacao ainda.";
+    : "Nenhuma publicação ainda.";
 }
 
 function resolveLoadedFeedMessage() {
@@ -199,8 +202,8 @@ function renderFollowedTagsPanel() {
 
   if (elements.followTagsHelp) {
     elements.followTagsHelp.textContent = isFollowingMode()
-      ? "Seu feed pessoal continua cronologico e mostra posts com qualquer tag que voce segue."
-      : "Siga tags para abrir um segundo feed sem alterar o feed publico principal.";
+      ? "Seu feed pessoal continua cronológico e mostra posts com qualquer tag que você segue."
+      : "Siga tags para abrir um segundo feed sem alterar o feed público principal.";
   }
 
   if (elements.followTagInput) {
@@ -216,7 +219,7 @@ function renderFollowedTagsPanel() {
   }
 
   if (!hasFollowedTags()) {
-    elements.followedTagsList.innerHTML = "<p class='muted'>Voce ainda nao segue nenhuma tag.</p>";
+    elements.followedTagsList.innerHTML = "<p class='muted'>Você ainda não segue nenhuma tag.</p>";
     return;
   }
 
@@ -330,31 +333,11 @@ async function loadFeed({ append = false } = {}) {
 }
 
 async function submitPostCreate(payload) {
-  const created = await api.posts.create(payload);
-  await loadFeed();
-  return created;
+  return api.posts.create(payload);
 }
 
 async function submitPostUpdate(postId, payload) {
-  const updated = await api.posts.update(postId, payload);
-  if (hasActiveSearch()) {
-    await loadFeed();
-    return updated;
-  }
-
-  const index = state.items.findIndex((item) => String(item.id) === String(postId));
-  if (index >= 0) {
-    const current = state.items[index];
-    state.items[index] = {
-      ...current,
-      title: updated.title ?? current.title,
-      content: updated.content ?? current.content,
-      tags: Array.isArray(updated.tags) ? updated.tags : current.tags,
-      updatedAt: updated.updatedAt ?? current.updatedAt,
-    };
-    renderFeed();
-  }
-  return updated;
+  return api.posts.update(postId, payload);
 }
 
 const postModalController = createPostModalController({
@@ -365,11 +348,14 @@ const postModalController = createPostModalController({
   cancelButton: elements.modalCancelButton,
   statusTarget: elements.postModalStatus,
   openCreateButton: elements.openModalButton,
+  mediaInput: elements.postMediaInput,
+  selectedMediaTarget: elements.selectedPostMedia,
+  existingMediaTarget: elements.existingPostMedia,
   resolveErrorMessage: resolveMessage,
   onBeforeOpenCreate() {
     const isAuthenticated = requireSession({
       onFail: () => {
-        statusFlash.show("Faca login para publicar no feed.", "error");
+        statusFlash.show("Faça login para publicar no feed.", "error");
         window.location.href = "./index.html";
       },
     });
@@ -379,19 +365,41 @@ const postModalController = createPostModalController({
   onBeforeOpenEdit() {
     const isAuthenticated = hasSession();
     if (!isAuthenticated) {
-      statusFlash.show("Faca login para editar posts.", "error");
+      statusFlash.show("Faça login para editar posts.", "error");
     }
     return isAuthenticated;
   },
   submitPostCreate,
   submitPostUpdate,
-  async onAfterSuccess({ mode, result }) {
+  uploadPostMedia(postId, files) {
+    return api.posts.uploadMedia(postId, files);
+  },
+  deletePostMedia(postId, mediaId) {
+    return api.posts.deleteMedia(postId, mediaId);
+  },
+  async onMediaChanged({ action }) {
+    if (action === "delete") {
+      await loadFeed();
+    }
+  },
+  async onAfterSuccess({ mode, mediaError, mediaErrorMessage }) {
+    await loadFeed();
     if (mode === "edit") {
-      statusFlash.show("Post atualizado.", "success");
+      statusFlash.show(
+        mediaError
+          ? `Post atualizado, mas as imagens não foram enviadas: ${mediaErrorMessage ?? "verifique os arquivos selecionados."}`
+          : "Post atualizado.",
+        mediaError ? "error" : "success",
+      );
       return;
     }
 
-    statusFlash.show("Post publicado.", "success");
+    statusFlash.show(
+      mediaError
+        ? `Post publicado, mas as imagens não foram enviadas: ${mediaErrorMessage ?? "verifique os arquivos selecionados."}`
+        : "Post publicado.",
+      mediaError ? "error" : "success",
+    );
   },
 });
 
@@ -433,7 +441,7 @@ async function toggleFollowTag(tag, currentlyFollowing) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para seguir tags.", "error");
+    statusFlash.show("Faça login para seguir tags.", "error");
     return false;
   }
 
@@ -464,8 +472,8 @@ async function toggleFollowTag(tag, currentlyFollowing) {
     }
 
     const successMessage = currentlyFollowing
-      ? `Voce deixou de seguir #${normalizedTag}.`
-      : `Agora voce segue #${normalizedTag}.`;
+      ? `Você deixou de seguir #${normalizedTag}.`
+      : `Agora você segue #${normalizedTag}.`;
     statusFlash.show(successMessage, "success");
     followTagFlash.show(successMessage, "success");
     return true;
@@ -493,7 +501,7 @@ async function handleManualFollowTag(event) {
   }
 
   if (state.followedTags.includes(normalizedTag)) {
-    followTagFlash.show(`Voce ja segue #${normalizedTag}.`, "info");
+    followTagFlash.show(`Você já segue #${normalizedTag}.`, "info");
     elements.followTagInput?.focus();
     elements.followTagInput?.select();
     return;
@@ -511,7 +519,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para avaliar um post.", "error");
+    statusFlash.show("Faça login para avaliar um post.", "error");
     return;
   }
 
@@ -523,7 +531,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   reviewButtons.forEach((button) => {
     button.disabled = true;
   });
-  statusFlash.show("Salvando avaliacao...", "info");
+  statusFlash.show("Salvando avaliação...", "info");
 
   try {
     const result = await api.posts.review(postId, decision, null);
@@ -531,7 +539,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
     statusFlash.show(reviewSavedMessage(result), "success");
   } catch (error) {
     statusFlash.show(
-      resolveModerationApiMessage(error, "Falha ao salvar avaliacao."),
+      resolveModerationApiMessage(error, "Falha ao salvar avaliação."),
       "error",
     );
   } finally {
@@ -545,7 +553,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
 function resolveDeleteMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria para excluir posts.",
+    "Autenticação necessária para excluir posts.",
     "Falha ao excluir o post.",
   );
 }
@@ -556,7 +564,7 @@ async function deleteFeedPost(postId) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para excluir posts.", "error");
+    statusFlash.show("Faça login para excluir posts.", "error");
     window.location.href = "./index.html";
     return;
   }
@@ -576,7 +584,7 @@ async function deleteFeedPost(postId) {
   try {
     await api.posts.delete(postId);
     await loadFeed();
-    statusFlash.show("Post excluido.", "success");
+    statusFlash.show("Post excluído.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {

@@ -1,5 +1,26 @@
 import mongoose from "mongoose";
 
+const PostMediaSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    kind: {
+      type: String,
+      enum: ["image"],
+      default: "image",
+      required: true,
+    },
+    url: { type: String, required: true },
+    storagePath: { type: String, required: true },
+    originalName: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    sizeBytes: { type: Number, required: true, min: 0 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    _id: false,
+  },
+);
+
 const PostSchema = new mongoose.Schema(
   {
     authorId: {
@@ -11,6 +32,7 @@ const PostSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true, trim: true },
     tags: { type: [String], default: [] },
+    media: { type: [PostMediaSchema], default: [] },
     status: {
       type: String,
       enum: ["published", "hidden", "pending_review"],

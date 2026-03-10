@@ -6,6 +6,12 @@ All notable changes to this project should be documented in this file.
 
 ### Added
 
+- Added post image upload support with:
+  - `POST /api/v1/posts/:id/media`
+  - `DELETE /api/v1/posts/:id/media/:mediaId`
+- Added local-disk upload storage served from `/uploads`, with post `media[]` metadata stored in MongoDB.
+- Added post create/edit modal support for selecting images and removing existing post images.
+- Added feed/post rendering for uploaded post images and RFC `docs/rfcs/post-image-uploads.md`.
 - Added protected followed-tag endpoints:
   - `GET /api/v1/me/followed-tags`
   - `POST /api/v1/me/followed-tags`
@@ -17,14 +23,22 @@ All notable changes to this project should be documented in this file.
 
 ### Changed
 
+- Extended post and feed responses to include uploaded post `media[]`.
+- Updated post deletion flow to clean up uploaded files from disk.
 - Extended the user model with canonical lowercase `followedTags` storage.
 - Kept personalization chronological by filtering followed tags without changing the default public feed behavior.
 - Updated feed and post renderers to expose tag-based follow controls for authenticated users.
+- Improved user-facing validation/auth/upload error messages with clearer PT-BR descriptions and actionable upload limits/details.
 
 ### Docs
 
+- Updated architecture and API docs to describe post media upload storage, routes, and response changes.
 - Updated architecture, API, and frontend docs to describe followed tags and the new personalized feed flow.
 - Corrected endpoint docs for post/comment deletion authorization to match current code behavior.
+
+### Fixed
+
+- Corrected Portuguese accentuation in key frontend labels, status messages, and modal copy.
 
 ## 2026-03-09
 
@@ -49,7 +63,7 @@ All notable changes to this project should be documented in this file.
 ### Fixed
 
 - Corrected author approval calculation to use `approvedVotes / totalVotes * 100`, clamped to `0..100` and rounded to the nearest integer.
-- Removed redundant "Nao relevante" post metric from feed/post rendering, leaving only approval percentage visible.
+- Removed redundant "Não relevante" post metric from feed/post rendering, leaving only approval percentage visible.
 - Removed redundant profile score display and aligned profile/admin UI labels with approval percentage semantics.
 - Updated architecture/API/frontend docs to describe approval percentage fields and current moderation behavior.
 - Removed redundant explanatory sections and load-success status copy across feed, post, profile, and admin pages while preserving error/loading feedback.

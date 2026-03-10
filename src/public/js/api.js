@@ -29,8 +29,9 @@ async function request(method, path, { body, token, query } = {}) {
   const headers = {
     Accept: "application/json",
   };
+  const isFormData = body instanceof FormData;
 
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -42,7 +43,12 @@ async function request(method, path, { body, token, query } = {}) {
   const response = await fetch(buildUrl(path, query), {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined
+        ? undefined
+        : isFormData
+          ? body
+          : JSON.stringify(body),
   });
 
   let payload = null;
@@ -52,7 +58,7 @@ async function request(method, path, { body, token, query } = {}) {
       payload = JSON.parse(text);
     } catch {
       throw new ApiError({
-        message: "Resposta invalida do servidor.",
+        message: "Resposta inválida do servidor.",
         code: "INVALID_JSON",
         status: response.status,
       });
@@ -69,7 +75,7 @@ async function request(method, path, { body, token, query } = {}) {
 
   if (!response.ok || payload.ok !== true) {
     throw new ApiError({
-      message: payload?.error?.message ?? "Falha na requisicao.",
+      message: payload?.error?.message ?? "Falha na requisição.",
       code: payload?.error?.code ?? "REQUEST_FAILED",
       status: response.status,
       details: payload?.error?.details ?? null,
@@ -142,6 +148,16 @@ export const api = {
   posts: {
     create(payload) {
       return request("POST", "/posts", { body: payload });
+    },
+    uploadMedia(postId, files) {
+      const formData = new FormData();
+      (Array.isArray(files) ? files : []).forEach((file) => {
+        formData.append("media", file);
+      });
+      return request("POST", `/posts/${postId}/media`, { body: formData });
+    },
+    deleteMedia(postId, mediaId) {
+      return request("DELETE", `/posts/${postId}/media/${mediaId}`);
     },
     getById(postId) {
       return request("GET", `/posts/${postId}`);

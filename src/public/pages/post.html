@@ -62,6 +62,19 @@
             Tags
             <input name="tags" placeholder="node, backend, estudo" />
           </label>
+          <label>
+            Imagens
+            <input
+              type="file"
+              name="media"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              data-post-media-input
+            />
+            <span class="muted">Até 4 imagens JPG, PNG ou WebP, com no máximo 5 MB cada.</span>
+          </label>
+          <section class="modal-media-section" data-existing-post-media hidden></section>
+          <section class="modal-media-section" data-selected-post-media></section>
           <button type="submit" data-post-modal-submit>Publicar</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>

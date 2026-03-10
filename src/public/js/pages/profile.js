@@ -7,7 +7,7 @@ import { clearSession, hasSession } from "../core/session.js";
 import { renderAdminUserList } from "../features/admin/renderers.js";
 import { renderProfileView } from "../features/profile/renderers.js";
 
-const AUTH_REQUIRED_NOTICE = "Autenticacao necessaria para acessar seu perfil.";
+const AUTH_REQUIRED_NOTICE = "Autenticação necessária para acessar seu perfil.";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),

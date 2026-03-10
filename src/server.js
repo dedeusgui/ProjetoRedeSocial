@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import connectDB from "./config/db.js";
@@ -23,6 +24,8 @@ function createApp() {
 
   app.use(cors());
   app.use(express.json());
+  fs.mkdirSync(env.uploadRoot, { recursive: true });
+  app.use("/uploads", express.static(env.uploadRoot));
   app.use(express.static(path.join(__dirname, "public")));
 
   const usersModule = createUsersModule();
@@ -63,7 +66,7 @@ function createApp() {
   app.use("/api/v1", moderationModule.router);
 
   app.use((req, res, next) => {
-    next(new AppError("Route not found", "NOT_FOUND", 404));
+    next(new AppError("Rota não encontrada.", "NOT_FOUND", 404));
   });
 
   app.use(errorHandler);

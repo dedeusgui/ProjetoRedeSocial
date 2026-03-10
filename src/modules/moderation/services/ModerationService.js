@@ -17,7 +17,10 @@ class ModerationService {
     requireFields({ decision }, ["decision"]);
 
     if (!["approved", "not_relevant"].includes(decision)) {
-      throw new AppError("Invalid decision", "VALIDATION_ERROR", 400);
+      throw new AppError("A decisão informada é inválida.", "VALIDATION_ERROR", 400, {
+        field: "decision",
+        allowedValues: ["approved", "not_relevant"],
+      });
     }
 
     const post = await this.postService.getPostForModeration(postId);

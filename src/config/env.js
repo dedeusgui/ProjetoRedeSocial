@@ -1,3 +1,4 @@
+import path from "node:path";
 import { parseAdminEmails } from "../common/security/adminAccess.js";
 
 if (typeof process.loadEnvFile === "function") {
@@ -13,6 +14,7 @@ const env = {
     10,
   ),
   adminEmails: parseAdminEmails(process.env.ADMIN_EMAILS),
+  uploadRoot: process.env.UPLOAD_ROOT ?? path.resolve(process.cwd(), "uploads"),
 };
 
 export default env;

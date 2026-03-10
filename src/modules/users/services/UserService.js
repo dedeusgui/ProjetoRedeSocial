@@ -11,7 +11,7 @@ class UserService {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     return {
@@ -32,7 +32,7 @@ class UserService {
     const updated = await this.userRepository.updatePrivateMetrics(userId, privateMetrics);
 
     if (!updated) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     return updated;
@@ -42,7 +42,7 @@ class UserService {
     const user = await this.userRepository.findFollowedTagsById(userId);
 
     if (!user) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     return normalizeFollowedTags(user.followedTags);
@@ -51,12 +51,14 @@ class UserService {
   async followTag(userId, payload) {
     const tag = normalizeFollowedTag(payload?.tag);
     if (!tag) {
-      throw new AppError("Field tag cannot be empty", "VALIDATION_ERROR", 400);
+      throw new AppError("Informe uma tag válida para seguir.", "VALIDATION_ERROR", 400, {
+        field: "tag",
+      });
     }
 
     const updated = await this.userRepository.addFollowedTag(userId, tag);
     if (!updated) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     const followedTags = normalizeFollowedTags(updated.followedTags);
@@ -71,12 +73,14 @@ class UserService {
   async unfollowTag(userId, tagValue) {
     const tag = normalizeFollowedTag(tagValue);
     if (!tag) {
-      throw new AppError("Field tag cannot be empty", "VALIDATION_ERROR", 400);
+      throw new AppError("Informe uma tag válida para remover.", "VALIDATION_ERROR", 400, {
+        field: "tag",
+      });
     }
 
     const updated = await this.userRepository.removeFollowedTag(userId, tag);
     if (!updated) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
     }
 
     return {

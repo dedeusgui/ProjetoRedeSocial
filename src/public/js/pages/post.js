@@ -42,6 +42,9 @@ const elements = {
   modalSubmitButton: document.querySelector("[data-post-modal-submit]"),
   postModalForm: document.querySelector("[data-post-modal-form]"),
   postModalStatus: document.querySelector("[data-post-modal-status]"),
+  postMediaInput: document.querySelector("[data-post-media-input]"),
+  selectedPostMedia: document.querySelector("[data-selected-post-media]"),
+  existingPostMedia: document.querySelector("[data-existing-post-media]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -78,7 +81,7 @@ function setReviewStatus(message, stateName = "info") {
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para comentar.",
+    "Autenticação necessária. Faça login para continuar.",
     "Erro inesperado ao comunicar com a API.",
   );
 }
@@ -86,15 +89,15 @@ function resolveMessage(error) {
 function resolveDeleteMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria para excluir conteudo.",
-    "Falha ao excluir conteudo.",
+    "Autenticação necessária para excluir conteúdo.",
+    "Falha ao excluir conteúdo.",
   );
 }
 
 function resolveFollowTagMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para seguir tags.",
+    "Autenticação necessária. Faça login para seguir tags.",
     "Falha ao atualizar as tags seguidas.",
   );
 }
@@ -142,9 +145,9 @@ function renderSessionState() {
 
   commentHelpFlash.show(
     !commentsVisible
-      ? "Comentarios ocultos. Clique em Abrir comentarios para voltar."
+      ? "Comentários ocultos. Clique em Abrir comentários para voltar."
       : !isAuthenticated
-        ? "Faca login para comentar neste post."
+        ? "Faça login para comentar neste post."
         : "",
     "info",
   );
@@ -247,7 +250,7 @@ async function loadPost() {
     state.postAuthorId = null;
     resetCommentEditState();
     renderMissingPostState("ID do post ausente na URL.");
-    statusFlash.show("Nao foi possivel abrir o post.", "error");
+    statusFlash.show("Não foi possível abrir o post.", "error");
     return;
   }
 
@@ -265,7 +268,7 @@ async function loadPost() {
     state.postData = null;
     state.postAuthorId = null;
     resetCommentEditState();
-    renderMissingPostState("Este post nao pode ser exibido no momento.");
+    renderMissingPostState("Este post não pode ser exibido no momento.");
     statusFlash.show(resolveMessage(error), "error");
   }
 }
@@ -305,7 +308,7 @@ async function toggleFollowTag(tag, currentlyFollowing) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para seguir tags.", "error");
+    statusFlash.show("Faça login para seguir tags.", "error");
     return false;
   }
 
@@ -329,8 +332,8 @@ async function toggleFollowTag(tag, currentlyFollowing) {
     renderCurrentPost();
     statusFlash.show(
       currentlyFollowing
-        ? `Voce deixou de seguir #${normalizedTag}.`
-        : `Agora voce segue #${normalizedTag}.`,
+        ? `Você deixou de seguir #${normalizedTag}.`
+        : `Agora você segue #${normalizedTag}.`,
       "success",
     );
     return true;
@@ -355,14 +358,14 @@ async function handleCommentSubmit(event) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para comentar neste post.", "error");
+    statusFlash.show("Faça login para comentar neste post.", "error");
     return;
   }
 
   const formData = new FormData(elements.commentForm);
   const content = String(formData.get("content") ?? "").trim();
   if (!content) {
-    statusFlash.show("Escreva um comentario antes de enviar.", "error");
+    statusFlash.show("Escreva um comentário antes de enviar.", "error");
     return;
   }
 
@@ -370,7 +373,7 @@ async function handleCommentSubmit(event) {
     await api.posts.createComment(postId, content);
     elements.commentForm.reset();
     await loadPost();
-    statusFlash.show("Comentario enviado.", "success");
+    statusFlash.show("Comentário enviado.", "success");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
   }
@@ -378,25 +381,25 @@ async function handleCommentSubmit(event) {
 
 async function handleReview(decision) {
   if (!state.postId) {
-    setReviewStatus("Post invalido para avaliacao.", "error");
+    setReviewStatus("Post inválido para avaliação.", "error");
     return;
   }
 
   if (!hasSession()) {
-    setReviewStatus("Faca login para avaliar este post.", "error");
+    setReviewStatus("Faça login para avaliar este post.", "error");
     return;
   }
 
   state.isReviewSubmitting = true;
   refreshReviewActions({ preserveStatus: true });
-  setReviewStatus("Salvando avaliacao...", "info");
+  setReviewStatus("Salvando avaliação...", "info");
 
   try {
     const result = await api.posts.review(state.postId, decision, null);
     setReviewStatus(reviewSavedMessage(result), "success");
     await loadPost();
   } catch (error) {
-    setReviewStatus(resolveModerationApiMessage(error, "Falha ao salvar avaliacao."), "error");
+    setReviewStatus(resolveModerationApiMessage(error, "Falha ao salvar avaliação."), "error");
   } finally {
     state.isReviewSubmitting = false;
     refreshReviewActions({ preserveStatus: true });
@@ -427,19 +430,7 @@ async function handleDeletePost() {
 }
 
 async function submitPostUpdate(postId, payload) {
-  const updated = await api.posts.update(postId, payload);
-  if (state.postData && String(state.postData.id) === String(postId)) {
-    state.postData = {
-      ...state.postData,
-      title: updated.title ?? state.postData.title,
-      content: updated.content ?? state.postData.content,
-      tags: Array.isArray(updated.tags) ? updated.tags : state.postData.tags,
-      updatedAt: updated.updatedAt ?? state.postData.updatedAt,
-    };
-    renderCurrentPost();
-  }
-
-  return updated;
+  return api.posts.update(postId, payload);
 }
 
 const postModalController = createPostModalController({
@@ -449,6 +440,9 @@ const postModalController = createPostModalController({
   submitButton: elements.modalSubmitButton,
   cancelButton: elements.modalCancelButton,
   statusTarget: elements.postModalStatus,
+  mediaInput: elements.postMediaInput,
+  selectedMediaTarget: elements.selectedPostMedia,
+  existingMediaTarget: elements.existingPostMedia,
   resolveErrorMessage: resolveMessage,
   onBeforeOpenEdit() {
     const isOwner = String(state.viewerId ?? "") === String(state.postAuthorId ?? "");
@@ -459,12 +453,29 @@ const postModalController = createPostModalController({
     return true;
   },
   async submitPostCreate() {
-    throw new Error("Criacao de post nao disponivel nesta tela.");
+    throw new Error("Criação de post não disponível nesta tela.");
   },
   submitPostUpdate,
-  async onAfterSuccess({ mode }) {
+  uploadPostMedia(postId, files) {
+    return api.posts.uploadMedia(postId, files);
+  },
+  deletePostMedia(postId, mediaId) {
+    return api.posts.deleteMedia(postId, mediaId);
+  },
+  async onMediaChanged({ action }) {
+    if (action === "delete") {
+      await loadPost();
+    }
+  },
+  async onAfterSuccess({ mode, mediaError, mediaErrorMessage }) {
+    await loadPost();
     if (mode === "edit") {
-      statusFlash.show("Post atualizado.", "success");
+      statusFlash.show(
+        mediaError
+          ? `Post atualizado, mas as imagens não foram enviadas: ${mediaErrorMessage ?? "verifique os arquivos selecionados."}`
+          : "Post atualizado.",
+        mediaError ? "error" : "success",
+      );
     }
   },
 });
@@ -483,7 +494,7 @@ function startCommentEdit(commentId) {
   );
   const isOwner = String(comment?.author?.id ?? "") === String(state.viewerId ?? "");
   if (!hasSession() || !isOwner || !comment) {
-    statusFlash.show("Apenas o autor pode editar o comentario.", "error");
+    statusFlash.show("Apenas o autor pode editar o comentário.", "error");
     return;
   }
 
@@ -514,14 +525,14 @@ async function saveCommentEdit(commentId) {
 
   const nextContent = String(state.commentEdit.draft ?? "").trim();
   if (!nextContent) {
-    statusFlash.show("O comentario nao pode ficar vazio.", "error");
+    statusFlash.show("O comentário não pode ficar vazio.", "error");
     focusCommentEditInput(commentId);
     return;
   }
 
   state.commentEdit.isSaving = true;
   renderCurrentPost();
-  statusFlash.show("Salvando edicao do comentario...", "info");
+  statusFlash.show("Salvando edição do comentário...", "info");
 
   try {
     const updated = await api.comments.update(commentId, { content: nextContent });
@@ -539,7 +550,7 @@ async function saveCommentEdit(commentId) {
     };
     resetCommentEditState();
     renderCurrentPost();
-    statusFlash.show("Comentario atualizado.", "success");
+    statusFlash.show("Comentário atualizado.", "success");
   } catch (error) {
     state.commentEdit.isSaving = false;
     renderCurrentPost();
@@ -560,12 +571,12 @@ async function handleDeleteComment(commentId) {
   const isPrivileged = ["moderator", "admin"].includes(state.viewerRole ?? "");
 
   if (!hasSession() || (!isOwner && !isPrivileged)) {
-    statusFlash.show("Sem permissao para excluir este comentario.", "error");
+    statusFlash.show("Sem permissão para excluir este comentário.", "error");
     return;
   }
 
   state.isDeletingComment = true;
-  statusFlash.show("Excluindo comentario...", "info");
+  statusFlash.show("Excluindo comentário...", "info");
   try {
     await api.comments.delete(commentId);
     state.postData = {
@@ -578,7 +589,7 @@ async function handleDeleteComment(commentId) {
       resetCommentEditState();
     }
     renderCurrentPost();
-    statusFlash.show("Comentario excluido.", "success");
+    statusFlash.show("Comentário excluído.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {
