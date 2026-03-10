@@ -15,21 +15,66 @@ export function ensureChronologicalOrder(items) {
   });
 }
 
-function renderTags(tags) {
+function normalizeTagForFollow(tag) {
+  return String(tag ?? "")
+    .trim()
+    .replace(/^#+/, "")
+    .toLowerCase();
+}
+
+function formatTagLabel(tag) {
+  const normalized = String(tag ?? "").trim().replace(/^#+/, "");
+  return normalized || String(tag ?? "").trim();
+}
+
+function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
   if (!Array.isArray(tags) || tags.length === 0) {
     return "<p class='muted post-tags'>Sem tags.</p>";
   }
 
   return `
     <ul class="tag-list" aria-label="Tags do post">
-      ${tags.map((tag) => `<li class="tag-item">#${escapeHtml(tag)}</li>`).join("")}
+      ${tags
+        .map((tag) => {
+          const followTag = normalizeTagForFollow(tag);
+          const label = formatTagLabel(tag);
+          const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
+
+          return `
+            <li class="tag-item tag-item-actionable">
+              <span class="tag-label">#${escapeHtml(label)}</span>
+              ${
+                canManageTagFollows && followTag
+                  ? `
+                    <button
+                      type="button"
+                      class="tag-follow-button ${isFollowing ? "button-ghost" : ""}"
+                      data-follow-tag="${escapeHtml(followTag)}"
+                      data-following="${isFollowing ? "true" : "false"}"
+                      aria-pressed="${isFollowing ? "true" : "false"}"
+                    >
+                      ${isFollowing ? "Seguindo" : "Seguir"}
+                    </button>
+                  `
+                  : ""
+              }
+            </li>
+          `;
+        })
+        .join("")}
     </ul>
   `;
 }
 
 export function createPostCard(
   post,
-  { viewerRole = null, viewerId = null, canReviewPosts = false } = {},
+  {
+    viewerRole = null,
+    viewerId = null,
+    canReviewPosts = false,
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
+  } = {},
 ) {
   const article = document.createElement("article");
   article.className = "card post-card";
@@ -51,7 +96,7 @@ export function createPostCard(
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
-    ${renderTags(tags)}
+    ${renderTags(tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">
       <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discuss&atilde;o</button>
       <div class="review-actions review-actions-inline">
@@ -74,8 +119,18 @@ export function renderFeedList(target, items, options = {}) {
     return;
   }
 
+  const followedTagSet =
+    options.followedTagSet instanceof Set
+      ? options.followedTagSet
+      : new Set(Array.isArray(options.followedTags) ? options.followedTags : []);
+
   target.innerHTML = "";
   ensureChronologicalOrder(items).forEach((post) => {
-    target.appendChild(createPostCard(post, options));
+    target.appendChild(
+      createPostCard(post, {
+        ...options,
+        followedTagSet,
+      }),
+    );
   });
 }

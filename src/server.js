@@ -31,7 +31,9 @@ function createApp() {
     commentService: commentsModule.service,
     userService: usersModule.service,
   });
-  const feedModule = createFeedModule();
+  const feedModule = createFeedModule({
+    userService: usersModule.service,
+  });
   const adminModule = createAdminModule({
     adminEmails: env.adminEmails,
   });

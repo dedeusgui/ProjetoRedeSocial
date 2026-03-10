@@ -386,6 +386,27 @@ select:focus-visible {
   flex-wrap: wrap;
 }
 
+.follow-tags-panel,
+.follow-tags-auth,
+.follow-tags-toolbar,
+.follow-tags-copy,
+.follow-tag-form,
+.followed-tags-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.feed-mode-toggle {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.follow-tags-toolbar {
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr);
+  align-items: start;
+}
+
 .post-card {
   display: grid;
   gap: var(--space-3);
@@ -431,6 +452,24 @@ select:focus-visible {
   background: rgba(22, 31, 46, 0.8);
   color: var(--text-1);
   font-size: 0.83rem;
+}
+
+.tag-item-actionable {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-right: 4px;
+}
+
+.tag-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag-follow-button {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 999px;
 }
 
 .trend-chip {
@@ -580,6 +619,14 @@ select:focus-visible {
 
   .feed-search-actions button {
     flex: 1 1 180px;
+  }
+
+  .feed-mode-toggle button {
+    flex: 1 1 180px;
+  }
+
+  .follow-tags-toolbar {
+    grid-template-columns: 1fr;
   }
 
   .metrics-grid {

@@ -41,6 +41,44 @@
         </form>
       </section>
 
+      <section class="card follow-tags-panel">
+        <div class="follow-tags-guest" data-follow-tags-guest>
+          <h2 class="ink-underline">Tags que sigo</h2>
+          <p class="muted">Faca login para seguir tags e abrir um feed cronologico so com os temas que voce acompanha.</p>
+        </div>
+
+        <div class="follow-tags-auth" data-follow-tags-auth hidden>
+          <div class="feed-mode-toggle" role="tablist" aria-label="Modo do feed">
+            <button type="button" data-feed-mode-button="all" aria-pressed="true">Todos os posts</button>
+            <button type="button" class="button-ghost" data-feed-mode-button="following" aria-pressed="false">Tags que sigo</button>
+          </div>
+
+          <div class="follow-tags-toolbar">
+            <div class="follow-tags-copy">
+              <h2 class="ink-underline">Meu radar de tags</h2>
+              <p class="muted" data-follow-tags-help></p>
+            </div>
+
+            <form class="follow-tag-form" data-follow-tag-form>
+              <label>
+                Seguir tag manualmente
+                <input
+                  type="text"
+                  name="tag"
+                  placeholder="Ex: nodejs"
+                  maxlength="40"
+                  data-follow-tag-input
+                />
+              </label>
+              <button type="submit" data-follow-tag-submit>Seguir tag</button>
+            </form>
+          </div>
+
+          <div class="followed-tags-list" data-followed-tags-list></div>
+          <p class="muted status-line" data-follow-tag-status></p>
+        </div>
+      </section>
+
       <p class="muted status-line" data-feed-status></p>
       <div class="feed-list" data-feed-list></div>
       <div class="feed-actions">

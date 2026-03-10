@@ -15,11 +15,14 @@ const state = {
   items: [],
   nextCursor: null,
   searchTerm: "",
+  feedMode: "all",
+  followedTags: [],
   viewerRole: null,
   viewerId: null,
   isLoading: false,
   isReviewing: false,
   isDeletingPost: false,
+  isManagingTags: false,
 };
 
 const elements = {
@@ -30,6 +33,14 @@ const elements = {
   searchInput: document.querySelector("[data-feed-search-input]"),
   searchSubmitButton: document.querySelector("[data-feed-search-submit]"),
   searchResetButton: document.querySelector("[data-feed-search-reset]"),
+  followTagsGuest: document.querySelector("[data-follow-tags-guest]"),
+  followTagsAuth: document.querySelector("[data-follow-tags-auth]"),
+  followTagsHelp: document.querySelector("[data-follow-tags-help]"),
+  followTagForm: document.querySelector("[data-follow-tag-form]"),
+  followTagInput: document.querySelector("[data-follow-tag-input]"),
+  followTagSubmit: document.querySelector("[data-follow-tag-submit]"),
+  followedTagsList: document.querySelector("[data-followed-tags-list]"),
+  followTagStatus: document.querySelector("[data-follow-tag-status]"),
   loginLink: document.querySelector("[data-login-link]"),
   profileLink: document.querySelector("[data-profile-link]"),
   openModalButton: document.querySelector("[data-open-post-modal]"),
@@ -43,6 +54,7 @@ const elements = {
 };
 
 const statusFlash = createFlash(elements.status);
+const followTagFlash = createFlash(elements.followTagStatus);
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
@@ -60,11 +72,59 @@ function resolveMessage(error) {
   );
 }
 
+function resolveFollowTagMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Autenticacao necessaria. Faca login para seguir tags.",
+    "Falha ao atualizar as tags seguidas.",
+  );
+}
+
+function resolveFeedLoadMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Autenticacao necessaria. Faca login para acessar seu feed de tags.",
+    "Erro inesperado ao carregar o feed.",
+  );
+}
+
+function normalizeFollowTagValue(value) {
+  return String(value ?? "")
+    .trim()
+    .replace(/^#+/, "")
+    .toLowerCase();
+}
+
+function setFollowedTags(tags) {
+  state.followedTags = [...new Set((Array.isArray(tags) ? tags : [])
+    .map((tag) => normalizeFollowTagValue(tag))
+    .filter((tag) => tag.length > 0))]
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function isFollowingMode() {
+  return state.feedMode === "following";
+}
+
+function hasFollowedTags() {
+  return state.followedTags.length > 0;
+}
+
 function hasActiveSearch() {
   return state.searchTerm.length > 0;
 }
 
 function resolveLoadingMessage({ append = false } = {}) {
+  if (isFollowingMode()) {
+    if (append) {
+      return "Carregando mais posts das tags que voce segue...";
+    }
+
+    return hasActiveSearch()
+      ? `Buscando nas tags que voce segue por "${state.searchTerm}"...`
+      : "Carregando feed das tags que voce segue...";
+  }
+
   if (append) {
     return hasActiveSearch() ? "Carregando mais resultados..." : "Carregando mais posts...";
   }
@@ -73,6 +133,16 @@ function resolveLoadingMessage({ append = false } = {}) {
 }
 
 function resolveEmptyFeedMessage() {
+  if (isFollowingMode() && !hasFollowedTags()) {
+    return "Siga uma tag para montar seu feed personalizado.";
+  }
+
+  if (isFollowingMode()) {
+    return hasActiveSearch()
+      ? `Nenhum post encontrado nas tags que voce segue para "${state.searchTerm}".`
+      : "Nenhum post encontrado nas tags que voce segue.";
+  }
+
   return hasActiveSearch()
     ? `Nenhum post encontrado para "${state.searchTerm}".`
     : "Nenhuma publicacao ainda.";
@@ -102,6 +172,79 @@ function syncSearchControls() {
   }
 }
 
+function renderFollowedTagsPanel() {
+  const authenticated = hasSession();
+
+  if (elements.followTagsGuest) {
+    elements.followTagsGuest.hidden = authenticated;
+  }
+
+  if (elements.followTagsAuth) {
+    elements.followTagsAuth.hidden = !authenticated;
+  }
+
+  if (!authenticated) {
+    return;
+  }
+
+  const modeButtons = Array.from(document.querySelectorAll("[data-feed-mode-button]"));
+  modeButtons.forEach((button) => {
+    const mode = String(button.dataset.feedModeButton ?? "").trim();
+    const isActive = mode === state.feedMode;
+    button.dataset.active = isActive ? "true" : "false";
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    button.classList.toggle("button-ghost", !isActive);
+    button.disabled = state.isLoading || state.isManagingTags;
+  });
+
+  if (elements.followTagsHelp) {
+    elements.followTagsHelp.textContent = isFollowingMode()
+      ? "Seu feed pessoal continua cronologico e mostra posts com qualquer tag que voce segue."
+      : "Siga tags para abrir um segundo feed sem alterar o feed publico principal.";
+  }
+
+  if (elements.followTagInput) {
+    elements.followTagInput.disabled = state.isManagingTags;
+  }
+
+  if (elements.followTagSubmit) {
+    elements.followTagSubmit.disabled = state.isManagingTags;
+  }
+
+  if (!elements.followedTagsList) {
+    return;
+  }
+
+  if (!hasFollowedTags()) {
+    elements.followedTagsList.innerHTML = "<p class='muted'>Voce ainda nao segue nenhuma tag.</p>";
+    return;
+  }
+
+  elements.followedTagsList.innerHTML = `
+    <ul class="tag-list" aria-label="Tags seguidas">
+      ${state.followedTags
+        .map(
+          (tag) => `
+            <li class="tag-item tag-item-actionable">
+              <span class="tag-label">#${tag}</span>
+              <button
+                type="button"
+                class="tag-follow-button button-ghost"
+                data-follow-tag="${tag}"
+                data-following="true"
+                aria-pressed="true"
+                ${state.isManagingTags ? "disabled" : ""}
+              >
+                Seguindo
+              </button>
+            </li>
+          `,
+        )
+        .join("")}
+    </ul>
+  `;
+}
+
 function renderFeed() {
   if (!elements.list) {
     return;
@@ -119,6 +262,8 @@ function renderFeed() {
     viewerRole: state.viewerRole,
     viewerId: state.viewerId,
     canReviewPosts: hasSession(),
+    canManageTagFollows: hasSession(),
+    followedTagSet: new Set(state.followedTags),
   });
 
   if (elements.loadMore) {
@@ -132,15 +277,24 @@ async function loadFeed({ append = false } = {}) {
     return;
   }
 
+  if (isFollowingMode() && !hasFollowedTags()) {
+    state.items = [];
+    state.nextCursor = null;
+    renderFeed();
+    statusFlash.show(resolveEmptyFeedMessage(), "info");
+    return;
+  }
+
   state.isLoading = true;
   syncSearchControls();
+  renderFollowedTagsPanel();
   statusFlash.show(resolveLoadingMessage({ append }), "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
 
   try {
-    const data = await api.feed.list({
+    const data = await (isFollowingMode() ? api.feed.listFollowing : api.feed.list)({
       cursor: append ? state.nextCursor : undefined,
       limit: FEED_LIMIT,
       search: state.searchTerm || undefined,
@@ -159,7 +313,7 @@ async function loadFeed({ append = false } = {}) {
       statusFlash.clear();
     }
   } catch (error) {
-    statusFlash.show(resolveMessage(error), "error");
+    statusFlash.show(resolveFeedLoadMessage(error), "error");
     if (!append) {
       state.items = [];
       state.nextCursor = null;
@@ -171,6 +325,7 @@ async function loadFeed({ append = false } = {}) {
       elements.loadMore.disabled = false;
     }
     syncSearchControls();
+    renderFollowedTagsPanel();
   }
 }
 
@@ -240,20 +395,113 @@ const postModalController = createPostModalController({
   },
 });
 
-async function syncViewerRole() {
+async function syncViewerContext() {
   if (!hasSession()) {
     state.viewerRole = null;
     state.viewerId = null;
+    setFollowedTags([]);
+    renderFollowedTagsPanel();
     return;
   }
 
-  try {
-    const profile = await api.users.meProfile();
+  const [profileResult, followedTagsResult] = await Promise.allSettled([
+    api.users.meProfile(),
+    api.users.listFollowedTags(),
+  ]);
+
+  if (profileResult.status === "fulfilled") {
+    const profile = profileResult.value;
     state.viewerRole = profile.role ?? null;
     state.viewerId = profile.id ?? null;
-  } catch {
+  } else {
     state.viewerRole = null;
     state.viewerId = null;
+  }
+
+  if (followedTagsResult.status === "fulfilled") {
+    setFollowedTags(followedTagsResult.value.followedTags);
+  } else {
+    setFollowedTags([]);
+  }
+
+  renderFollowedTagsPanel();
+}
+
+async function toggleFollowTag(tag, currentlyFollowing) {
+  if (state.isManagingTags) {
+    return false;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Faca login para seguir tags.", "error");
+    return false;
+  }
+
+  const normalizedTag = normalizeFollowTagValue(tag);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  state.isManagingTags = true;
+  renderFollowedTagsPanel();
+  followTagFlash.show(
+    currentlyFollowing ? `Parando de seguir #${normalizedTag}...` : `Seguindo #${normalizedTag}...`,
+    "info",
+  );
+
+  try {
+    const result = currentlyFollowing
+      ? await api.users.unfollowTag(normalizedTag)
+      : await api.users.followTag(normalizedTag);
+
+    setFollowedTags(result.followedTags);
+    renderFollowedTagsPanel();
+    renderFeed();
+
+    if (isFollowingMode()) {
+      state.nextCursor = null;
+      await loadFeed();
+    }
+
+    const successMessage = currentlyFollowing
+      ? `Voce deixou de seguir #${normalizedTag}.`
+      : `Agora voce segue #${normalizedTag}.`;
+    statusFlash.show(successMessage, "success");
+    followTagFlash.show(successMessage, "success");
+    return true;
+  } catch (error) {
+    const message = resolveFollowTagMessage(error);
+    statusFlash.show(message, "error");
+    followTagFlash.show(message, "error");
+    return false;
+  } finally {
+    state.isManagingTags = false;
+    renderFollowedTagsPanel();
+  }
+}
+
+async function handleManualFollowTag(event) {
+  event.preventDefault();
+
+  const formData = new FormData(elements.followTagForm);
+  const rawValue = String(formData.get("tag") ?? "");
+  const normalizedTag = normalizeFollowTagValue(rawValue);
+
+  if (!normalizedTag) {
+    followTagFlash.show("Digite uma tag antes de enviar.", "error");
+    return;
+  }
+
+  if (state.followedTags.includes(normalizedTag)) {
+    followTagFlash.show(`Voce ja segue #${normalizedTag}.`, "info");
+    elements.followTagInput?.focus();
+    elements.followTagInput?.select();
+    return;
+  }
+
+  const success = await toggleFollowTag(normalizedTag, false);
+  if (success) {
+    elements.followTagForm.reset();
   }
 }
 
@@ -370,6 +618,37 @@ function bindEvents() {
     });
   }
 
+  if (elements.followTagForm) {
+    elements.followTagForm.addEventListener("submit", handleManualFollowTag);
+  }
+
+  if (elements.followTagsAuth) {
+    elements.followTagsAuth.addEventListener("click", (event) => {
+      const modeButton = event.target.closest("[data-feed-mode-button]");
+      if (modeButton && elements.followTagsAuth.contains(modeButton)) {
+        const nextMode = String(modeButton.dataset.feedModeButton ?? "").trim();
+        if (!nextMode || nextMode === state.feedMode) {
+          return;
+        }
+
+        state.feedMode = nextMode;
+        state.nextCursor = null;
+        renderFollowedTagsPanel();
+        loadFeed();
+        return;
+      }
+
+      const followButton = event.target.closest("[data-follow-tag]");
+      if (followButton && elements.followTagsAuth.contains(followButton)) {
+        const tag = String(followButton.dataset.followTag ?? "").trim();
+        const currentlyFollowing = followButton.dataset.following === "true";
+        if (tag) {
+          toggleFollowTag(tag, currentlyFollowing);
+        }
+      }
+    });
+  }
+
   if (elements.loadMore) {
     elements.loadMore.addEventListener("click", () => {
       loadFeed({ append: true });
@@ -378,6 +657,16 @@ function bindEvents() {
 
   if (elements.list) {
     elements.list.addEventListener("click", (event) => {
+      const followButton = event.target.closest("[data-follow-tag]");
+      if (followButton && elements.list.contains(followButton)) {
+        const tag = String(followButton.dataset.followTag ?? "").trim();
+        const currentlyFollowing = followButton.dataset.following === "true";
+        if (tag) {
+          toggleFollowTag(tag, currentlyFollowing);
+        }
+        return;
+      }
+
       const button = event.target.closest("[data-review-action]");
       if (!button || !elements.list.contains(button)) {
         return;
@@ -431,6 +720,7 @@ async function init() {
   bindNavigation();
   navbar.refresh();
   syncSearchControls();
+  renderFollowedTagsPanel();
   try {
     const pendingNotice = window.sessionStorage.getItem(FEED_NOTICE_KEY);
     if (pendingNotice) {
@@ -441,7 +731,7 @@ async function init() {
     // noop: sessionStorage can be unavailable in restricted environments
   }
 
-  await syncViewerRole();
+  await syncViewerContext();
   bindEvents();
   await loadFeed();
 }

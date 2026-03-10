@@ -69,6 +69,21 @@ Example request:
   - blank or missing `search` returns the normal unfiltered feed
   - cursor pagination applies within the filtered result set when `search` is used
 
+### `GET /api/v1/feed/following`
+
+- Auth: required (`user` or higher)
+- Query:
+  - `cursor` (optional): `<createdAtMillis>_<postId>`
+  - `limit` (optional): default `20`, max `50`
+  - `search` (optional): case-insensitive partial match on `title`, `content`, or `tags`, applied only inside posts matching followed tags
+- Success: `200`
+- Returns:
+  - published posts in reverse chronological order whose `tags` match any followed tag
+  - same `items[]` and `pageInfo` shape as `GET /api/v1/feed`
+- Notes:
+  - if the user follows no tags, the endpoint returns an empty `items[]`
+  - followed-tag matching is case-insensitive and tolerates a leading `#` in stored post tags
+
 ## Posts
 
 ### `POST /api/v1/posts`
@@ -90,7 +105,7 @@ Example request:
   - `id` must be a valid ObjectId
 - Success: `200`
 - Rules:
-  - only post author or `admin` can delete
+  - only post author, `moderator`, or `admin` can delete
 - Side effects:
   - permanently deletes the post
   - permanently deletes related comments and reviews
@@ -150,10 +165,12 @@ Example request:
 
 ### `DELETE /api/v1/comments/:id`
 
-- Auth: required (`admin`)
+- Auth: required (`user` or higher)
 - Path params:
   - `id` must be a valid ObjectId
 - Success: `200`
+- Rules:
+  - comment author, `moderator`, or `admin` can delete
 - Side effects:
   - permanently deletes the comment
 
@@ -251,6 +268,38 @@ Example request:
   - private metrics:
     - `score` (approval percentage in range `0` to `100` using `approvedCount / totalReviews * 100`)
     - `totalReviews`
+
+### `GET /api/v1/me/followed-tags`
+
+- Auth: required (`user` or higher)
+- Success: `200`
+- Returns:
+  - `followedTags[]` stored as canonical lowercase values without leading `#`
+
+### `POST /api/v1/me/followed-tags`
+
+- Auth: required (`user` or higher)
+- Body:
+  - `tag` (required string)
+- Success: `201`
+- Behavior:
+  - trims the value
+  - removes leading `#`
+  - lowercases the stored tag
+  - deduplicates the followed-tag list
+- Returns:
+  - `tag` (canonical stored tag)
+  - `followedTags[]`
+
+### `DELETE /api/v1/me/followed-tags/:tag`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `tag` is the canonical or URL-encoded tag value to remove
+- Success: `200`
+- Returns:
+  - `removedTag`
+  - `followedTags[]`
 
 ## Representative Error Examples
 

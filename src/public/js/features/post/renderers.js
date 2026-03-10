@@ -1,13 +1,52 @@
 import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
 
-function renderTags(tags) {
+function normalizeTagForFollow(tag) {
+  return String(tag ?? "")
+    .trim()
+    .replace(/^#+/, "")
+    .toLowerCase();
+}
+
+function formatTagLabel(tag) {
+  const normalized = String(tag ?? "").trim().replace(/^#+/, "");
+  return normalized || String(tag ?? "").trim();
+}
+
+function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
   if (!Array.isArray(tags) || tags.length === 0) {
     return "<p class='muted post-tags'>Sem tags.</p>";
   }
 
   return `
     <ul class="tag-list" aria-label="Tags do post">
-      ${tags.map((tag) => `<li class="tag-item">#${escapeHtml(tag)}</li>`).join("")}
+      ${tags
+        .map((tag) => {
+          const followTag = normalizeTagForFollow(tag);
+          const label = formatTagLabel(tag);
+          const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
+
+          return `
+            <li class="tag-item tag-item-actionable">
+              <span class="tag-label">#${escapeHtml(label)}</span>
+              ${
+                canManageTagFollows && followTag
+                  ? `
+                    <button
+                      type="button"
+                      class="tag-follow-button ${isFollowing ? "button-ghost" : ""}"
+                      data-follow-tag="${escapeHtml(followTag)}"
+                      data-following="${isFollowing ? "true" : "false"}"
+                      aria-pressed="${isFollowing ? "true" : "false"}"
+                    >
+                      ${isFollowing ? "Seguindo" : "Seguir"}
+                    </button>
+                  `
+                  : ""
+              }
+            </li>
+          `;
+        })
+        .join("")}
     </ul>
   `;
 }
@@ -84,6 +123,8 @@ export function renderPostView(
     viewerId = null,
     commentsOpen = true,
     commentEdit = null,
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
   } = {},
 ) {
   if (!target) {
@@ -102,7 +143,7 @@ export function renderPostView(
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
-      ${renderTags(tags)}
+      ${renderTags(tags, { canManageTagFollows, followedTagSet })}
       <div class="review-actions">
         ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${escapeHtml(post.id ?? "")}">Aprovar</button>` : ""}
         ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${escapeHtml(post.id ?? "")}">Nao relevante</button>` : ""}

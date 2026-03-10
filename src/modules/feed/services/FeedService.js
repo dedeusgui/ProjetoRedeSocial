@@ -14,19 +14,12 @@ function normalizeSearch(value) {
 }
 
 class FeedService {
-  constructor(feedRepository) {
+  constructor(feedRepository, userService) {
     this.feedRepository = feedRepository;
+    this.userService = userService;
   }
 
-  async getFeed({ cursor, limit, search }) {
-    const resolvedLimit = parseLimit(limit, 20, 50);
-    const resolvedSearch = normalizeSearch(search);
-    const results = await this.feedRepository.findChronologicalFeed({
-      cursor,
-      limit: resolvedLimit,
-      search: resolvedSearch,
-    });
-
+  buildFeedResponse(results, resolvedLimit) {
     const hasMore = results.length > resolvedLimit;
     const entries = hasMore ? results.slice(0, resolvedLimit) : results;
 
@@ -61,6 +54,37 @@ class FeedService {
         limit: resolvedLimit,
       },
     };
+  }
+
+  async getFeed({ cursor, limit, search }) {
+    const resolvedLimit = parseLimit(limit, 20, 50);
+    const resolvedSearch = normalizeSearch(search);
+    const results = await this.feedRepository.findChronologicalFeed({
+      cursor,
+      limit: resolvedLimit,
+      search: resolvedSearch,
+    });
+
+    return this.buildFeedResponse(results, resolvedLimit);
+  }
+
+  async getFollowingFeed({ requesterId, cursor, limit, search }) {
+    const resolvedLimit = parseLimit(limit, 20, 50);
+    const resolvedSearch = normalizeSearch(search);
+    const followedTags = await this.userService.getFollowedTags(requesterId);
+
+    if (followedTags.length === 0) {
+      return this.buildFeedResponse([], resolvedLimit);
+    }
+
+    const results = await this.feedRepository.findChronologicalFeed({
+      cursor,
+      limit: resolvedLimit,
+      search: resolvedSearch,
+      followedTags,
+    });
+
+    return this.buildFeedResponse(results, resolvedLimit);
   }
 }
 

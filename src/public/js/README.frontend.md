@@ -34,6 +34,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
+- For the feed page, keep `All posts` and `Tags que sigo` orchestration in `pages/feed.js`; renderer code should stay limited to card/tag markup.
 
 ## Review checklist for new pages
 1. Page script only orchestrates flow.

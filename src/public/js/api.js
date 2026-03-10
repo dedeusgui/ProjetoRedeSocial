@@ -121,10 +121,22 @@ export const api = {
     meProfile() {
       return request("GET", "/me/profile");
     },
+    listFollowedTags() {
+      return request("GET", "/me/followed-tags");
+    },
+    followTag(tag) {
+      return request("POST", "/me/followed-tags", { body: { tag } });
+    },
+    unfollowTag(tag) {
+      return request("DELETE", `/me/followed-tags/${encodeURIComponent(String(tag ?? ""))}`);
+    },
   },
   feed: {
     list({ cursor, limit, search } = {}) {
       return request("GET", "/feed", { query: { cursor, limit, search } });
+    },
+    listFollowing({ cursor, limit, search } = {}) {
+      return request("GET", "/feed/following", { query: { cursor, limit, search } });
     },
   },
   posts: {

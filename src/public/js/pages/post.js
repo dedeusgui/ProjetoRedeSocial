@@ -11,6 +11,7 @@ import { renderPostView } from "../features/post/renderers.js";
 const state = {
   postId: null,
   postData: null,
+  followedTags: [],
   viewerRole: null,
   viewerId: null,
   postAuthorId: null,
@@ -18,6 +19,7 @@ const state = {
   isReviewSubmitting: false,
   isDeletingPost: false,
   isDeletingComment: false,
+  isManagingTags: false,
   commentEdit: {
     editingCommentId: null,
     draft: "",
@@ -87,6 +89,28 @@ function resolveDeleteMessage(error) {
     "Autenticacao necessaria para excluir conteudo.",
     "Falha ao excluir conteudo.",
   );
+}
+
+function resolveFollowTagMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Autenticacao necessaria. Faca login para seguir tags.",
+    "Falha ao atualizar as tags seguidas.",
+  );
+}
+
+function normalizeFollowTagValue(value) {
+  return String(value ?? "")
+    .trim()
+    .replace(/^#+/, "")
+    .toLowerCase();
+}
+
+function setFollowedTags(tags) {
+  state.followedTags = [...new Set((Array.isArray(tags) ? tags : [])
+    .map((tag) => normalizeFollowTagValue(tag))
+    .filter((tag) => tag.length > 0))]
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function resetCommentEditState() {
@@ -168,6 +192,8 @@ function renderCurrentPost() {
     viewerId: state.viewerId,
     commentsOpen: state.commentsOpen,
     commentEdit: state.commentEdit,
+    canManageTagFollows: hasSession(),
+    followedTagSet: new Set(state.followedTags),
   });
 
   refreshReviewActions();
@@ -244,20 +270,75 @@ async function loadPost() {
   }
 }
 
-async function syncViewerRole() {
+async function syncViewerContext() {
   if (!hasSession()) {
     state.viewerRole = null;
     state.viewerId = null;
+    setFollowedTags([]);
     return;
   }
 
-  try {
-    const profile = await api.users.meProfile();
+  const [profileResult, followedTagsResult] = await Promise.allSettled([
+    api.users.meProfile(),
+    api.users.listFollowedTags(),
+  ]);
+
+  if (profileResult.status === "fulfilled") {
+    const profile = profileResult.value;
     state.viewerRole = profile.role ?? null;
     state.viewerId = profile.id ?? null;
-  } catch {
+  } else {
     state.viewerRole = null;
     state.viewerId = null;
+  }
+
+  if (followedTagsResult.status === "fulfilled") {
+    setFollowedTags(followedTagsResult.value.followedTags);
+  } else {
+    setFollowedTags([]);
+  }
+}
+
+async function toggleFollowTag(tag, currentlyFollowing) {
+  if (state.isManagingTags) {
+    return false;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Faca login para seguir tags.", "error");
+    return false;
+  }
+
+  const normalizedTag = normalizeFollowTagValue(tag);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  state.isManagingTags = true;
+  statusFlash.show(
+    currentlyFollowing ? `Parando de seguir #${normalizedTag}...` : `Seguindo #${normalizedTag}...`,
+    "info",
+  );
+
+  try {
+    const result = currentlyFollowing
+      ? await api.users.unfollowTag(normalizedTag)
+      : await api.users.followTag(normalizedTag);
+
+    setFollowedTags(result.followedTags);
+    renderCurrentPost();
+    statusFlash.show(
+      currentlyFollowing
+        ? `Voce deixou de seguir #${normalizedTag}.`
+        : `Agora voce segue #${normalizedTag}.`,
+      "success",
+    );
+    return true;
+  } catch (error) {
+    statusFlash.show(resolveFollowTagMessage(error), "error");
+    return false;
+  } finally {
+    state.isManagingTags = false;
   }
 }
 
@@ -518,6 +599,16 @@ function bindEvents() {
 
   if (elements.view) {
     elements.view.addEventListener("click", (event) => {
+      const followButton = event.target.closest("[data-follow-tag]");
+      if (followButton && elements.view.contains(followButton)) {
+        const tag = String(followButton.dataset.followTag ?? "").trim();
+        const currentlyFollowing = followButton.dataset.following === "true";
+        if (tag) {
+          toggleFollowTag(tag, currentlyFollowing);
+        }
+        return;
+      }
+
       const reviewButton = event.target.closest("[data-review-action]");
       if (reviewButton && elements.view.contains(reviewButton)) {
         const decision = String(reviewButton.dataset.reviewAction ?? "").trim();
@@ -630,7 +721,7 @@ async function init() {
   bindNavigation();
   renderSessionState();
   bindEvents();
-  await syncViewerRole();
+  await syncViewerContext();
   await loadPost();
 }
 

@@ -5,6 +5,7 @@
 The system is a social network API and static frontend focused on knowledge sharing:
 
 - chronological feed (no recommendation algorithm)
+- authenticated users can follow tags and open a separate chronological followed-tags feed
 - binary moderation decisions on posts (`approved`, `not_relevant`)
 - post-level approval percentage is public in feed and post detail
 - user aggregate metrics remain private to authenticated profile/admin endpoints

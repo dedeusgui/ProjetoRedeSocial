@@ -1,13 +1,22 @@
 import mongoose from "mongoose";
 import Post from "../../../models/post.js";
+import { buildStoredTagMatcher } from "../../../common/tags/followedTags.js";
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 class FeedRepository {
-  async findChronologicalFeed({ cursor, limit, search }) {
+  async findChronologicalFeed({ cursor, limit, search, followedTags }) {
     const filters = [{ status: "published" }];
+
+    if (Array.isArray(followedTags) && followedTags.length > 0) {
+      filters.push({
+        tags: {
+          $in: followedTags.map((tag) => buildStoredTagMatcher(tag)),
+        },
+      });
+    }
 
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");

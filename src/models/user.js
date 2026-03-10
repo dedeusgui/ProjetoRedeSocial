@@ -6,6 +6,10 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ["user", "moderator", "admin"], default: "user" },
+    followedTags: {
+      type: [String],
+      default: [],
+    },
     privateMetrics: {
       score: { type: Number, default: 0, min: 0, max: 100 },
       totalReviews: { type: Number, default: 0, min: 0 },

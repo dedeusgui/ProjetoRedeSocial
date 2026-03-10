@@ -2,6 +2,30 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-10
+
+### Added
+
+- Added protected followed-tag endpoints:
+  - `GET /api/v1/me/followed-tags`
+  - `POST /api/v1/me/followed-tags`
+  - `DELETE /api/v1/me/followed-tags/:tag`
+- Added protected chronological followed-tags feed endpoint `GET /api/v1/feed/following`.
+- Added feed-page `Tags que sigo` mode with manual tag follow form and visible followed-tag list.
+- Added follow/unfollow actions on tag chips in both the feed and post detail views.
+- Added RFC `docs/rfcs/follow-tags-feed.md` for the implemented feature.
+
+### Changed
+
+- Extended the user model with canonical lowercase `followedTags` storage.
+- Kept personalization chronological by filtering followed tags without changing the default public feed behavior.
+- Updated feed and post renderers to expose tag-based follow controls for authenticated users.
+
+### Docs
+
+- Updated architecture, API, and frontend docs to describe followed tags and the new personalized feed flow.
+- Corrected endpoint docs for post/comment deletion authorization to match current code behavior.
+
 ## 2026-03-09
 
 ### Fixed
