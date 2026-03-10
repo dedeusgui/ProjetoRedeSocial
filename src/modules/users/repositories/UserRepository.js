@@ -5,6 +5,10 @@ class UserRepository {
     return User.findById(id);
   }
 
+  async findProfileImageById(userId) {
+    return User.findById(userId).select("profileImage");
+  }
+
   async findFollowedTagsById(userId) {
     return User.findById(userId).select("followedTags");
   }
@@ -39,6 +43,33 @@ class UserRepository {
       { $pull: { followedTags: tag } },
       { returnDocument: "after" },
     ).select("followedTags");
+  }
+
+  async updateProfileImage(userId, profileImage) {
+    return User.findByIdAndUpdate(
+      userId,
+      { $set: { profileImage } },
+      { returnDocument: "after" },
+    );
+  }
+
+  async clearProfileImage(userId) {
+    return User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          profileImage: {
+            url: null,
+            storagePath: null,
+            originalName: null,
+            mimeType: null,
+            sizeBytes: 0,
+            updatedAt: null,
+          },
+        },
+      },
+      { returnDocument: "after" },
+    );
   }
 }
 

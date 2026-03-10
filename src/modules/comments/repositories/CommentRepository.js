@@ -8,7 +8,7 @@ class CommentRepository {
   async findVisibleByPostId(postId) {
     return Comment.find({ postId, status: "visible" })
       .sort({ createdAt: 1, _id: 1 })
-      .populate("authorId", "username");
+      .populate("authorId", "username privateMetrics profileImage");
   }
 
   async findByIdOrNull(commentId) {

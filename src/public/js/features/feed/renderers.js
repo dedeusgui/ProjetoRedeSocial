@@ -3,6 +3,7 @@ import {
   formatDateTime,
   formatPercent,
 } from "../../core/formatters.js";
+import { renderAuthorSummary } from "../authors/renderers.js";
 
 export function ensureChronologicalOrder(items) {
   return [...items].sort((a, b) => {
@@ -115,18 +116,22 @@ export function createPostCard(
 
   article.innerHTML = `
     <header class="post-header">
-      <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(createdAtText)}</p>
-      <p class="trend-chip status-neutral">Aprova&ccedil;&atilde;o: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+      ${renderAuthorSummary(post.author, {
+        metaText: createdAtText,
+        avatarClassName: "author-avatar-sm",
+        className: "post-author-summary",
+      })}
+      <p class="trend-chip status-neutral">Aprovação: ${escapeHtml(formatPercent(approvalPercentage))}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
     ${renderFeedMedia(post.media, post.title)}
     ${renderTags(tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">
-      <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discuss&atilde;o</button>
+      <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discussão</button>
       <div class="review-actions review-actions-inline">
         ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>` : ""}
-        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">N&atilde;o relevante</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">Não relevante</button>` : ""}
         ${canEditPost ? `<button type="button" class="button-ghost" data-edit-post-id="${postIdAttr}">Editar post</button>` : ""}
         ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Excluir post</button>` : ""}
       </div>

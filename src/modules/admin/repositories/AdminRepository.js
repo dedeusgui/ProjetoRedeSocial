@@ -84,7 +84,7 @@ class AdminRepository {
 
   async findById(userId) {
     return User.findById(userId)
-      .select("username email role privateMetrics createdAt")
+      .select("username email role privateMetrics profileImage createdAt")
       .lean();
   }
 

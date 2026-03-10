@@ -56,6 +56,13 @@ Example request:
 - Returns:
   - matched published posts in reverse chronological order
   - `items[]` with post summary
+    - includes `author`:
+      - `id`
+      - `username`
+      - `avatarUrl` (`string | null`)
+      - `reputation`:
+        - `tier` (`low | medium | high`)
+        - `label`
     - includes `media[]`
     - includes `trend`
     - includes `moderationMetrics`:
@@ -172,8 +179,22 @@ Example request:
 - Success: `200`
 - Returns:
   - post detail
+  - `author`:
+    - `id`
+    - `username`
+    - `avatarUrl` (`string | null`)
+    - `reputation`:
+      - `tier` (`low | medium | high`)
+      - `label`
   - `media[]` with uploaded post image metadata
   - embedded `comments` list with visible comments only
+    - each `comment.author` includes:
+      - `id`
+      - `username`
+      - `avatarUrl` (`string | null`)
+      - `reputation`:
+        - `tier` (`low | medium | high`)
+        - `label`
   - includes `moderationMetrics`:
     - `approvedCount`
     - `notRelevantCount`
@@ -191,7 +212,14 @@ Example request:
 - Path params:
   - `id` must be a valid ObjectId
 - Success: `200`
-- Returns: visible comments for post
+- Returns: visible comments for post, where each comment includes:
+  - `author`:
+    - `id`
+    - `username`
+    - `avatarUrl` (`string | null`)
+    - `reputation`:
+      - `tier` (`low | medium | high`)
+      - `label`
 
 ### `POST /api/v1/posts/:id/comments`
 
@@ -306,9 +334,41 @@ Example request:
 - Success: `200`
 - Returns:
   - user identity and role
+  - `avatarUrl` (`string | null`)
+  - `publicReputation`:
+    - `tier` (`low | medium | high`)
+    - `label`
   - private metrics:
     - `score` (approval percentage in range `0` to `100` using `approvedCount / totalReviews * 100`)
     - `totalReviews`
+
+### `POST /api/v1/me/avatar`
+
+- Auth: required (`user` or higher)
+- Content type:
+  - `multipart/form-data`
+- Body:
+  - `avatar` (required file field, single image)
+- Success: `201`
+- Returns:
+  - `avatarUrl` (`string | null`)
+  - `publicReputation`
+  - `updatedAt`
+- Rules:
+  - owner-only route
+  - allowed formats: JPG, PNG, WebP
+  - max size: `5 MB`
+
+### `DELETE /api/v1/me/avatar`
+
+- Auth: required (`user` or higher)
+- Success: `200`
+- Returns:
+  - `avatarUrl` (`null`)
+  - `publicReputation`
+  - `updatedAt`
+- Rules:
+  - owner-only route
 
 ### `GET /api/v1/me/followed-tags`
 

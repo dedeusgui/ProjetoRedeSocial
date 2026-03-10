@@ -14,6 +14,14 @@ const UserSchema = new mongoose.Schema(
       score: { type: Number, default: 0, min: 0, max: 100 },
       totalReviews: { type: Number, default: 0, min: 0 },
     },
+    profileImage: {
+      url: { type: String, default: null },
+      storagePath: { type: String, default: null },
+      originalName: { type: String, default: null },
+      mimeType: { type: String, default: null },
+      sizeBytes: { type: Number, default: 0, min: 0 },
+      updatedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,

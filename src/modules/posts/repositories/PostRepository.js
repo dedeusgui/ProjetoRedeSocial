@@ -9,7 +9,7 @@ class PostRepository {
   }
 
   async findById(id) {
-    return Post.findById(id).populate("authorId", "username");
+    return Post.findById(id).populate("authorId", "username privateMetrics profileImage");
   }
 
   async findByIdOrNull(id) {

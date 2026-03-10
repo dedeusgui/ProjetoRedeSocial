@@ -1,4 +1,5 @@
 import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
+import { renderAuthorSummary } from "../authors/renderers.js";
 
 function normalizeTagForFollow(tag) {
   return String(tag ?? "")
@@ -87,10 +88,11 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
 
   return `
     <article class="comment-item">
-      <p>
-        <strong>@${escapeHtml(comment.author?.username ?? "desconhecido")}</strong>
-        <span class="muted">${escapeHtml(formatDateTime(comment.createdAt))}</span>
-      </p>
+      ${renderAuthorSummary(comment.author, {
+        metaText: formatDateTime(comment.createdAt),
+        avatarClassName: "author-avatar-xs",
+        className: "author-summary-comment",
+      })}
       ${
         isEditing
           ? `
@@ -164,7 +166,11 @@ export function renderPostView(
   target.innerHTML = `
     <article class="card post-card">
       <header class="post-header">
-        <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(formatDateTime(post.createdAt))}</p>
+        ${renderAuthorSummary(post.author, {
+          metaText: formatDateTime(post.createdAt),
+          avatarClassName: "author-avatar-sm",
+          className: "post-author-summary",
+        })}
         <p class="trend-chip status-neutral">Aprovação: ${escapeHtml(formatPercent(approvalPercentage))}</p>
       </header>
       <h2 class="post-title"></h2>

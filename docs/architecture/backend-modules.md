@@ -5,10 +5,10 @@
 | Module | Main Routes | Service Responsibilities | Key Dependencies |
 |---|---|---|---|
 | `auth` | `POST /auth/register`, `POST /auth/login` | Create users, validate credentials, issue JWT | `AuthRepository`, JWT signer |
-| `users` | `GET /me/profile`, `GET/POST/DELETE /me/followed-tags` | Return authenticated profile/private metrics; persist followed tags; update metrics | `UserRepository` |
-| `posts` | `POST /posts`, `GET /posts/:id`, `PATCH /posts/:id`, `POST /posts/:id/media`, `DELETE /posts/:id/media/:mediaId`, `DELETE /posts/:id` | Create/edit post, persist image metadata, manage post image uploads/removals, fetch post details with visible comments, update post moderation metrics, delete posts by owner/moderator/admin with private metric recalculation and file cleanup | `PostRepository`, `CommentService`, `UserService`, local disk storage |
-| `comments` | `GET /posts/:id/comments`, `POST /posts/:id/comments`, `DELETE /comments/:id` | Create visible comments, list visible comments by post, edit comments by owner, delete comments by owner/moderator/admin | `CommentRepository` |
-| `feed` | `GET /feed`, `GET /feed/following` | Return chronological published posts with cursor pagination and optional search; return a chronological followed-tags feed for authenticated users | `FeedRepository`, `UserService` |
+| `users` | `GET /me/profile`, `POST/DELETE /me/avatar`, `GET/POST/DELETE /me/followed-tags` | Return authenticated profile/private metrics, manage owner avatar uploads/removal, persist followed tags, update metrics, and format public author summaries | `UserRepository`, local disk storage |
+| `posts` | `POST /posts`, `GET /posts/:id`, `PATCH /posts/:id`, `POST /posts/:id/media`, `DELETE /posts/:id/media/:mediaId`, `DELETE /posts/:id` | Create/edit post, persist image metadata, manage post image uploads/removals, fetch post details with visible comments and public author summaries, update post moderation metrics, delete posts by owner/moderator/admin with private metric recalculation and file cleanup | `PostRepository`, `CommentService`, `UserService`, local disk storage |
+| `comments` | `GET /posts/:id/comments`, `POST /posts/:id/comments`, `DELETE /comments/:id` | Create visible comments, list visible comments by post with public author summaries, edit comments by owner, delete comments by owner/moderator/admin | `CommentRepository` |
+| `feed` | `GET /feed`, `GET /feed/following` | Return chronological published posts with cursor pagination and optional search, including public author summaries; return a chronological followed-tags feed for authenticated users | `FeedRepository`, `UserService` |
 | `admin` | `GET /admin/users`, `GET /admin/moderator-eligibility`, `PATCH /admin/users/:id/moderator`, `DELETE /admin/users/:id` | Sync bootstrap admins from environment, list users/roles, manage moderator eligibility/promotion, and delete users for testing with stat recalculation | `AdminRepository`, `roles` middleware |
 | `moderation` | `POST /posts/:id/review` | Upsert review, recompute post trend + approval percentages, recompute author private metrics | `ModerationRepository`, `PostService` |
 
@@ -37,12 +37,15 @@ Module construction is centralized in `src/server.js`:
 - `feed`: strictly chronological ordering and cursor pagination, even when search filters are applied.
 - `feed`: followed-tag filtering matches any followed tag, keeps public feed behavior unchanged, and never introduces recommendation ranking.
 - `feed`: public search is limited to published posts and matches `title`, `content`, and `tags`.
+- `feed`: public author data in feed responses is limited to avatar URL, username, and derived reputation tier.
 - `posts`: hidden posts are not returned by detail endpoint.
 - `posts`: post images are stored on local disk and only image metadata/URLs are stored in MongoDB.
 - `posts`: a post can have at most 4 images.
 - `posts`: only the post author can add or remove post images.
 - `posts`: authenticated post deletion is allowed for post author, moderator, or admin.
+- `posts`: post detail author data is limited to avatar URL, username, and derived reputation tier.
 - `comments`: authenticated comment deletion is allowed for comment author, moderator, or admin.
+- `comments`: comment author data is limited to avatar URL, username, and derived reputation tier.
 - `admin`: `admin` role is bootstrap-managed through `ADMIN_EMAILS`; API can only grant/revoke `moderator`.
 - `admin`: moderator eligibility requires minimum posts, minimum account age, and minimum approval percentage (`privateMetrics.score`) of 40%.
 - `moderation`: any authenticated user can review posts, including own posts.
@@ -51,4 +54,6 @@ Module construction is centralized in `src/server.js`:
   - `positive` when approval is greater than rejection
   - `negative` when rejection is greater than approval
 - `users`: private metrics use approval percentage (`privateMetrics.score`, range `0` to `100`) plus total review volume, exposed only through authenticated profile/admin endpoints.
+- `users`: avatar uploads are owner-managed, stored on local disk, and exposed publicly only as an image URL on post/comment author summaries.
+- `users`: public reputation is derived server-side from `privateMetrics.score` bands (`0-39 low`, `40-69 medium`, `70-100 high`) and does not expose the exact percentage publicly.
 - `users`: followed tags are stored as canonical lowercase values without leading `#`.

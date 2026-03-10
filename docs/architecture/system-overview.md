@@ -8,7 +8,8 @@ The system is a social network API and static frontend focused on knowledge shar
 - authenticated users can follow tags and open a separate chronological followed-tags feed
 - binary moderation decisions on posts (`approved`, `not_relevant`)
 - post-level approval percentage is public in feed and post detail
-- user aggregate metrics remain private to authenticated profile/admin endpoints
+- full user aggregate metrics remain private to authenticated profile/admin endpoints
+- public author surfaces are limited to avatar, username, and a derived reputation tier on posts/comments; there is no public profile page
 
 ## Runtime Architecture
 

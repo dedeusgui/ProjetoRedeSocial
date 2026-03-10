@@ -32,9 +32,9 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological public feed with search, authenticated `Tags que sigo` mode, manual tag follow form, tag follow/unfollow actions, and post create/edit image upload.
-- `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, and post edit image upload/removal.
-- `profile.html`: authenticated profile with private approval metrics; admins also see user/role testing panel.
+- `feed.html`: chronological public feed with search, authenticated `Tags que sigo` mode, manual tag follow form, tag follow/unfollow actions, post create/edit image upload, and public author chips (avatar, username, reputation tier).
+- `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, post edit image upload/removal, and public author chips for the post author and comment authors.
+- `profile.html`: authenticated profile with private approval metrics, avatar upload/removal controls, larger owner identity header, and admin tools for admins.
 - `admin/reviews.html`: moderation review flow + admin-only moderator management panel.
 
 ## Navigation Pattern
@@ -55,5 +55,6 @@ Reference guide:
 - Live regions and helper text should be reserved for loading, error, and non-obvious action feedback, not for restating visible page context.
 - Ambient visual effects should live in shared CSS and stay behind content, subtle by default, and safe under `prefers-reduced-motion`.
 - Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts.
+- Public author UI on feed/post/comment surfaces must remain non-navigable and limited to avatar, username, and derived reputation tier.
 - Feed cards may show the first uploaded post image, while post detail can show the full image gallery.
 - Feed personalization must stay chronological; `Tags que sigo` filters by followed tags but does not replace the public feed with ranked results.

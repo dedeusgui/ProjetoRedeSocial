@@ -7,6 +7,8 @@ class UserController {
     this.getFollowedTags = this.getFollowedTags.bind(this);
     this.followTag = this.followTag.bind(this);
     this.unfollowTag = this.unfollowTag.bind(this);
+    this.uploadAvatar = this.uploadAvatar.bind(this);
+    this.deleteAvatar = this.deleteAvatar.bind(this);
   }
 
   async getMeProfile(req, res) {
@@ -26,6 +28,16 @@ class UserController {
 
   async unfollowTag(req, res) {
     const result = await this.userService.unfollowTag(req.user.id, req.params.tag);
+    return sendSuccess(res, result);
+  }
+
+  async uploadAvatar(req, res) {
+    const result = await this.userService.uploadAvatar(req.user.id, req.file);
+    return sendSuccess(res, result, 201);
+  }
+
+  async deleteAvatar(req, res) {
+    const result = await this.userService.deleteAvatar(req.user.id);
     return sendSuccess(res, result);
   }
 }

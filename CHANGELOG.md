@@ -6,6 +6,11 @@ All notable changes to this project should be documented in this file.
 
 ### Added
 
+- Added owner-managed profile avatar support with:
+  - `POST /api/v1/me/avatar`
+  - `DELETE /api/v1/me/avatar`
+- Added local-disk avatar storage and a profile-page avatar upload/remove workflow.
+- Added public author chips on feed, post detail, and comments showing avatar, username, and reputation tier without public profile navigation.
 - Added post image upload support with:
   - `POST /api/v1/posts/:id/media`
   - `DELETE /api/v1/posts/:id/media/:mediaId`
@@ -23,6 +28,9 @@ All notable changes to this project should be documented in this file.
 
 ### Changed
 
+- Extended `GET /api/v1/me/profile` to include avatar preview data and public-reputation preview data.
+- Extended feed/post/comment author payloads to include avatar URLs and derived reputation tiers.
+- Enlarged the profile-page username header and repositioned profile identity content around the new avatar controls.
 - Extended post and feed responses to include uploaded post `media[]`.
 - Updated post deletion flow to clean up uploaded files from disk.
 - Extended the user model with canonical lowercase `followedTags` storage.
@@ -32,6 +40,7 @@ All notable changes to this project should be documented in this file.
 
 ### Docs
 
+- Updated architecture, API, frontend, and RFC docs to describe private-profile avatar management and the limited public author summary contract.
 - Updated architecture and API docs to describe post media upload storage, routes, and response changes.
 - Updated architecture, API, and frontend docs to describe followed tags and the new personalized feed flow.
 - Corrected endpoint docs for post/comment deletion authorization to match current code behavior.

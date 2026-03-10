@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import AppError from "../../../common/errors/AppError.js";
 import {
   buildPostModerationMetrics,
@@ -50,6 +52,38 @@ class AdminService {
   async syncAdminUsers() {
     const adminEmails = Array.from(this.adminEmailSet);
     return this.adminRepository.syncAdminRolesByEmails(adminEmails);
+  }
+
+  async safeDeleteFiles(filePaths) {
+    await Promise.all(
+      (Array.isArray(filePaths) ? filePaths : [])
+        .filter((filePath) => typeof filePath === "string" && filePath.length > 0)
+        .map(async (filePath) => {
+          try {
+            await fs.unlink(filePath);
+            await this.removeEmptyParentDirectory(filePath);
+          } catch (error) {
+            if (error?.code !== "ENOENT" && error?.code !== "ENOTEMPTY") {
+              console.error(`Failed to remove uploaded file: ${filePath}`, error);
+            }
+          }
+        }),
+    );
+  }
+
+  async removeEmptyParentDirectory(filePath) {
+    const parentDirectory = path.dirname(String(filePath ?? ""));
+    if (!parentDirectory || parentDirectory === "." || parentDirectory === path.dirname(parentDirectory)) {
+      return;
+    }
+
+    try {
+      await fs.rmdir(parentDirectory);
+    } catch (error) {
+      if (error?.code !== "ENOENT" && error?.code !== "ENOTEMPTY") {
+        console.error(`Failed to remove upload directory: ${parentDirectory}`, error);
+      }
+    }
   }
 
   async listModeratorEligibility() {
@@ -220,6 +254,8 @@ class AdminService {
       this.adminRepository.deletePostRelationsByPostIds(postIds),
       this.adminRepository.deleteUserById(userId),
     ]);
+
+    await this.safeDeleteFiles([user.profileImage?.storagePath]);
 
     await this.recalculateDerivedStats();
 

@@ -25,6 +25,8 @@ const adminUsersFlash = createFlash(elements.adminUsersStatus);
 const state = {
   currentUserId: null,
   isDeletingUser: false,
+  isUpdatingAvatar: false,
+  profile: null,
 };
 
 const navbar = initNavbar({
@@ -51,18 +53,44 @@ function redirectToHome(noticeMessage = AUTH_REQUIRED_NOTICE) {
   window.location.href = "./index.html";
 }
 
-async function loadProfile() {
+function renderProfile() {
+  if (!state.profile) {
+    return;
+  }
+
+  renderProfileView(elements.profile, state.profile, {
+    isAvatarBusy: state.isUpdatingAvatar,
+  });
+}
+
+function handleAuthFailure(error) {
+  if (
+    error instanceof ApiError &&
+    (error.code === "UNAUTHENTICATED" || error.status === 401)
+  ) {
+    clearSession();
+    redirectToHome();
+    return true;
+  }
+
+  return false;
+}
+
+async function loadProfile({ showLoading = true } = {}) {
   if (!hasSession()) {
     redirectToHome();
     return;
   }
 
-  statusFlash.show("Carregando perfil...", "info");
+  if (showLoading) {
+    statusFlash.show("Carregando perfil...", "info");
+  }
 
   try {
     const profile = await api.users.meProfile();
     state.currentUserId = profile.id;
-    renderProfileView(elements.profile, profile);
+    state.profile = profile;
+    renderProfile();
     statusFlash.clear();
 
     if (profile.role === "admin" && elements.adminTools) {
@@ -72,12 +100,7 @@ async function loadProfile() {
       elements.adminTools.hidden = true;
     }
   } catch (error) {
-    if (
-      error instanceof ApiError &&
-      (error.code === "UNAUTHENTICATED" || error.status === 401)
-    ) {
-      clearSession();
-      redirectToHome();
+    if (handleAuthFailure(error)) {
       return;
     }
 
@@ -89,7 +112,7 @@ function resolveAdminUsersMessage(error) {
   return resolveAuthApiMessage(
     error,
     AUTH_REQUIRED_NOTICE,
-    "Falha ao carregar a lista de usu\u00e1rios.",
+    "Falha ao carregar a lista de usuários.",
   );
 }
 
@@ -98,7 +121,7 @@ async function loadAdminUsers() {
     return;
   }
 
-  adminUsersFlash.show("Carregando usu\u00e1rios...", "info");
+  adminUsersFlash.show("Carregando usuários...", "info");
   try {
     const users = await api.admin.listUsers();
     renderAdminUserList(elements.adminUsersList, users, {
@@ -116,15 +139,77 @@ async function deleteUserForTesting(userId) {
   }
 
   state.isDeletingUser = true;
-  adminUsersFlash.show("Excluindo usu\u00e1rio...", "info");
+  adminUsersFlash.show("Excluindo usuário...", "info");
   try {
     await api.admin.deleteUser(userId);
     await loadAdminUsers();
-    adminUsersFlash.show("Usu\u00e1rio exclu\u00eddo e estat\u00edsticas recalculadas.", "success");
+    adminUsersFlash.show("Usuário excluído e estatísticas recalculadas.", "success");
   } catch (error) {
     adminUsersFlash.show(resolveAdminUsersMessage(error), "error");
   } finally {
     state.isDeletingUser = false;
+  }
+}
+
+async function uploadAvatar(file) {
+  if (!file || state.isUpdatingAvatar) {
+    return;
+  }
+
+  state.isUpdatingAvatar = true;
+  renderProfile();
+  statusFlash.show("Enviando foto de perfil...", "info");
+
+  try {
+    const result = await api.users.uploadAvatar(file);
+    if (state.profile) {
+      state.profile = {
+        ...state.profile,
+        avatarUrl: result.avatarUrl ?? null,
+        publicReputation: result.publicReputation ?? state.profile.publicReputation,
+      };
+    }
+    statusFlash.show("Foto de perfil atualizada.", "success");
+  } catch (error) {
+    if (handleAuthFailure(error)) {
+      return;
+    }
+
+    statusFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isUpdatingAvatar = false;
+    renderProfile();
+  }
+}
+
+async function removeAvatar() {
+  if (state.isUpdatingAvatar || !state.profile?.avatarUrl) {
+    return;
+  }
+
+  state.isUpdatingAvatar = true;
+  renderProfile();
+  statusFlash.show("Removendo foto de perfil...", "info");
+
+  try {
+    const result = await api.users.deleteAvatar();
+    if (state.profile) {
+      state.profile = {
+        ...state.profile,
+        avatarUrl: result.avatarUrl ?? null,
+        publicReputation: result.publicReputation ?? state.profile.publicReputation,
+      };
+    }
+    statusFlash.show("Foto de perfil removida.", "success");
+  } catch (error) {
+    if (handleAuthFailure(error)) {
+      return;
+    }
+
+    statusFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isUpdatingAvatar = false;
+    renderProfile();
   }
 }
 
@@ -154,10 +239,37 @@ function bindAdminEvents() {
   }
 }
 
+function bindProfileEvents() {
+  if (!elements.profile) {
+    return;
+  }
+
+  elements.profile.addEventListener("change", (event) => {
+    const input = event.target.closest("[data-avatar-input]");
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const [file] = Array.from(input.files ?? []);
+    input.value = "";
+    uploadAvatar(file ?? null);
+  });
+
+  elements.profile.addEventListener("click", (event) => {
+    const removeButton = event.target.closest("[data-remove-avatar]");
+    if (!removeButton || !elements.profile.contains(removeButton)) {
+      return;
+    }
+
+    removeAvatar();
+  });
+}
+
 function init() {
   bindNavigation();
   navbar.refresh();
   bindAdminEvents();
+  bindProfileEvents();
   loadProfile();
 }
 

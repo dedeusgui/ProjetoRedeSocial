@@ -127,6 +127,14 @@ export const api = {
     meProfile() {
       return request("GET", "/me/profile");
     },
+    uploadAvatar(file) {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      return request("POST", "/me/avatar", { body: formData });
+    },
+    deleteAvatar() {
+      return request("DELETE", "/me/avatar");
+    },
     listFollowedTags() {
       return request("GET", "/me/followed-tags");
     },

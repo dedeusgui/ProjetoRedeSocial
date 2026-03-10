@@ -1,4 +1,5 @@
 import AppError from "../../../common/errors/AppError.js";
+import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
 class CommentService {
@@ -48,10 +49,7 @@ class CommentService {
     return comments.map((comment) => ({
       id: comment.id,
       postId: comment.postId,
-      author: {
-        id: comment.authorId?.id,
-        username: comment.authorId?.username,
-      },
+      author: buildPublicAuthorSummary(comment.authorId),
       content: comment.content,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,

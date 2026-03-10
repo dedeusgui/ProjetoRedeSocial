@@ -45,7 +45,7 @@ class FeedRepository {
     return Post.find(query)
       .sort({ createdAt: -1, _id: -1 })
       .limit(limit + 1)
-      .populate("authorId", "username");
+      .populate("authorId", "username privateMetrics profileImage");
   }
 }
 

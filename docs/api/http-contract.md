@@ -3,7 +3,7 @@
 ## Base Information
 
 - API prefix: `/api/v1`
-- Content type: `application/json` by default; `multipart/form-data` is used for `POST /api/v1/posts/:id/media`
+- Content type: `application/json` by default; `multipart/form-data` is used for `POST /api/v1/posts/:id/media` and `POST /api/v1/me/avatar`
 - Auth scheme for protected routes: `Authorization: Bearer <token>`
 
 ## Success Envelope

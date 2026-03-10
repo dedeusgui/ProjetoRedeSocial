@@ -8,6 +8,7 @@ import {
   formatPostMediaCollection,
 } from "../../../common/media/postMedia.js";
 import { buildPrivateMetricsFromAuthorSummary } from "../../../common/metrics/moderationMetrics.js";
+import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
 const POST_TITLE_MAX_LENGTH = 120;
@@ -207,10 +208,7 @@ class PostService {
 
     return {
       id: post.id,
-      author: {
-        id: post.authorId?.id,
-        username: post.authorId?.username,
-      },
+      author: buildPublicAuthorSummary(post.authorId),
       title: post.title,
       content: post.content,
       tags: post.tags,

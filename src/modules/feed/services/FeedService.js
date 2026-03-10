@@ -1,4 +1,5 @@
 import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
+import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { parseLimit } from "../../../common/validation/index.js";
 
 function normalizeSearch(value) {
@@ -26,10 +27,7 @@ class FeedService {
 
     const items = entries.map((post) => ({
       id: post.id,
-      author: {
-        id: post.authorId?.id,
-        username: post.authorId?.username,
-      },
+      author: buildPublicAuthorSummary(post.authorId),
       title: post.title,
       content: post.content,
       tags: post.tags,

@@ -8,6 +8,8 @@ function formatList(items) {
 
 function resolveValidationDetailsMessage(error) {
   const details = error.details ?? {};
+  const isAvatarField = details.field === "avatar";
+  const uploadSubject = isAvatarField ? "imagem de perfil" : "imagem";
 
   if (Array.isArray(details.missingLabels) && details.missingLabels.length > 0) {
     return `Preencha os campos obrigatórios: ${formatList(details.missingLabels)}.`;
@@ -25,8 +27,18 @@ function resolveValidationDetailsMessage(error) {
     return `Cada imagem deve ter no máximo ${details.maxFileSizeMb} MB.`;
   }
 
+  if (isAvatarField && typeof details.maxItemsPerRequest === "number") {
+    return `Você pode enviar até ${details.maxItemsPerRequest} ${uploadSubject} por envio.`;
+  }
+
+  if (isAvatarField && typeof details.maxFileSizeMb === "number") {
+    return `Cada ${uploadSubject} deve ter no máximo ${details.maxFileSizeMb} MB.`;
+  }
+
   if (Array.isArray(details.allowedExtensions) && details.allowedExtensions.length > 0) {
-    return `Envie apenas imagens nos formatos ${formatList(details.allowedExtensions)}.`;
+    return isAvatarField
+      ? `Envie apenas imagens de perfil nos formatos ${formatList(details.allowedExtensions)}.`
+      : `Envie apenas imagens nos formatos ${formatList(details.allowedExtensions)}.`;
   }
 
   return error.message;
@@ -70,7 +82,7 @@ export function resolveModerationApiMessage(error, fallbackMessage) {
   }
 
   if (error.code === "UNAUTHENTICATED" || error.status === 401) {
-    return "Autentica\u00e7\u00e3o necess\u00e1ria para avaliar posts.";
+    return "Autenticação necessária para avaliar posts.";
   }
 
   if (error.code === "FORBIDDEN" || error.status === 403) {
