@@ -21,7 +21,6 @@ export function renderProfileView(
     <section class="card profile-card">
       <div class="profile-topline">
         <p class="profile-privacy-badge">Perfil privado</p>
-        <p class="muted profile-privacy-copy">Somente foto, nome e reputação são públicos.</p>
       </div>
 
       <div class="profile-layout">
@@ -59,7 +58,6 @@ export function renderProfileView(
 
         <aside class="card profile-avatar-panel">
           <h3 class="ink-underline">Foto de perfil</h3>
-          <p class="muted">Atualize sua imagem para identificação pública no feed e nos comentários.</p>
           <label class="profile-avatar-field file-picker" aria-label="Atualizar foto de perfil">
             <input
               type="file"

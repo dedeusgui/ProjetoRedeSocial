@@ -221,14 +221,7 @@ p {
 }
 
 .ink-underline::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -3px;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(175, 186, 204, 0.35);
+  display: none;
 }
 
 .tone-note {
@@ -658,11 +651,41 @@ select:focus-visible {
 
 .questionnaire-editor-correct {
   display: grid;
-  justify-items: center;
+  justify-items: stretch;
   align-items: center;
-  min-width: 74px;
-  align-items: center;
+  min-width: 108px;
+  position: relative;
   gap: var(--space-1);
+}
+
+.questionnaire-editor-correct input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.questionnaire-editor-correct span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-1);
+  background: rgba(18, 26, 40, 0.9);
+  color: var(--text-1);
+  padding: 9px 10px;
+  font-size: 0.84rem;
+}
+
+.questionnaire-editor-correct input:checked + span {
+  border-color: #6382b1;
+  background: rgba(43, 62, 93, 0.85);
+  color: var(--text-0);
+}
+
+.questionnaire-editor-correct input:focus-visible + span {
+  outline: 2px solid #6c84ae;
+  outline-offset: 2px;
 }
 
 .questionnaire-preview {
@@ -696,17 +719,34 @@ select:focus-visible {
 
 .questionnaire-option {
   display: flex;
+  position: relative;
   align-items: center;
-  gap: var(--space-2);
-  padding: 10px 12px;
+  gap: 0;
+  padding: 0;
   border: 1px solid var(--line-0);
   border-radius: var(--radius-1);
   background: rgba(13, 19, 28, 0.92);
+  overflow: hidden;
 }
 
 .questionnaire-option input {
-  width: auto;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
   margin: 0;
+  cursor: pointer;
+}
+
+.questionnaire-option span {
+  width: 100%;
+  display: block;
+  padding: 10px 12px;
+}
+
+.questionnaire-option input:checked + span {
+  color: var(--text-0);
 }
 
 .questionnaire-option-selected {
@@ -834,6 +874,21 @@ select:focus-visible {
 .modal-form-section-copy {
   display: grid;
   gap: var(--space-1);
+}
+
+.modal-form-section-copy .ink-underline {
+  color: #f6f9ff;
+  text-shadow: 0 1px 8px rgba(150, 174, 210, 0.25);
+}
+
+.modal-header .ink-underline {
+  color: #f6f9ff;
+  text-shadow: 0 1px 8px rgba(150, 174, 210, 0.25);
+}
+
+.modal-header [data-post-modal-title].ink-underline {
+  color: #f6f9ff;
+  text-shadow: 0 1px 8px rgba(150, 174, 210, 0.25);
 }
 
 .post-type-toggle {
@@ -1029,7 +1084,7 @@ select:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
 }
 
 .profile-main {
@@ -1065,7 +1120,7 @@ select:focus-visible {
 
 .profile-meta-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-2) var(--space-3);
 }
 
@@ -1073,11 +1128,16 @@ select:focus-visible {
   margin: 0;
   display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .profile-meta-item strong {
+  display: block;
   font-weight: 600;
   color: var(--text-0);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-avatar-field input[type="file"] {
@@ -1091,6 +1151,8 @@ select:focus-visible {
 .profile-avatar-panel {
   margin: 0;
   display: grid;
+  height: 100%;
+  grid-template-rows: auto auto auto 1fr auto;
   gap: var(--space-3);
 }
 

@@ -117,12 +117,12 @@ export function createQuestionnaireEditor({ target } = {}) {
     state.title = String(questionnaire?.title ?? "");
     state.questions = Array.isArray(questionnaire?.questions)
       ? questionnaire.questions.map((question) =>
-          cloneQuestion(
-            question,
-            nextId(),
-            (Array.isArray(question?.options) ? question.options : [null, null]).map(() => nextId()),
-          ),
-        )
+        cloneQuestion(
+          question,
+          nextId(),
+          (Array.isArray(question?.options) ? question.options : [null, null]).map(() => nextId()),
+        ),
+      )
       : [];
     render();
   }
@@ -206,7 +206,7 @@ export function createQuestionnaireEditor({ target } = {}) {
                     ${question.correctOptionIndex === optionIndex ? "checked" : ""}
                     ${state.disabled ? "disabled" : ""}
                   />
-                  <span class="muted">Correta</span>
+                  <span class="questionnaire-correct-text">Correta</span>
                 </label>
                 <input
                   type="text"
@@ -285,7 +285,6 @@ export function createQuestionnaireEditor({ target } = {}) {
       <section class="modal-questionnaire-section" aria-label="Questionário do post">
         <div class="row questionnaire-editor-header">
           <div class="questionnaire-editor-copy">
-            <h3 class="ink-underline">Questionário</h3>
             <p class="muted">Monte perguntas de múltipla escolha com uma única resposta correta.</p>
           </div>
           <div class="row questionnaire-editor-actions">
