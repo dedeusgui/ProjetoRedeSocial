@@ -2,7 +2,7 @@ import { escapeHtml } from "../../core/formatters.js";
 
 function buildQuestionnaireHeading(questionnaire) {
   const title = String(questionnaire?.title ?? "").trim();
-  return title || "Questionario";
+  return title || "Question\u00e1rio";
 }
 
 export function renderQuestionnairePreview(questionnaire) {
@@ -15,7 +15,7 @@ export function renderQuestionnairePreview(questionnaire) {
   const extraQuestions = Math.max(0, questions.length - 1);
 
   return `
-    <section class="questionnaire-preview" aria-label="Preview do questionario">
+    <section class="questionnaire-preview" aria-label="Preview do question\u00e1rio">
       <div class="row questionnaire-preview-header">
         <strong>${escapeHtml(buildQuestionnaireHeading(questionnaire))}</strong>
         <span class="tag-item">Quiz ${escapeHtml(String(questions.length))} pergunta(s)</span>
@@ -49,10 +49,10 @@ export function renderQuestionnaireDetail(
 
   const isSubmitted = Boolean(result);
   const summaryText = isSubmitted
-    ? `Voce acertou ${result.correctCount} de ${result.totalQuestions} pergunta(s).`
+    ? `Voc\u00ea acertou ${result.correctCount} de ${result.totalQuestions} pergunta(s).`
     : canAnswer
       ? "Escolha uma alternativa por pergunta e confira o resultado."
-      : "Faca login para responder ao questionario deste post.";
+      : "Fa\u00e7a login para responder ao question\u00e1rio deste post.";
 
   return `
     <section class="questionnaire-panel" data-questionnaire-panel>

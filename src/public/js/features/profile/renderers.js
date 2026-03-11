@@ -15,31 +15,49 @@ export function renderProfileView(target, profile, { isAvatarBusy = false } = {}
 
   target.innerHTML = `
     <section class="card profile-card">
-      <div class="profile-hero">
-        <div class="profile-avatar-shell">
-          ${renderAvatar({
-            avatarUrl: profile.avatarUrl,
-            username: profile.username,
-            alt: `Foto de perfil de @${profile.username}`,
-            className: "profile-avatar-image",
-          })}
+      <div class="profile-topline">
+        <p class="profile-privacy-badge">Perfil privado</p>
+        <p class="muted profile-privacy-copy">Somente foto, nome e reputação são públicos.</p>
+      </div>
+
+      <div class="profile-layout">
+        <div class="profile-main">
+          <div class="profile-hero">
+            <div class="profile-avatar-shell">
+              ${renderAvatar({
+                avatarUrl: profile.avatarUrl,
+                username: profile.username,
+                alt: `Foto de perfil de @${profile.username}`,
+                className: "profile-avatar-image",
+              })}
+            </div>
+            <div class="profile-identity">
+              <div class="profile-heading">
+                <h2 class="profile-username">@${escapeHtml(profile.username)}</h2>
+                ${renderReputationBadge(profile.publicReputation, "reputation-badge-large")}
+              </div>
+              <div class="profile-meta-grid">
+                <p class="profile-meta-item"><span class="muted">Email</span><strong>${escapeHtml(profile.email)}</strong></p>
+                <p class="profile-meta-item"><span class="muted">Papel</span><strong>${escapeHtml(profile.role)}</strong></p>
+                <p class="profile-meta-item"><span class="muted">Criado em</span><strong>${escapeHtml(formatDateTime(profile.createdAt))}</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <article class="card metric-box">
+              <h3 class="ink-underline">Avaliação geral</h3>
+              <p><strong>Aprovação: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
+              <p class="muted">Avaliações recebidas: ${escapeHtml(totalReviews)}</p>
+            </article>
+          </div>
         </div>
-        <div class="profile-identity">
-          <div class="profile-heading">
-            <p class="profile-handle">Perfil privado</p>
-            <h2 class="profile-username">@${escapeHtml(profile.username)}</h2>
-          </div>
-          <div class="author-meta-row">
-            ${renderReputationBadge(profile.publicReputation, "reputation-badge-large")}
-            <span class="muted">${escapeHtml(profile.email)}</span>
-          </div>
-          <p class="muted">Papel: ${escapeHtml(profile.role)}</p>
-          <p class="muted">Criado em: ${escapeHtml(formatDateTime(profile.createdAt))}</p>
-          <p class="muted">
-            Outros usuÃ¡rios veem apenas sua foto, nome e reputaÃ§Ã£o pÃºblica. Seu perfil completo continua privado.
-          </p>
+
+        <aside class="card profile-avatar-panel">
+          <h3 class="ink-underline">Foto de perfil</h3>
+          <p class="muted">Atualize sua imagem para identificação pública no feed e nos comentários.</p>
           <label class="profile-avatar-field" aria-label="Atualizar foto de perfil">
-            <span class="muted">Atualizar foto de perfil</span>
+            <span class="muted">Selecionar arquivo</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -47,26 +65,17 @@ export function renderProfileView(target, profile, { isAvatarBusy = false } = {}
               ${isAvatarBusy ? "disabled" : ""}
             />
           </label>
-          <div class="row profile-avatar-actions">
-            <span class="muted">JPG, PNG ou WebP, com no mÃ¡ximo 5 MB.</span>
-            ${
-              profile.avatarUrl
-                ? `
-                  <button type="button" class="button-ghost" data-remove-avatar ${isAvatarBusy ? "disabled" : ""}>
-                    Remover foto
-                  </button>
-                `
-                : ""
-            }
-          </div>
-        </div>
-      </div>
-      <div class="metrics-grid">
-        <article class="card metric-box">
-          <h3>AvaliaÃ§Ã£o geral</h3>
-          <p><strong>AprovaÃ§Ã£o: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
-          <p class="muted">AvaliaÃ§Ãµes recebidas: ${escapeHtml(totalReviews)}</p>
-        </article>
+          <p class="muted">JPG, PNG ou WebP, até 5 MB.</p>
+          ${
+            profile.avatarUrl
+              ? `
+                <button type="button" class="button-ghost" data-remove-avatar ${isAvatarBusy ? "disabled" : ""}>
+                  Remover foto
+                </button>
+              `
+              : ""
+          }
+        </aside>
       </div>
     </section>
   `;

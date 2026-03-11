@@ -2,8 +2,10 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import { normalizeFollowedTags, normalizeFollowTagValue } from "../core/followed-tags.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
+import { UI_TEXT } from "../core/ui-text.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 import { renderPostView } from "../features/post/renderers.js";
@@ -87,8 +89,8 @@ function setReviewStatus(message, stateName = "info") {
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticação necessária. Faça login para continuar.",
-    "Erro inesperado ao comunicar com a API.",
+    UI_TEXT.auth.loginToContinue,
+    UI_TEXT.genericApiError,
   );
 }
 
@@ -103,23 +105,13 @@ function resolveDeleteMessage(error) {
 function resolveFollowTagMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticação necessária. Faça login para seguir tags.",
-    "Falha ao atualizar as tags seguidas.",
+    UI_TEXT.auth.loginToFollowTags,
+    UI_TEXT.followTags.updateError,
   );
 }
 
-function normalizeFollowTagValue(value) {
-  return String(value ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
 function setFollowedTags(tags) {
-  state.followedTags = [...new Set((Array.isArray(tags) ? tags : [])
-    .map((tag) => normalizeFollowTagValue(tag))
-    .filter((tag) => tag.length > 0))]
-    .sort((left, right) => left.localeCompare(right));
+  state.followedTags = normalizeFollowedTags(tags);
 }
 
 function resetCommentEditState() {
@@ -170,9 +162,9 @@ function renderSessionState() {
 
   commentHelpFlash.show(
     !commentsVisible
-      ? "Comentários ocultos. Clique em Abrir comentários para voltar."
+      ? UI_TEXT.comments.hidden
       : !isAuthenticated
-        ? "Faça login para comentar neste post."
+        ? UI_TEXT.auth.loginToComment
         : "",
     "info",
   );
@@ -194,7 +186,7 @@ function renderMissingPostState(message) {
 
   elements.view.innerHTML = `
     <section class="card empty-card">
-      <h2 class="ink-underline">Post indisponivel</h2>
+      <h2 class="ink-underline">${UI_TEXT.posts.unavailableTitle}</h2>
       <p class="muted">${message}</p>
       <p class="muted">Volte ao feed para continuar.</p>
       <button type="button" class="button-link button-link-inline" data-nav-href="./feed.html">Voltar ao feed</button>
@@ -343,7 +335,7 @@ async function toggleFollowTag(tag, currentlyFollowing) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faça login para seguir tags.", "error");
+    statusFlash.show(UI_TEXT.auth.loginToFollowTags, "error");
     return false;
   }
 
@@ -354,7 +346,9 @@ async function toggleFollowTag(tag, currentlyFollowing) {
 
   state.isManagingTags = true;
   statusFlash.show(
-    currentlyFollowing ? `Parando de seguir #${normalizedTag}...` : `Seguindo #${normalizedTag}...`,
+    currentlyFollowing
+      ? UI_TEXT.followTags.loadingUnfollow(normalizedTag)
+      : UI_TEXT.followTags.loadingFollow(normalizedTag),
     "info",
   );
 
@@ -367,8 +361,8 @@ async function toggleFollowTag(tag, currentlyFollowing) {
     renderCurrentPost();
     statusFlash.show(
       currentlyFollowing
-        ? `Você deixou de seguir #${normalizedTag}.`
-        : `Agora você segue #${normalizedTag}.`,
+        ? UI_TEXT.followTags.stoppedFollowing(normalizedTag)
+        : UI_TEXT.followTags.nowFollowing(normalizedTag),
       "success",
     );
     return true;
@@ -393,14 +387,14 @@ async function handleCommentSubmit(event) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faça login para comentar neste post.", "error");
+    statusFlash.show(UI_TEXT.auth.loginToComment, "error");
     return;
   }
 
   const formData = new FormData(elements.commentForm);
   const content = String(formData.get("content") ?? "").trim();
   if (!content) {
-    statusFlash.show("Escreva um comentário antes de enviar.", "error");
+    statusFlash.show(UI_TEXT.comments.beforeSend, "error");
     return;
   }
 
@@ -408,7 +402,7 @@ async function handleCommentSubmit(event) {
     await api.posts.createComment(postId, content);
     elements.commentForm.reset();
     await loadPost();
-    statusFlash.show("Comentário enviado.", "success");
+    statusFlash.show(UI_TEXT.comments.sent, "success");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
   }
@@ -508,8 +502,8 @@ const postModalController = createPostModalController({
     if (mode === "edit") {
       statusFlash.show(
         mediaError
-          ? `Post atualizado, mas as imagens não foram enviadas: ${mediaErrorMessage ?? "verifique os arquivos selecionados."}`
-          : "Post atualizado.",
+          ? UI_TEXT.posts.updateMediaError(mediaErrorMessage)
+          : UI_TEXT.posts.updateSuccess,
         mediaError ? "error" : "success",
       );
     }
@@ -545,7 +539,7 @@ function submitQuestionnaireAnswers() {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para responder ao questionario.", "error");
+    statusFlash.show(UI_TEXT.auth.loginToAnswerQuestionnaire, "error");
     return;
   }
 
@@ -589,7 +583,7 @@ function startCommentEdit(commentId) {
   );
   const isOwner = String(comment?.author?.id ?? "") === String(state.viewerId ?? "");
   if (!hasSession() || !isOwner || !comment) {
-    statusFlash.show("Apenas o autor pode editar o comentário.", "error");
+    statusFlash.show(UI_TEXT.comments.onlyAuthorCanEdit, "error");
     return;
   }
 
@@ -620,14 +614,14 @@ async function saveCommentEdit(commentId) {
 
   const nextContent = String(state.commentEdit.draft ?? "").trim();
   if (!nextContent) {
-    statusFlash.show("O comentário não pode ficar vazio.", "error");
+    statusFlash.show(UI_TEXT.comments.cannotBeEmpty, "error");
     focusCommentEditInput(commentId);
     return;
   }
 
   state.commentEdit.isSaving = true;
   renderCurrentPost();
-  statusFlash.show("Salvando edição do comentário...", "info");
+  statusFlash.show(UI_TEXT.comments.savingEdit, "info");
 
   try {
     const updated = await api.comments.update(commentId, { content: nextContent });
@@ -645,7 +639,7 @@ async function saveCommentEdit(commentId) {
     };
     resetCommentEditState();
     renderCurrentPost();
-    statusFlash.show("Comentário atualizado.", "success");
+    statusFlash.show(UI_TEXT.comments.updated, "success");
   } catch (error) {
     state.commentEdit.isSaving = false;
     renderCurrentPost();
@@ -666,12 +660,12 @@ async function handleDeleteComment(commentId) {
   const isPrivileged = ["moderator", "admin"].includes(state.viewerRole ?? "");
 
   if (!hasSession() || (!isOwner && !isPrivileged)) {
-    statusFlash.show("Sem permissão para excluir este comentário.", "error");
+    statusFlash.show(UI_TEXT.comments.noPermissionDelete, "error");
     return;
   }
 
   state.isDeletingComment = true;
-  statusFlash.show("Excluindo comentário...", "info");
+  statusFlash.show(UI_TEXT.comments.deleting, "info");
   try {
     await api.comments.delete(commentId);
     state.postData = {
@@ -684,7 +678,7 @@ async function handleDeleteComment(commentId) {
       resetCommentEditState();
     }
     renderCurrentPost();
-    statusFlash.show("Comentário excluído.", "success");
+    statusFlash.show(UI_TEXT.comments.deleted, "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {

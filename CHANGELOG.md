@@ -59,6 +59,8 @@ All notable changes to this project should be documented in this file.
 ### Fixed
 
 - Corrected Portuguese accentuation in key frontend labels, status messages, and modal copy.
+- Reduced frontend duplication by centralizing shared auth/status text and followed-tag normalization used by feed and post pages.
+- Simplified feed card click orchestration by consolidating redundant event listeners into a single delegated handler.
 
 ## 2026-03-09
 

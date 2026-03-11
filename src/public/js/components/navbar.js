@@ -1,4 +1,5 @@
 import { clearSession, hasSession } from "../core/session.js";
+import { UI_TEXT } from "../core/ui-text.js";
 
 export const HOME_NOTICE_KEY = "thesocial_home_notice";
 
@@ -49,7 +50,7 @@ export function bindLogout(
     onLogout = null,
     redirectOnLogout = true,
     logoutRedirectUrl = "./index.html",
-    logoutNotice = "Sessao encerrada.",
+    logoutNotice = UI_TEXT.sessionClosed,
   } = {},
 ) {
   if (!logoutButton) {
@@ -78,7 +79,7 @@ export function initNavbar({
   onLogout = null,
   redirectOnLogout = true,
   logoutRedirectUrl = "./index.html",
-  logoutNotice = "Sessao encerrada.",
+  logoutNotice = UI_TEXT.sessionClosed,
 } = {}) {
   function refresh() {
     return renderNavbarAuthState({

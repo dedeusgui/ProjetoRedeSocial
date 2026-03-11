@@ -17,6 +17,8 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `core/session.js`: token lifecycle and auth checks.
 - `core/formatters.js`: shared formatting utilities for percentages, dates, and localized labels used by renderers.
 - `core/http-state.js`: normalize API error messages for UI.
+- `core/followed-tags.js`: shared normalization for followed-tag values and collections.
+- `core/ui-text.js`: shared PT-BR UI copy to avoid duplicated status/auth text across pages.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.
 - `components/flash.js`: transient status/feedback messaging.

@@ -1,0 +1,45 @@
+export const UI_TEXT = {
+  genericApiError: "Erro inesperado ao comunicar com a API.",
+  auth: {
+    loginToContinue: "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para continuar.",
+    loginToFollowTags: "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para seguir tags.",
+    loginToCreatePost: "Fa\u00e7a login para publicar no feed.",
+    loginToEditPost: "Fa\u00e7a login para editar posts.",
+    loginToDeletePosts: "Fa\u00e7a login para excluir posts.",
+    loginToComment: "Fa\u00e7a login para comentar neste post.",
+    loginToReviewPost: "Fa\u00e7a login para avaliar este post.",
+    loginToAnswerQuestionnaire: "Fa\u00e7a login para responder ao question\u00e1rio.",
+  },
+  followTags: {
+    updateError: "Falha ao atualizar as tags seguidas.",
+    empty: "Voc\u00ea ainda n\u00e3o segue nenhuma tag.",
+    alreadyFollowing: (tag) => `Voc\u00ea j\u00e1 segue #${tag}.`,
+    nowFollowing: (tag) => `Agora voc\u00ea segue #${tag}.`,
+    stoppedFollowing: (tag) => `Voc\u00ea deixou de seguir #${tag}.`,
+    loadingFollow: (tag) => `Seguindo #${tag}...`,
+    loadingUnfollow: (tag) => `Parando de seguir #${tag}...`,
+  },
+  posts: {
+    unavailableTitle: "Post indispon\u00edvel",
+    deleted: "Post exclu\u00eddo.",
+    updateSuccess: "Post atualizado.",
+    createSuccess: "Post publicado.",
+    updateMediaError: (errorMessage) =>
+      `Post atualizado, mas as imagens n\u00e3o foram enviadas: ${errorMessage ?? "verifique os arquivos selecionados."}`,
+    createMediaError: (errorMessage) =>
+      `Post publicado, mas as imagens n\u00e3o foram enviadas: ${errorMessage ?? "verifique os arquivos selecionados."}`,
+  },
+  comments: {
+    beforeSend: "Escreva um coment\u00e1rio antes de enviar.",
+    sent: "Coment\u00e1rio enviado.",
+    onlyAuthorCanEdit: "Apenas o autor pode editar o coment\u00e1rio.",
+    cannotBeEmpty: "O coment\u00e1rio n\u00e3o pode ficar vazio.",
+    savingEdit: "Salvando edi\u00e7\u00e3o do coment\u00e1rio...",
+    updated: "Coment\u00e1rio atualizado.",
+    deleting: "Excluindo coment\u00e1rio...",
+    deleted: "Coment\u00e1rio exclu\u00eddo.",
+    noPermissionDelete: "Sem permiss\u00e3o para excluir este coment\u00e1rio.",
+    hidden: "Coment\u00e1rios ocultos. Clique em Abrir coment\u00e1rios para voltar.",
+  },
+  sessionClosed: "Sess\u00e3o encerrada.",
+};

@@ -2,8 +2,10 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import { normalizeFollowedTags, normalizeFollowTagValue } from "../core/followed-tags.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
+import { UI_TEXT } from "../core/ui-text.js";
 import { renderFeedList } from "../features/feed/renderers.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
@@ -71,39 +73,25 @@ const navbar = initNavbar({
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticação necessária. Faça login para publicar no feed.",
-    "Erro inesperado ao comunicar com a API.",
+    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para publicar no feed.",
+    UI_TEXT.genericApiError,
   );
 }
 
 function resolveFollowTagMessage(error) {
-  return resolveAuthApiMessage(
-    error,
-    "Autenticação necessária. Faça login para seguir tags.",
-    "Falha ao atualizar as tags seguidas.",
-  );
+  return resolveAuthApiMessage(error, UI_TEXT.auth.loginToFollowTags, UI_TEXT.followTags.updateError);
 }
 
 function resolveFeedLoadMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticação necessária. Faça login para acessar seu feed de tags.",
+    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para acessar seu feed de tags.",
     "Erro inesperado ao carregar o feed.",
   );
 }
 
-function normalizeFollowTagValue(value) {
-  return String(value ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
 function setFollowedTags(tags) {
-  state.followedTags = [...new Set((Array.isArray(tags) ? tags : [])
-    .map((tag) => normalizeFollowTagValue(tag))
-    .filter((tag) => tag.length > 0))]
-    .sort((left, right) => left.localeCompare(right));
+  state.followedTags = normalizeFollowedTags(tags);
 }
 
 function isFollowingMode() {
@@ -121,12 +109,12 @@ function hasActiveSearch() {
 function resolveLoadingMessage({ append = false } = {}) {
   if (isFollowingMode()) {
     if (append) {
-      return "Carregando mais posts das tags que você segue...";
+      return "Carregando mais posts das tags que voc\u00ea segue...";
     }
 
     return hasActiveSearch()
-      ? `Buscando nas tags que você segue por "${state.searchTerm}"...`
-      : "Carregando feed das tags que você segue...";
+      ? `Buscando nas tags que voc\u00ea segue por "${state.searchTerm}"...`
+      : "Carregando feed das tags que voc\u00ea segue...";
   }
 
   if (append) {
@@ -143,13 +131,13 @@ function resolveEmptyFeedMessage() {
 
   if (isFollowingMode()) {
     return hasActiveSearch()
-      ? `Nenhum post encontrado nas tags que você segue para "${state.searchTerm}".`
-      : "Nenhum post encontrado nas tags que você segue.";
+      ? `Nenhum post encontrado nas tags que voc\u00ea segue para "${state.searchTerm}".`
+      : "Nenhum post encontrado nas tags que voc\u00ea segue.";
   }
 
   return hasActiveSearch()
     ? `Nenhum post encontrado para "${state.searchTerm}".`
-    : "Nenhuma publicação ainda.";
+    : "Nenhuma publica\u00e7\u00e3o ainda.";
 }
 
 function resolveLoadedFeedMessage() {
@@ -203,8 +191,8 @@ function renderFollowedTagsPanel() {
 
   if (elements.followTagsHelp) {
     elements.followTagsHelp.textContent = isFollowingMode()
-      ? "Seu feed pessoal continua cronológico e mostra posts com qualquer tag que você segue."
-      : "Siga tags para abrir um segundo feed sem alterar o feed público principal.";
+      ? "Seu feed pessoal continua cronol\u00f3gico e mostra posts com qualquer tag que voc\u00ea segue."
+      : "Siga tags para abrir um segundo feed sem alterar o feed p\u00fablico principal.";
   }
 
   if (elements.followTagInput) {
@@ -220,7 +208,7 @@ function renderFollowedTagsPanel() {
   }
 
   if (!hasFollowedTags()) {
-    elements.followedTagsList.innerHTML = "<p class='muted'>Você ainda não segue nenhuma tag.</p>";
+    elements.followedTagsList.innerHTML = `<p class="muted">${UI_TEXT.followTags.empty}</p>`;
     return;
   }
 
@@ -357,7 +345,7 @@ const postModalController = createPostModalController({
   onBeforeOpenCreate() {
     const isAuthenticated = requireSession({
       onFail: () => {
-        statusFlash.show("Faça login para publicar no feed.", "error");
+        statusFlash.show(UI_TEXT.auth.loginToCreatePost, "error");
         window.location.href = "./index.html";
       },
     });
@@ -367,7 +355,7 @@ const postModalController = createPostModalController({
   onBeforeOpenEdit() {
     const isAuthenticated = hasSession();
     if (!isAuthenticated) {
-      statusFlash.show("Faça login para editar posts.", "error");
+      statusFlash.show(UI_TEXT.auth.loginToEditPost, "error");
     }
     return isAuthenticated;
   },
@@ -389,8 +377,8 @@ const postModalController = createPostModalController({
     if (mode === "edit") {
       statusFlash.show(
         mediaError
-          ? `Post atualizado, mas as imagens não foram enviadas: ${mediaErrorMessage ?? "verifique os arquivos selecionados."}`
-          : "Post atualizado.",
+          ? UI_TEXT.posts.updateMediaError(mediaErrorMessage)
+          : UI_TEXT.posts.updateSuccess,
         mediaError ? "error" : "success",
       );
       return;
@@ -398,8 +386,8 @@ const postModalController = createPostModalController({
 
     statusFlash.show(
       mediaError
-        ? `Post publicado, mas as imagens não foram enviadas: ${mediaErrorMessage ?? "verifique os arquivos selecionados."}`
-        : "Post publicado.",
+        ? UI_TEXT.posts.createMediaError(mediaErrorMessage)
+        : UI_TEXT.posts.createSuccess,
       mediaError ? "error" : "success",
     );
   },
@@ -443,7 +431,7 @@ async function toggleFollowTag(tag, currentlyFollowing) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faça login para seguir tags.", "error");
+    statusFlash.show(UI_TEXT.auth.loginToFollowTags, "error");
     return false;
   }
 
@@ -455,7 +443,9 @@ async function toggleFollowTag(tag, currentlyFollowing) {
   state.isManagingTags = true;
   renderFollowedTagsPanel();
   followTagFlash.show(
-    currentlyFollowing ? `Parando de seguir #${normalizedTag}...` : `Seguindo #${normalizedTag}...`,
+    currentlyFollowing
+      ? UI_TEXT.followTags.loadingUnfollow(normalizedTag)
+      : UI_TEXT.followTags.loadingFollow(normalizedTag),
     "info",
   );
 
@@ -474,8 +464,8 @@ async function toggleFollowTag(tag, currentlyFollowing) {
     }
 
     const successMessage = currentlyFollowing
-      ? `Você deixou de seguir #${normalizedTag}.`
-      : `Agora você segue #${normalizedTag}.`;
+      ? UI_TEXT.followTags.stoppedFollowing(normalizedTag)
+      : UI_TEXT.followTags.nowFollowing(normalizedTag);
     statusFlash.show(successMessage, "success");
     followTagFlash.show(successMessage, "success");
     return true;
@@ -503,7 +493,7 @@ async function handleManualFollowTag(event) {
   }
 
   if (state.followedTags.includes(normalizedTag)) {
-    followTagFlash.show(`Você já segue #${normalizedTag}.`, "info");
+    followTagFlash.show(UI_TEXT.followTags.alreadyFollowing(normalizedTag), "info");
     elements.followTagInput?.focus();
     elements.followTagInput?.select();
     return;
@@ -521,7 +511,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faça login para avaliar um post.", "error");
+    statusFlash.show(UI_TEXT.auth.loginToReviewPost, "error");
     return;
   }
 
@@ -566,7 +556,7 @@ async function deleteFeedPost(postId) {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faça login para excluir posts.", "error");
+    statusFlash.show(UI_TEXT.auth.loginToDeletePosts, "error");
     window.location.href = "./index.html";
     return;
   }
@@ -586,7 +576,7 @@ async function deleteFeedPost(postId) {
   try {
     await api.posts.delete(postId);
     await loadFeed();
-    statusFlash.show("Post excluído.", "success");
+    statusFlash.show(UI_TEXT.posts.deleted, "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {
@@ -677,47 +667,35 @@ function bindEvents() {
         return;
       }
 
-      const button = event.target.closest("[data-review-action]");
-      if (!button || !elements.list.contains(button)) {
+      const reviewButton = event.target.closest("[data-review-action]");
+      if (reviewButton && elements.list.contains(reviewButton)) {
+        const postId = String(reviewButton.dataset.postId ?? "").trim();
+        const decision = String(reviewButton.dataset.reviewAction ?? "").trim();
+        if (!postId || !decision) {
+          return;
+        }
+
+        const actionsContainer = reviewButton.closest(".review-actions");
+        submitFeedReview(postId, decision, actionsContainer);
         return;
       }
 
-      const postId = String(button.dataset.postId ?? "").trim();
-      const decision = String(button.dataset.reviewAction ?? "").trim();
-      if (!postId || !decision) {
+      const editButton = event.target.closest("[data-edit-post-id]");
+      if (editButton && elements.list.contains(editButton)) {
+        const editPostId = String(editButton.dataset.editPostId ?? "").trim();
+        if (editPostId) {
+          editFeedPost(editPostId);
+        }
         return;
       }
 
-      const actionsContainer = button.closest(".review-actions");
-      submitFeedReview(postId, decision, actionsContainer);
-    });
-
-    elements.list.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-edit-post-id]");
-      if (!button || !elements.list.contains(button)) {
-        return;
+      const deleteButton = event.target.closest("[data-delete-post-id]");
+      if (deleteButton && elements.list.contains(deleteButton)) {
+        const deletePostId = String(deleteButton.dataset.deletePostId ?? "").trim();
+        if (deletePostId) {
+          deleteFeedPost(deletePostId);
+        }
       }
-
-      const postId = String(button.dataset.editPostId ?? "").trim();
-      if (!postId) {
-        return;
-      }
-
-      editFeedPost(postId);
-    });
-
-    elements.list.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-delete-post-id]");
-      if (!button || !elements.list.contains(button)) {
-        return;
-      }
-
-      const postId = String(button.dataset.deletePostId ?? "").trim();
-      if (!postId) {
-        return;
-      }
-
-      deleteFeedPost(postId);
     });
   }
 }
