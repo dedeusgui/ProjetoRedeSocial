@@ -256,7 +256,7 @@ export function createQuestionnaireEditor({ target } = {}) {
             </label>
             <div class="questionnaire-editor-options">
               <div class="row questionnaire-editor-options-header">
-                <strong>Alternativas (${escapeHtml(String(question.options.length))}/${escapeHtml(String(MAX_OPTIONS))})</strong>
+                <h3 class="ink-underline">Alternativas (${escapeHtml(String(question.options.length))}/${escapeHtml(String(MAX_OPTIONS))})</h3>
                 <button
                   type="button"
                   class="button-ghost"
