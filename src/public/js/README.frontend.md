@@ -13,6 +13,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `features/posts/post-modal.js`: shared create/edit modal orchestration, including sequence selection for owned posts
 - `features/profile/content-renderers.js`: owner post cards and reusable collection-management surfaces
 - `features/collections/renderers.js`: public collection detail rendering
+- `features/collections/feed-renderers.js`: collection-feed card rendering for `feed.html`
 
 ## Responsibilities
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.
@@ -40,8 +41,8 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
-- For the feed page, keep `All posts` and `Followed tags` orchestration in `pages/feed.js`; renderer code should stay limited to card, tag, sequence, and collection context markup.
-- Keep collection management on `pages/feed.js` and public collection reads on `pages/collection.js`.
+- For the feed page, keep `Posts` vs `Collections` switching plus the authenticated followed-tags toggle in `pages/feed.js`; renderer code should stay limited to card, tag, sequence, and collection context markup.
+- Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; avoid duplicating collection-create CTAs across those pages.
 - Keep the shared post modal explicit about post type (`regular` vs `questionnaire`) and avoid mixing questionnaire controls into the base post fields visually.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
@@ -52,4 +53,3 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 3. API errors are mapped through `core/http-state.js`.
 4. Public post-level approval percentage is allowed in feed/post; user aggregate metrics stay private to profile/admin screens, except for the coarse public reputation tier derived by the backend.
 5. Direct URL access works without broken dependencies.
-

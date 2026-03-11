@@ -51,7 +51,7 @@ function fileFilter(req, file, callback) {
   if (!AVATAR_MEDIA_ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     callback(
       new AppError(
-        "Envie apenas imagens de perfil nos formatos JPG, PNG ou WebP.",
+        "Upload only profile images in JPG, PNG, or WebP format.",
         "VALIDATION_ERROR",
         400,
         {

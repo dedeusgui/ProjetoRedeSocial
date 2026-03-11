@@ -99,6 +99,52 @@ Example request:
   - if the user follows no tags, the endpoint returns an empty `items[]`
   - followed-tag matching is case-insensitive and tolerates a leading `#` in stored post tags
 
+### `GET /api/v1/collections/feed`
+
+- Auth: none
+- Query:
+  - `cursor` (optional): `<createdAtMillis>_<collectionId>`
+  - `limit` (optional): default `20`, max `50`
+  - `search` (optional): case-insensitive partial match on collection `title`, `description`, or `tags`
+- Success: `200`
+- Returns:
+  - published collections in reverse chronological order by `createdAt`
+  - `items[]` with collection summary
+    - `id`
+    - `title`
+    - `description`
+    - `tags[]`
+    - `status`
+    - `itemCount`
+    - `author`
+      - `id`
+      - `username`
+      - `avatarUrl` (`string | null`)
+      - `reputation`
+        - `tier` (`low | medium | high`)
+        - `label`
+    - `createdAt`
+    - `updatedAt`
+  - `pageInfo.nextCursor` (`string | null`)
+  - `pageInfo.limit`
+- Notes:
+  - this endpoint powers the `Collections` mode on `feed.html`
+  - blank or missing `search` returns the normal unfiltered collections feed
+
+### `GET /api/v1/collections/feed/following`
+
+- Auth: required (`user` or higher)
+- Query:
+  - `cursor` (optional): `<createdAtMillis>_<collectionId>`
+  - `limit` (optional): default `20`, max `50`
+  - `search` (optional): case-insensitive partial match on collection `title`, `description`, or `tags`, applied only inside collections whose own tags match any followed tag
+- Success: `200`
+- Returns:
+  - same `items[]` and `pageInfo` shape as `GET /api/v1/collections/feed`
+- Notes:
+  - if the user follows no tags, the endpoint returns an empty `items[]`
+  - followed-tag matching is case-insensitive and compares against collection tags only
+
 ## Posts
 
 ### `POST /api/v1/posts`
@@ -568,10 +614,10 @@ Missing required field:
   "ok": false,
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Preencha os campos obrigatórios: título.",
+    "message": "Fill in the required fields: title.",
     "details": {
       "missing": ["title"],
-      "missingLabels": ["título"]
+      "missingLabels": ["title"]
     }
   }
 }
@@ -584,7 +630,8 @@ Missing bearer token:
   "ok": false,
   "error": {
     "code": "UNAUTHENTICATED",
-    "message": "Autenticação necessária."
+    "message": "Authentication required."
   }
 }
 ```
+

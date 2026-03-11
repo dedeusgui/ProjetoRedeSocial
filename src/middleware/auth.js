@@ -8,7 +8,7 @@ async function auth(req, res, next) {
   const [scheme, token] = authorization.split(" ");
 
   if (scheme !== "Bearer" || !token) {
-    next(new AppError("Autenticação necessária.", "UNAUTHENTICATED", 401));
+    next(new AppError("Authentication required.", "UNAUTHENTICATED", 401));
     return;
   }
 
@@ -19,7 +19,7 @@ async function auth(req, res, next) {
       .lean();
 
     if (!currentUser) {
-      throw new AppError("Autenticação necessária.", "UNAUTHENTICATED", 401);
+      throw new AppError("Authentication required.", "UNAUTHENTICATED", 401);
     }
 
     req.user = {

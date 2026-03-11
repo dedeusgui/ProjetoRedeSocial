@@ -9,7 +9,7 @@
 | `posts` | `POST /posts`, `GET /posts/:id`, `PATCH /posts/:id`, `POST /posts/:id/media`, `DELETE /posts/:id/media/:mediaId`, `DELETE /posts/:id` | Create/edit post, persist optional questionnaire data and image metadata, manage post image uploads/removals, fetch post details with visible comments and public author summaries, update post moderation metrics, delete posts by owner/moderator/admin with private metric recalculation and file cleanup | `PostRepository`, `CommentService`, `UserService`, local disk storage |
 | `comments` | `GET /posts/:id/comments`, `POST /posts/:id/comments`, `DELETE /comments/:id` | Create visible comments, list visible comments by post with public author summaries, edit comments by owner, delete comments by owner/moderator/admin | `CommentRepository` |
 | `collections` | `GET /collections/:id`, `GET /me/collections`, `POST /collections`, `PATCH /collections/:id`, `DELETE /collections/:id`, `POST /collections/:id/items`, `DELETE /collections/:id/items/:postId`, `PATCH /collections/:id/items/reorder` | Create public collections, manage ordered collection items, validate owner-only collection rules, preserve manual item order, and resolve collection summaries/search matches for other modules | `CollectionRepository`, `Post` model |
-| `feed` | `GET /feed`, `GET /feed/following` | Return chronological published posts with cursor pagination and optional search, including public author summaries, optional questionnaire payload, media, sequence summaries, and collection summaries; return a chronological followed-tags feed for authenticated users | `FeedRepository`, `UserService`, `CollectionService` |
+| `feed` | `GET /feed`, `GET /feed/following`, `GET /collections/feed`, `GET /collections/feed/following` | Return chronological published posts with cursor pagination and optional search, including public author summaries, optional questionnaire payload, media, sequence summaries, and collection summaries; return a chronological followed-tags post feed for authenticated users; provide chronological collection-feed groundwork with optional search and followed-tag filtering by collection tags | `FeedRepository`, `UserService`, `CollectionService` |
 | `admin` | `GET /admin/users`, `GET /admin/moderator-eligibility`, `PATCH /admin/users/:id/moderator`, `DELETE /admin/users/:id` | Sync bootstrap admins from environment, list users/roles, manage moderator eligibility/promotion, and delete users for testing with stat recalculation | `AdminRepository`, `roles` middleware |
 | `moderation` | `POST /posts/:id/review` | Upsert review, recompute post trend + approval percentages, recompute author private metrics | `ModerationRepository`, `PostService` |
 
@@ -39,6 +39,9 @@ Module construction is centralized in `src/server.js`:
 - `feed`: strictly chronological ordering and cursor pagination, even when search filters are applied.
 - `feed`: followed-tag filtering matches any followed tag, keeps public feed behavior unchanged, and never introduces recommendation ranking.
 - `feed`: public search is limited to published posts and matches `title`, `content`, `tags`, and collection tags through resolved collection post ids.
+- `feed`: chronological collection-feed groundwork is separate from the posts feed and orders published collections by `createdAt` without mixing posts and collections in one stream.
+- `feed`: collection-feed search matches collection `title`, `description`, and `tags`.
+- `feed`: collection-feed followed-tag mode uses the authenticated user's followed tags against collection tags only.
 - `feed`: public author data in feed responses is limited to avatar URL, username, and derived reputation tier.
 - `feed`: questionnaire posts stay in normal chronological ordering; the feed may preview only the first questionnaire question while the full answer flow lives on post detail.
 - `posts`: hidden posts are not returned by detail endpoint.
@@ -56,6 +59,7 @@ Module construction is centralized in `src/server.js`:
 - `posts`: post detail author data is limited to avatar URL, username, and derived reputation tier.
 - `collections`: collection reads are public; create/edit/delete/item management are owner-only.
 - `collections`: only the owner's visible posts may be added, duplicates are rejected, and reorder requests must contain the exact same post set.
+- `collections`: owner CRUD is exposed on a dedicated authenticated management page, while public collection browsing remains read-only.
 - `comments`: authenticated comment deletion is allowed for comment author, moderator, or admin.
 - `comments`: comment author data is limited to avatar URL, username, and derived reputation tier.
 - `admin`: `admin` role is bootstrap-managed through `ADMIN_EMAILS`; API can only grant/revoke `moderator`.

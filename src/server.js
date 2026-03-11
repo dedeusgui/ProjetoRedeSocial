@@ -63,15 +63,15 @@ function createApp() {
 
   app.use("/api/v1", authModule.router);
   app.use("/api/v1", usersModule.router);
+  app.use("/api/v1", feedModule.router);
   app.use("/api/v1", collectionsModule.router);
   app.use("/api/v1", postsModule.router);
   app.use("/api/v1", commentsModule.router);
-  app.use("/api/v1", feedModule.router);
   app.use("/api/v1", adminModule.router);
   app.use("/api/v1", moderationModule.router);
 
   app.use((req, res, next) => {
-    next(new AppError("Rota não encontrada.", "NOT_FOUND", 404));
+    next(new AppError("Route not found.", "NOT_FOUND", 404));
   });
 
   app.use(errorHandler);

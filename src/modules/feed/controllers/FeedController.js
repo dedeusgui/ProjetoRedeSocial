@@ -5,6 +5,8 @@ class FeedController {
     this.feedService = feedService;
     this.getFeed = this.getFeed.bind(this);
     this.getFollowingFeed = this.getFollowingFeed.bind(this);
+    this.getCollectionFeed = this.getCollectionFeed.bind(this);
+    this.getFollowingCollectionFeed = this.getFollowingCollectionFeed.bind(this);
   }
 
   async getFeed(req, res) {
@@ -19,6 +21,27 @@ class FeedController {
 
   async getFollowingFeed(req, res) {
     const result = await this.feedService.getFollowingFeed({
+      requesterId: req.user.id,
+      cursor: req.query.cursor,
+      limit: req.query.limit,
+      search: req.query.search,
+    });
+
+    return sendSuccess(res, result);
+  }
+
+  async getCollectionFeed(req, res) {
+    const result = await this.feedService.getCollectionFeed({
+      cursor: req.query.cursor,
+      limit: req.query.limit,
+      search: req.query.search,
+    });
+
+    return sendSuccess(res, result);
+  }
+
+  async getFollowingCollectionFeed(req, res) {
+    const result = await this.feedService.getFollowingCollectionFeed({
       requesterId: req.user.id,
       cursor: req.query.cursor,
       limit: req.query.limit,

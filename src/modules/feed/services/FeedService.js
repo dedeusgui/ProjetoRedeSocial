@@ -1,4 +1,4 @@
-﻿import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
+import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
 import { formatQuestionnaire } from "../../../common/posts/questionnaire.js";
 import { buildSequenceSummary } from "../../../common/posts/sequence.js";
 import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
@@ -74,6 +74,35 @@ class FeedService {
     };
   }
 
+  buildCollectionFeedResponse(results, resolvedLimit) {
+    const hasMore = results.length > resolvedLimit;
+    const entries = hasMore ? results.slice(0, resolvedLimit) : results;
+
+    const items = entries.map((collection) => ({
+      id: collection.id,
+      author: buildPublicAuthorSummary(collection.authorId),
+      title: collection.title,
+      description: collection.description ?? "",
+      tags: Array.isArray(collection.tags) ? collection.tags : [],
+      status: collection.status,
+      itemCount: Array.isArray(collection.items) ? collection.items.length : 0,
+      createdAt: collection.createdAt,
+      updatedAt: collection.updatedAt,
+    }));
+
+    const nextCursor = hasMore
+      ? `${entries[entries.length - 1].createdAt.getTime()}_${entries[entries.length - 1].id}`
+      : null;
+
+    return {
+      items,
+      pageInfo: {
+        nextCursor,
+        limit: resolvedLimit,
+      },
+    };
+  }
+
   async getFeed({ cursor, limit, search }) {
     const resolvedLimit = parseLimit(limit, 20, 50);
     const resolvedSearch = normalizeSearch(search);
@@ -111,6 +140,37 @@ class FeedService {
     });
 
     return this.buildFeedResponse(results, resolvedLimit);
+  }
+
+  async getCollectionFeed({ cursor, limit, search }) {
+    const resolvedLimit = parseLimit(limit, 20, 50);
+    const resolvedSearch = normalizeSearch(search);
+    const results = await this.feedRepository.findChronologicalCollectionFeed({
+      cursor,
+      limit: resolvedLimit,
+      search: resolvedSearch,
+    });
+
+    return this.buildCollectionFeedResponse(results, resolvedLimit);
+  }
+
+  async getFollowingCollectionFeed({ requesterId, cursor, limit, search }) {
+    const resolvedLimit = parseLimit(limit, 20, 50);
+    const resolvedSearch = normalizeSearch(search);
+    const followedTags = await this.userService.getFollowedTags(requesterId);
+
+    if (followedTags.length === 0) {
+      return this.buildCollectionFeedResponse([], resolvedLimit);
+    }
+
+    const results = await this.feedRepository.findChronologicalCollectionFeed({
+      cursor,
+      limit: resolvedLimit,
+      search: resolvedSearch,
+      followedTags,
+    });
+
+    return this.buildCollectionFeedResponse(results, resolvedLimit);
   }
 }
 

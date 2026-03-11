@@ -7,6 +7,8 @@ function createFeedRoutes(controller) {
 
   router.get("/feed", asyncHandler(controller.getFeed));
   router.get("/feed/following", auth, asyncHandler(controller.getFollowingFeed));
+  router.get("/collections/feed", asyncHandler(controller.getCollectionFeed));
+  router.get("/collections/feed/following", auth, asyncHandler(controller.getFollowingCollectionFeed));
 
   return router;
 }

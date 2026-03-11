@@ -452,12 +452,12 @@ export function createPostModalController({
 
       if (state.mode === "edit") {
         if (typeof submitPostUpdate !== "function" || !state.editingPostId) {
-          throw new Error("Atualizacao de post indisponivel.");
+          throw new Error("Post update is unavailable.");
         }
         result = await submitPostUpdate(state.editingPostId, payload);
       } else {
         if (typeof submitPostCreate !== "function") {
-          throw new Error("Criacao de post indisponivel.");
+          throw new Error("Post creation is unavailable.");
         }
         result = await submitPostCreate(payload);
       }
@@ -540,7 +540,7 @@ export function createPostModalController({
           action: "delete",
         });
       }
-      statusFlash.show("Imagem removida.", "success");
+      statusFlash.show("Image removed.", "success");
     } catch (error) {
       const message =
         typeof resolveErrorMessage === "function"

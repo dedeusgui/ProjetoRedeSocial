@@ -195,7 +195,7 @@ function renderMissingPostState(message) {
 
   elements.view.innerHTML = `
     <section class="card empty-card">
-      <h2 class="ink-underline">Post indisponivel</h2>
+      <h2 class="ink-underline">Post unavailable</h2>
       <p class="muted">${message}</p>
       <p class="muted">Return to the feed to continue.</p>
       <button type="button" class="button-link button-link-inline" data-nav-href="./feed.html">Back to feed</button>
@@ -273,7 +273,7 @@ async function loadPost() {
     state.questionnaireSignature = null;
     resetQuestionnaireSession();
     resetCommentEditState();
-    renderMissingPostState("ID do post ausente na URL.");
+    renderMissingPostState("Post ID is missing from the URL.");
     statusFlash.show("Could not open the post.", "error");
     return;
   }
@@ -310,7 +310,7 @@ async function loadPost() {
     state.questionnaireSignature = null;
     resetQuestionnaireSession();
     resetCommentEditState();
-    renderMissingPostState("Este post nao pode ser exibido no momento.");
+    renderMissingPostState("This post cannot be displayed right now.");
     statusFlash.show(resolveMessage(error), "error");
   }
 }
@@ -395,7 +395,7 @@ async function handleCommentSubmit(event) {
 
   const postId = state.postId;
   if (!postId) {
-    statusFlash.show("ID do post ausente na URL.", "error");
+    statusFlash.show("Post ID is missing from the URL.", "error");
     return;
   }
 

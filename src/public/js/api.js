@@ -197,6 +197,12 @@ export const api = {
     },
   },
   collections: {
+    listFeed({ cursor, limit, search } = {}) {
+      return request("GET", "/collections/feed", { query: { cursor, limit, search } });
+    },
+    listFeedFollowing({ cursor, limit, search } = {}) {
+      return request("GET", "/collections/feed/following", { query: { cursor, limit, search } });
+    },
     listMine() {
       return request("GET", "/me/collections");
     },

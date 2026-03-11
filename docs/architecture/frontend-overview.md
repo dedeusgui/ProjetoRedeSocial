@@ -32,9 +32,10 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological public feed with search, authenticated `Followed tags` mode, manual tag follow form, tag follow/unfollow actions, post create/edit image upload, explicit post-type selection (`regular` vs `questionnaire`) in the shared post modal, questionnaire authoring, owner collection management, questionnaire first-question preview on cards, visible sequence membership on cards, and public author chips (avatar, username, reputation tier).
+- `feed.html`: unified chronological browsing page for public posts and public collections, with search, a same-page `Posts` vs `Collections` selector, an authenticated followed-tags toggle, manual tag follow form, tag follow/unfollow actions, post create/edit image upload, explicit post-type selection (`regular` vs `questionnaire`) in the shared post modal, questionnaire authoring, questionnaire first-question preview on post cards, visible sequence membership on post cards, and public author chips (avatar, username, reputation tier).
 - `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, sequence context links, full sequence panel, collection membership links, post edit image upload/removal, full questionnaire rendering with logged-in self-check, and public author chips for the post author and comment authors.
 - `profile.html`: authenticated profile with private approval metrics, avatar upload/removal controls, owner post management, and admin tools for admins.
+- `collections.html`: authenticated owner page for collection creation and collection-item management, with a single in-page `New collection` modal trigger.
 - `collection.html`: public collection page with ordered collection items and sequence context for each item.
 - `admin/reviews.html`: moderation review flow and admin-only moderator management panel.
 
@@ -61,7 +62,9 @@ Reference guide:
 - Feed cards may show the first uploaded post image, while post detail can show the full image gallery.
 - Feed cards may preview only the first questionnaire question; the full questionnaire answer flow belongs to `post.html`.
 - The shared post modal is responsible for create/edit plus optional sequence selection for owned posts; page scripts should only orchestrate it.
-- Owner collection management lives on `feed.html`; public collection reads stay on `collection.html`.
+- Owner collection management lives on `collections.html`; public collection reads stay on `collection.html`.
+- `feed.html` is the shared browsing surface for feed switching and now renders both `Posts` and `Collections` behind the same page-level selector plus an authenticated followed-tags toggle; owner collection creation stays on `collections.html`, which is linked from a single `My collections` header action.
 - Questionnaire answers are checked locally in the browser for v1, so frontend state must avoid inventing score persistence or cross-user history.
 - Feed personalization must stay chronological; `Followed tags` filters by followed tags but does not replace the public feed with ranked results.
+- On the collections feed inside `feed.html`, the followed-tags toggle matches collection tags only, not tags on posts inside the collection.
 

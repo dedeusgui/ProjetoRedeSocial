@@ -31,7 +31,7 @@ Extend the `users` module with protected followed-tag endpoints and store canoni
 
 On the frontend, enhance `src/public/pages/feed.html` and `src/public/js/pages/feed.js` with:
 
-- an `All posts` / `Tags que sigo` mode toggle for authenticated users
+- an `All posts` / `Followed tags` mode toggle for authenticated users
 - a manual follow-tag form
 - a visible list of followed tags
 - quick follow/unfollow controls on tag chips in feed cards
@@ -77,7 +77,7 @@ Also expose the same tag-chip follow/unfollow action on `post.html` so users can
 
 ## Chosen Decisions and Rationale
 
-- Chosen option: separate `Tags que sigo` feed view
+- Chosen option: separate `Followed tags` feed view
 - Why this option: it preserves the existing public feed while adding a clear personalized mode for authenticated users
 - Chosen option: `follow + filtered feed` only for v1
 - Why this option: it delivers the main user value without profile or onboarding expansion
@@ -115,7 +115,7 @@ Also expose the same tag-chip follow/unfollow action on `post.html` so users can
 - Option B: create a separate `tag-follows` module and collection
   - rejected for v1 because the relationship is simple and fits cleanly in the current user document
 - Option C: recommend tags algorithmically
-  - rejected because it conflicts with the project’s no-algorithm direction
+  - rejected because it conflicts with the project's no-algorithm direction
 
 ## Risks and Mitigations
 
@@ -141,7 +141,7 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
 2. `GET /api/v1/feed/following` returns only published posts matching any followed tag in reverse-chronological order.
 3. Cursor pagination works the same way in the followed-tag feed as it does in the public feed.
 4. Search inside the followed-tag feed narrows only the followed-tag result set.
-5. Users who do not follow any tags see an explicit empty state in `Tags que sigo`.
+5. Users who do not follow any tags see an explicit empty state in `Followed tags`.
 
 ## Test Plan
 
@@ -162,3 +162,4 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
 - [x] `docs/api/*`
 - [x] `CHANGELOG.md`
 - [x] RFC entry under `docs/rfcs/`
+

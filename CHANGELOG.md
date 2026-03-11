@@ -4,8 +4,26 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-11
 
+### Added
+
+- Added collections-feed groundwork endpoints:
+  - `GET /api/v1/collections/feed`
+  - `GET /api/v1/collections/feed/following`
+- Added a dedicated owner collections management page to replace feed-embedded collection CRUD.
+
+### Changed
+
+- Removed owner collection CRUD from `feed.html` and turned the page into the shared browsing surface for `Posts` vs `Collections` switching.
+- Simplified collection CTA flow so `feed.html` keeps a single `My collections` link and `collections.html` keeps a single `New collection` trigger.
+- Documented that the future followed-tags mode for the collections feed matches collection tags only.
+
+### Docs
+
+- Updated architecture and API docs to describe the dedicated owner collections page and the collections-feed groundwork endpoints.
+
 ### Fixed
 
+- Registered feed routes before generic collection-detail routes so `GET /api/v1/collections/feed` is no longer misread as `/collections/:id`.
 - Removed the committed root-level scratch helper scripts (`tmp_check.mjs`, `tmp_fix_encoding.mjs`, `tmp_update_css.mjs`, `tmp_write_renderer.mjs`) because they were one-off developer utilities with no runtime or npm-script role.
 
 ### Added
@@ -61,7 +79,7 @@ All notable changes to this project should be documented in this file.
   - `POST /api/v1/me/followed-tags`
   - `DELETE /api/v1/me/followed-tags/:tag`
 - Added protected chronological followed-tags feed endpoint `GET /api/v1/feed/following`.
-- Added feed-page `Tags que sigo` mode with manual tag follow form and visible followed-tag list.
+- Added feed-page `Followed tags` mode with manual tag follow form and visible followed-tag list.
 - Added follow/unfollow actions on tag chips in both the feed and post detail views.
 - Added RFC `docs/rfcs/follow-tags-feed.md` for the implemented feature.
 - Added optional post questionnaires with:
@@ -82,11 +100,11 @@ All notable changes to this project should be documented in this file.
 - Extended the user model with canonical lowercase `followedTags` storage.
 - Kept personalization chronological by filtering followed tags without changing the default public feed behavior.
 - Updated feed and post renderers to expose tag-based follow controls for authenticated users.
-- Improved user-facing validation/auth/upload error messages with clearer PT-BR descriptions and actionable upload limits/details.
+- Improved user-facing validation/auth/upload error messages with clearer English descriptions and actionable upload limits/details.
 - Tightened post title/content validation to `100` / `3000` characters and enforced the same limits on both post create and edit flows.
 - Improved shared post/comment wrapping and spacing so long text no longer breaks feed/post layouts, with clearer separation between post detail and comments.
-- Reorganized the shared post create/edit modal into clearer sections with explicit post-type selection (`post normal` vs `post com questionário`) while preserving existing creation, edit, image upload, and questionnaire capabilities.
-- Updated the questionnaire editor UI with cleaner hierarchy, clearer limits, and improved action labels for pergunta/alternativa management.
+- Reorganized the shared post create/edit modal into clearer sections with explicit post-type selection (`regular post` vs `questionnaire post`) while preserving existing creation, edit, image upload, and questionnaire capabilities.
+- Updated the questionnaire editor UI with cleaner hierarchy, clearer limits, and improved action labels for question/option management.
 - Replaced native-looking file inputs in post/profile flows with a custom file-picker presentation that keeps real upload behavior and accessibility.
 
 ### Docs
@@ -100,7 +118,7 @@ All notable changes to this project should be documented in this file.
 
 ### Fixed
 
-- Corrected Portuguese accentuation in key frontend labels, status messages, and modal copy.
+- Corrected remaining localization inconsistencies in key frontend labels, status messages, and modal copy.
 - Reduced frontend duplication by centralizing shared auth/status text and followed-tag normalization used by feed and post pages.
 - Simplified feed card click orchestration by consolidating redundant event listeners into a single delegated handler.
 
@@ -108,7 +126,7 @@ All notable changes to this project should be documented in this file.
 
 ### Fixed
 
-- Removed the self-referential `Feed` button from `src/public/pages/feed.html` and the self-referential `Meu perfil` button from `src/public/pages/profile.html`.
+- Removed the self-referential `Feed` button from `src/public/pages/feed.html` and the self-referential `My profile` button from `src/public/pages/profile.html`.
 - Cleaned `src/public/js/pages/profile.js` so the profile page no longer queries/passes a navbar profile-link hook that was removed from its own markup.
 - Removed the redundant session summary card from `src/public/pages/index.html` and cleaned the home-page script so it no longer queries or toggles session/nav elements that are absent on that page.
 - Preserved home notices by rendering redirect/logout messages through the existing auth status area after the session card removal.
@@ -127,7 +145,7 @@ All notable changes to this project should be documented in this file.
 ### Fixed
 
 - Corrected author approval calculation to use `approvedVotes / totalVotes * 100`, clamped to `0..100` and rounded to the nearest integer.
-- Removed redundant "Não relevante" post metric from feed/post rendering, leaving only approval percentage visible.
+- Removed redundant "Not relevant" post metric from feed/post rendering, leaving only approval percentage visible.
 - Removed redundant profile score display and aligned profile/admin UI labels with approval percentage semantics.
 - Updated architecture/API/frontend docs to describe approval percentage fields and current moderation behavior.
 - Removed redundant explanatory sections and load-success status copy across feed, post, profile, and admin pages while preserving error/loading feedback.
@@ -167,7 +185,7 @@ All notable changes to this project should be documented in this file.
 - Updated auth service to ensure users whose email is in `ADMIN_EMAILS` receive role `admin` on register/login.
 - Updated docs and architecture references to include the new admin module, routes, and role-governance contract.
 - Replaced post edit `prompt` UX with a shared modal controller (`create | edit`) on feed/post pages, including state reset on close/cancel.
-- Replaced comment edit `prompt` UX with inline editing in post details (`Salvar`/`Cancelar`, `Esc` cancela, `Ctrl+Enter` salva) without page reload.
+- Replaced comment edit `prompt` UX with inline editing in post details (`Save`/`Cancel`, `Esc` cancels, `Ctrl+Enter` saves) without page reload.
 - Updated API docs to include existing edit endpoints `PATCH /api/v1/posts/:id` and `PATCH /api/v1/comments/:id`.
 - Updated moderation authorization/rules so any authenticated user (`user` or higher), including the post author, can submit `POST /api/v1/posts/:id/review`.
 - Replaced split private profile metrics (`approvalRate/rejectionRate` and per-decision counts) with a unified `score` metric plus `totalReviews`.
@@ -215,8 +233,8 @@ All notable changes to this project should be documented in this file.
   - `src/public/js/README.frontend.md`
 - Updated root frontend overview in `README.md` to reflect the shared navigation pattern.
 - Refined moderation trend calculation to use a unified validation score (`approvalRate - rejectionRate`) while preserving `positive|neutral|negative` outcomes.
-- Updated profile UI to show a single derived "Score geral" metric based on private approval/rejection percentages.
-- Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positiva`, `neutra`, `negativa`).
+- Updated profile UI to show a single derived "Overall score" metric based on private approval/rejection percentages.
+- Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positive`, `neutral`, `negative`).
 - Removed redundant approval/rejection cards from profile UI, keeping only the consolidated score and tendency.
 - Updated tendency rule: `neutral` is now only the exact 50/50 split; any imbalance becomes `positive` or `negative`.
 

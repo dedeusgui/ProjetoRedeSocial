@@ -51,7 +51,7 @@ function fileFilter(req, file, callback) {
   if (!POST_MEDIA_ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     callback(
       new AppError(
-        "Envie apenas imagens nos formatos JPG, PNG ou WebP.",
+        "Upload only images in JPG, PNG, or WebP format.",
         "VALIDATION_ERROR",
         400,
         {

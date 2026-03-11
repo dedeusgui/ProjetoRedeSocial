@@ -39,7 +39,7 @@ Notes:
 - `AppError` is mapped directly by `src/common/http/errorHandler.js`.
 - unknown runtime failures return:
   - `code: "INTERNAL_ERROR"`
-  - `message: "Ocorreu um erro interno inesperado."`
+  - `message: "An unexpected internal error occurred."`
 
 ## Common Error Codes
 
@@ -79,3 +79,4 @@ If one of these changes, update docs in the same pull request:
 - response envelope shape
 - auth or role requirements
 - error code semantics
+
