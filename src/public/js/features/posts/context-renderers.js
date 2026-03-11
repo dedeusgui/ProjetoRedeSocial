@@ -5,29 +5,11 @@ function renderSequenceContext(sequence, postId) {
     return "";
   }
 
-  let stateLabel = "Standalone";
-  if (sequence.previousPostId && sequence.hasNext) {
-    stateLabel = "Middle step";
-  } else if (sequence.previousPostId) {
-    stateLabel = "Continues a sequence";
-  } else if (sequence.hasNext) {
-    stateLabel = "Sequence starting point";
-  }
+  const stateLabel = sequence.previousPostId ? "Has previous sequence" : "In sequence";
 
   return `
     <div class="post-context-group" aria-label="Sequence context">
-      <span class="post-context-pill post-context-pill-static">In sequence</span>
       <span class="post-context-pill post-context-pill-static">${escapeHtml(stateLabel)}</span>
-      ${
-        sequence.previousPostId
-          ? '<span class="post-context-pill post-context-pill-static">Has previous</span>'
-          : ""
-      }
-      ${
-        sequence.hasNext
-          ? '<span class="post-context-pill post-context-pill-static">Has next</span>'
-          : ""
-      }
       <button
         type="button"
         class="button-ghost button-link-inline post-context-link"

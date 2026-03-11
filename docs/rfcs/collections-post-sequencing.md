@@ -36,7 +36,7 @@ Add `sequence.previousPostId` to posts, enforced by a sparse unique index so a p
   - `GET /api/v1/posts/:id/sequence`
   - full `collections` CRUD + item management routes
   - feed search extension for collection tags
-  - profile collection management and collection public page
+  - feed collection management and collection public page
 - Out of scope:
   - collection privacy modes
   - branching sequences
@@ -123,7 +123,7 @@ Rollback: remove the collections router/module and the post sequence field/index
 - API integration checks:
   - all new routes, post create/update with `previousPostId`, search by collection tag, post/user deletion cleanup
 - Frontend/manual checks:
-  - shared modal sequence selection, profile collection management, collection public page, post sequence panel
+  - shared modal sequence selection, feed collection management, collection public page, post sequence panel
 
 ## Documentation Updates Required
 
@@ -132,3 +132,5 @@ Rollback: remove the collections router/module and the post sequence field/index
 - [x] `docs/api/*`
 - [ ] `docs/workflows/*` if process changed
 - [x] release notes
+
+

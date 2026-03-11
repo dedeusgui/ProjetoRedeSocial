@@ -4,6 +4,10 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-11
 
+### Fixed
+
+- Removed the committed root-level scratch helper scripts (`tmp_check.mjs`, `tmp_fix_encoding.mjs`, `tmp_update_css.mjs`, `tmp_write_renderer.mjs`) because they were one-off developer utilities with no runtime or npm-script role.
+
 ### Added
 
 - Added post sequencing with:
@@ -28,10 +32,14 @@ All notable changes to this project should be documented in this file.
 - Extended feed, owned-post, and post-detail payloads with `sequence` and `collections[]` context.
 - Extended feed search so both feed modes may also match collection tags while preserving chronological ordering.
 - Updated post deletion and admin user deletion flows to remove post references from collections.
+- Moved owner collection management from the profile page to the feed page while keeping the collections API unchanged.
+- Restyled collection and questionnaire surfaces to match the main project UI more closely, with flatter cards and white modal copy.
+- Simplified sequence context chips to a single shorter label.
 
 ### Docs
 
 - Updated architecture, API, frontend, and frontend-guide docs to describe collections, sequencing, and their UI/API surfaces.
+- Updated agent/process guidance to require removing or promoting temporary helper scripts before handoff.
 
 ## 2026-03-10
 
@@ -215,3 +223,4 @@ All notable changes to this project should be documented in this file.
 ### Notes
 
 - This update focused on documentation and process assets for better idea refinement, bugfix workflows, and feature implementation consistency.
+

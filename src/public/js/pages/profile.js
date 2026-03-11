@@ -2,11 +2,10 @@
 import { createFlash } from "../components/flash.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
-import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 import { clearSession, hasSession } from "../core/session.js";
 import { renderAdminUserList } from "../features/admin/renderers.js";
-import { renderProfileCollectionList, renderProfilePostList } from "../features/profile/content-renderers.js";
+import { renderProfilePostList } from "../features/profile/content-renderers.js";
 import { renderProfileView } from "../features/profile/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 
@@ -19,8 +18,6 @@ const elements = {
   profile: document.querySelector("[data-profile]"),
   postsStatus: document.querySelector("[data-profile-posts-status]"),
   posts: document.querySelector("[data-profile-posts]"),
-  collectionsStatus: document.querySelector("[data-profile-collections-status]"),
-  collections: document.querySelector("[data-profile-collections]"),
   adminTools: document.querySelector("[data-admin-tools]"),
   adminUsersStatus: document.querySelector("[data-admin-users-status]"),
   adminUsersList: document.querySelector("[data-admin-users-list]"),
@@ -37,37 +34,25 @@ const elements = {
   selectedPostMedia: document.querySelector("[data-selected-post-media]"),
   existingPostMedia: document.querySelector("[data-existing-post-media]"),
   questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
-  openCollectionModalButton: document.querySelector("[data-open-collection-modal]"),
-  collectionModal: document.querySelector("[data-collection-modal]"),
-  collectionModalTitle: document.querySelector("[data-collection-modal-title]"),
-  collectionModalCancelButton: document.querySelector("[data-collection-modal-cancel]"),
-  collectionModalSubmitButton: document.querySelector("[data-collection-modal-submit]"),
-  collectionModalForm: document.querySelector("[data-collection-modal-form]"),
-  collectionModalStatus: document.querySelector("[data-collection-modal-status]"),
 };
 
 const statusFlash = createFlash(elements.status);
 const postsFlash = createFlash(elements.postsStatus);
-const collectionsFlash = createFlash(elements.collectionsStatus);
 const adminUsersFlash = createFlash(elements.adminUsersStatus);
-const collectionModalFlash = createFlash(elements.collectionModalStatus);
 
 const state = {
   currentUserId: null,
   isDeletingUser: false,
   isUpdatingAvatar: false,
-  isMutatingCollection: false,
   profile: null,
   posts: [],
-  collections: [],
-  editingCollectionId: null,
   avatarFileLabel: "No file selected.",
 };
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
   logoutButton: elements.logoutButton,
-  protectedButtons: [elements.openPostModalButton, elements.openCollectionModalButton],
+  protectedButtons: [elements.openPostModalButton],
   logoutRedirectUrl: "./index.html",
 });
 
@@ -102,9 +87,6 @@ function renderProfile() {
 
 function renderOwnedContent() {
   renderProfilePostList(elements.posts, state.posts);
-  renderProfileCollectionList(elements.collections, state.collections, {
-    availablePosts: state.posts,
-  });
 }
 
 function handleAuthFailure(error) {
@@ -118,12 +100,8 @@ function handleAuthFailure(error) {
 }
 
 async function refreshOwnedContent() {
-  const [posts, collections] = await Promise.all([
-    api.posts.listMine(),
-    api.collections.listMine(),
-  ]);
+  const posts = await api.posts.listMine();
   state.posts = Array.isArray(posts) ? posts : [];
-  state.collections = Array.isArray(collections) ? collections : [];
   renderOwnedContent();
 }
 
@@ -136,24 +114,20 @@ async function loadProfile({ showLoading = true } = {}) {
   if (showLoading) {
     statusFlash.show("Loading profile...", "info");
     postsFlash.show("Loading posts...", "info");
-    collectionsFlash.show("Loading collections...", "info");
   }
 
   try {
-    const [profile, posts, collections] = await Promise.all([
+    const [profile, posts] = await Promise.all([
       api.users.meProfile(),
       api.posts.listMine(),
-      api.collections.listMine(),
     ]);
     state.currentUserId = profile.id;
     state.profile = profile;
     state.posts = Array.isArray(posts) ? posts : [];
-    state.collections = Array.isArray(collections) ? collections : [];
     renderProfile();
     renderOwnedContent();
     statusFlash.clear();
     postsFlash.clear();
-    collectionsFlash.clear();
 
     if (profile.role === "admin" && elements.adminTools) {
       elements.adminTools.hidden = false;
@@ -168,7 +142,6 @@ async function loadProfile({ showLoading = true } = {}) {
 
     statusFlash.show(resolveMessage(error), "error");
     postsFlash.show(resolveMessage(error), "error");
-    collectionsFlash.show(resolveMessage(error), "error");
   }
 }
 
@@ -281,173 +254,6 @@ async function removeAvatar() {
 
 function getManagedPost(postId) {
   return state.posts.find((item) => String(item.id) === String(postId));
-}
-
-function getManagedCollection(collectionId) {
-  return state.collections.find((item) => String(item.id) === String(collectionId));
-}
-
-function resetCollectionModal() {
-  state.editingCollectionId = null;
-  elements.collectionModalForm?.reset();
-  if (elements.collectionModalTitle) {
-    elements.collectionModalTitle.textContent = "New collection";
-  }
-  if (elements.collectionModalSubmitButton) {
-    elements.collectionModalSubmitButton.textContent = "Save collection";
-  }
-  collectionModalFlash.clear();
-}
-
-function openCollectionModalCreate() {
-  resetCollectionModal();
-  elements.collectionModal?.showModal();
-}
-
-function openCollectionModalEdit(collectionId) {
-  const collection = getManagedCollection(collectionId);
-  if (!collection || !elements.collectionModalForm) {
-    return;
-  }
-
-  resetCollectionModal();
-  state.editingCollectionId = String(collectionId);
-  elements.collectionModalForm.querySelector("[name='title']").value = collection.title ?? "";
-  elements.collectionModalForm.querySelector("[name='description']").value = collection.description ?? "";
-  elements.collectionModalForm.querySelector("[name='tags']").value = Array.isArray(collection.tags)
-    ? collection.tags.join(", ")
-    : "";
-  if (elements.collectionModalTitle) {
-    elements.collectionModalTitle.textContent = "Edit collection";
-  }
-  if (elements.collectionModalSubmitButton) {
-    elements.collectionModalSubmitButton.textContent = "Save changes";
-  }
-  elements.collectionModal?.showModal();
-}
-
-async function submitCollectionModal(event) {
-  event.preventDefault();
-  if (!elements.collectionModalForm || state.isMutatingCollection) {
-    return;
-  }
-
-  const formData = new FormData(elements.collectionModalForm);
-  const payload = {
-    title: String(formData.get("title") ?? "").trim(),
-    description: String(formData.get("description") ?? "").trim(),
-    tags: parseCsvTags(formData.get("tags")),
-  };
-
-  state.isMutatingCollection = true;
-  collectionModalFlash.show(
-    state.editingCollectionId ? "Saving collection changes..." : "Creating collection...",
-    "info",
-  );
-
-  try {
-    if (state.editingCollectionId) {
-      await api.collections.update(state.editingCollectionId, payload);
-      collectionsFlash.show("Collection updated.", "success");
-    } else {
-      await api.collections.create(payload);
-      collectionsFlash.show("Collection created.", "success");
-    }
-
-    await refreshOwnedContent();
-    elements.collectionModal?.close();
-  } catch (error) {
-    collectionModalFlash.show(resolveMessage(error), "error");
-  } finally {
-    state.isMutatingCollection = false;
-  }
-}
-
-async function deleteCollection(collectionId) {
-  if (!collectionId || state.isMutatingCollection) {
-    return;
-  }
-
-  state.isMutatingCollection = true;
-  collectionsFlash.show("Deleting collection...", "info");
-  try {
-    await api.collections.delete(collectionId);
-    await refreshOwnedContent();
-    collectionsFlash.show("Collection deleted.", "success");
-  } catch (error) {
-    collectionsFlash.show(resolveMessage(error), "error");
-  } finally {
-    state.isMutatingCollection = false;
-  }
-}
-
-async function addPostToCollection(collectionId, postId) {
-  if (!collectionId || !postId || state.isMutatingCollection) {
-    return;
-  }
-
-  state.isMutatingCollection = true;
-  collectionsFlash.show("Adding post to collection...", "info");
-  try {
-    await api.collections.addItems(collectionId, [postId]);
-    await refreshOwnedContent();
-    collectionsFlash.show("Post added to the collection.", "success");
-  } catch (error) {
-    collectionsFlash.show(resolveMessage(error), "error");
-  } finally {
-    state.isMutatingCollection = false;
-  }
-}
-
-async function removePostFromCollection(collectionId, postId) {
-  if (!collectionId || !postId || state.isMutatingCollection) {
-    return;
-  }
-
-  state.isMutatingCollection = true;
-  collectionsFlash.show("Removing post from collection...", "info");
-  try {
-    await api.collections.removeItem(collectionId, postId);
-    await refreshOwnedContent();
-    collectionsFlash.show("Post removed from the collection.", "success");
-  } catch (error) {
-    collectionsFlash.show(resolveMessage(error), "error");
-  } finally {
-    state.isMutatingCollection = false;
-  }
-}
-
-async function reorderCollectionItem(collectionId, postId, direction) {
-  const collection = getManagedCollection(collectionId);
-  if (!collection || state.isMutatingCollection) {
-    return;
-  }
-
-  const items = Array.isArray(collection.items) ? [...collection.items] : [];
-  const index = items.findIndex((item) => String(item.id) === String(postId));
-  if (index === -1) {
-    return;
-  }
-
-  const nextIndex = direction === "up" ? index - 1 : index + 1;
-  if (nextIndex < 0 || nextIndex >= items.length) {
-    return;
-  }
-
-  const [moved] = items.splice(index, 1);
-  items.splice(nextIndex, 0, moved);
-
-  state.isMutatingCollection = true;
-  collectionsFlash.show("Reordering collection...", "info");
-  try {
-    await api.collections.reorderItems(collectionId, items.map((item) => item.id));
-    await refreshOwnedContent();
-    collectionsFlash.show("Collection reordered.", "success");
-  } catch (error) {
-    collectionsFlash.show(resolveMessage(error), "error");
-  } finally {
-    state.isMutatingCollection = false;
-  }
 }
 
 async function submitPostCreate(payload) {
@@ -572,36 +378,6 @@ function bindProfileEvents() {
     });
   }
 
-  if (elements.openCollectionModalButton) {
-    elements.openCollectionModalButton.addEventListener("click", () => {
-      if (!hasSession()) {
-        statusFlash.show(AUTH_REQUIRED_NOTICE, "error");
-        redirectToHome();
-        return;
-      }
-      openCollectionModalCreate();
-    });
-  }
-
-  if (elements.collectionModalCancelButton) {
-    elements.collectionModalCancelButton.addEventListener("click", () => {
-      elements.collectionModal?.close();
-    });
-  }
-
-  if (elements.collectionModal) {
-    elements.collectionModal.addEventListener("click", (event) => {
-      if (event.target === elements.collectionModal) {
-        elements.collectionModal.close();
-      }
-    });
-    elements.collectionModal.addEventListener("close", resetCollectionModal);
-  }
-
-  if (elements.collectionModalForm) {
-    elements.collectionModalForm.addEventListener("submit", submitCollectionModal);
-  }
-
   if (elements.posts) {
     elements.posts.addEventListener("click", (event) => {
       const editButton = event.target.closest("[data-manage-edit-post-id]");
@@ -619,59 +395,6 @@ function bindProfileEvents() {
         const postId = String(continueButton.dataset.manageContinuePostId ?? "").trim();
         if (postId) {
           postModalController.openPostModalCreate({ previousPostId: postId });
-        }
-      }
-    });
-  }
-
-  if (elements.collections) {
-    elements.collections.addEventListener("click", (event) => {
-      const editButton = event.target.closest("[data-edit-collection-id]");
-      if (editButton && elements.collections.contains(editButton)) {
-        const collectionId = String(editButton.dataset.editCollectionId ?? "").trim();
-        if (collectionId) {
-          openCollectionModalEdit(collectionId);
-        }
-        return;
-      }
-
-      const deleteButton = event.target.closest("[data-delete-collection-id]");
-      if (deleteButton && elements.collections.contains(deleteButton)) {
-        const collectionId = String(deleteButton.dataset.deleteCollectionId ?? "").trim();
-        if (collectionId) {
-          deleteCollection(collectionId);
-        }
-        return;
-      }
-
-      const addButton = event.target.closest("[data-add-collection-post-button]");
-      if (addButton && elements.collections.contains(addButton)) {
-        const collectionId = String(addButton.dataset.addCollectionPostButton ?? "").trim();
-        const select = elements.collections.querySelector(`[data-collection-post-select="${collectionId}"]`);
-        const postId = String(select?.value ?? "").trim();
-        if (collectionId && postId) {
-          addPostToCollection(collectionId, postId);
-        }
-        return;
-      }
-
-      const removeButton = event.target.closest("[data-remove-collection-post-id]");
-      if (removeButton && elements.collections.contains(removeButton)) {
-        const collectionId = String(removeButton.dataset.collectionId ?? "").trim();
-        const postId = String(removeButton.dataset.removeCollectionPostId ?? "").trim();
-        if (collectionId && postId) {
-          removePostFromCollection(collectionId, postId);
-        }
-        return;
-      }
-
-      const moveButton = event.target.closest("[data-move-collection-post-id]");
-      if (moveButton && elements.collections.contains(moveButton)) {
-        const collectionId = String(moveButton.dataset.collectionId ?? "").trim();
-        const postId = String(moveButton.dataset.moveCollectionPostId ?? "").trim();
-        const direction = String(moveButton.dataset.direction ?? "").trim();
-        if (collectionId && postId && direction) {
-          reorderCollectionItem(collectionId, postId, direction);
         }
       }
     });

@@ -38,6 +38,7 @@ Update docs in the same PR when changing:
 - core business rules (feed order, moderation, private metrics behavior)
 - environment variables or run commands
 - agent collaboration rules or decision protocol
+- repository hygiene rules for temporary scripts or disposable helper files
 
 ## Required Files by Change Type
 
@@ -65,6 +66,7 @@ Agent behavior/process change:
 
 - `AGENTS.md`
 - `docs/README.md` when onboarding order changes
+- `docs/governance/documentation-policy.md` when repository hygiene rules change
 
 ## Review Checklist
 
@@ -75,6 +77,7 @@ Agent behavior/process change:
 - [ ] links in `docs/README.md` are valid
 - [ ] decision gate was applied before implementation
 - [ ] decision options + recommendation are documented when relevant
+- [ ] disposable helper files or temporary scripts were removed, ignored, or promoted into a documented permanent utility
 
 ## Conflict Resolution
 
@@ -84,3 +87,5 @@ When docs and implementation conflict:
 2. update docs with explicit decision and rationale in the same PR
 
 No PR should merge with unresolved drift.
+
+

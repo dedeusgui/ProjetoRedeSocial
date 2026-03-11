@@ -2,10 +2,12 @@
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
 import { renderFeedList } from "../features/feed/renderers.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
+import { renderProfileCollectionList } from "../features/profile/content-renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 
 const FEED_LIMIT = 20;
@@ -19,10 +21,14 @@ const state = {
   followedTags: [],
   viewerRole: null,
   viewerId: null,
+  ownedPosts: [],
+  collections: [],
   isLoading: false,
   isReviewing: false,
   isDeletingPost: false,
   isManagingTags: false,
+  isManagingCollections: false,
+  editingCollectionId: null,
 };
 
 const elements = {
@@ -41,9 +47,14 @@ const elements = {
   followTagSubmit: document.querySelector("[data-follow-tag-submit]"),
   followedTagsList: document.querySelector("[data-followed-tags-list]"),
   followTagStatus: document.querySelector("[data-follow-tag-status]"),
+  collectionsPanel: document.querySelector("[data-feed-collections-panel]"),
+  collectionsStatus: document.querySelector("[data-feed-collections-status]"),
+  collectionsList: document.querySelector("[data-feed-collections]"),
   loginLink: document.querySelector("[data-login-link]"),
   profileLink: document.querySelector("[data-profile-link]"),
   openModalButton: document.querySelector("[data-open-post-modal]"),
+  openCollectionModalButton: document.querySelector("[data-open-collection-modal]"),
+  openCollectionModalPanelButton: document.querySelector("[data-open-collection-modal-panel]"),
   logoutButton: document.querySelector("[data-logout]"),
   modal: document.querySelector("[data-post-modal]"),
   modalTitle: document.querySelector("[data-post-modal-title]"),
@@ -56,16 +67,28 @@ const elements = {
   selectedPostMedia: document.querySelector("[data-selected-post-media]"),
   existingPostMedia: document.querySelector("[data-existing-post-media]"),
   questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
+  collectionModal: document.querySelector("[data-collection-modal]"),
+  collectionModalTitle: document.querySelector("[data-collection-modal-title]"),
+  collectionModalCancelButton: document.querySelector("[data-collection-modal-cancel]"),
+  collectionModalSubmitButton: document.querySelector("[data-collection-modal-submit]"),
+  collectionModalForm: document.querySelector("[data-collection-modal-form]"),
+  collectionModalStatus: document.querySelector("[data-collection-modal-status]"),
 };
 
 const statusFlash = createFlash(elements.status);
 const followTagFlash = createFlash(elements.followTagStatus);
+const collectionsFlash = createFlash(elements.collectionsStatus);
+const collectionModalFlash = createFlash(elements.collectionModalStatus);
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
   profileLink: elements.profileLink,
   logoutButton: elements.logoutButton,
-  protectedButtons: [elements.openModalButton],
+  protectedButtons: [
+    elements.openModalButton,
+    elements.openCollectionModalButton,
+    elements.openCollectionModalPanelButton,
+  ],
   logoutRedirectUrl: "./index.html",
 });
 
@@ -250,6 +273,231 @@ function renderFollowedTagsPanel() {
   `;
 }
 
+function renderCollectionsPanel() {
+  if (elements.collectionsPanel) {
+    elements.collectionsPanel.hidden = !hasSession();
+  }
+
+  if (!hasSession() || !elements.collectionsList) {
+    return;
+  }
+
+  renderProfileCollectionList(elements.collectionsList, state.collections, {
+    availablePosts: state.ownedPosts,
+  });
+}
+
+async function refreshCollectionManagement({ showLoading = false } = {}) {
+  if (!hasSession()) {
+    state.ownedPosts = [];
+    state.collections = [];
+    state.editingCollectionId = null;
+    collectionsFlash.clear();
+    renderCollectionsPanel();
+    return;
+  }
+
+  if (showLoading) {
+    collectionsFlash.show("Loading collections...", "info");
+  }
+
+  try {
+    const [posts, collections] = await Promise.all([
+      api.posts.listMine(),
+      api.collections.listMine(),
+    ]);
+    state.ownedPosts = Array.isArray(posts) ? posts : [];
+    state.collections = Array.isArray(collections) ? collections : [];
+    renderCollectionsPanel();
+    collectionsFlash.clear();
+  } catch (error) {
+    collectionsFlash.show(resolveMessage(error), "error");
+  }
+}
+
+function getManagedCollection(collectionId) {
+  return state.collections.find((item) => String(item.id) === String(collectionId));
+}
+
+function resetCollectionModal() {
+  state.editingCollectionId = null;
+  elements.collectionModalForm?.reset();
+
+  if (elements.collectionModalTitle) {
+    elements.collectionModalTitle.textContent = "New collection";
+  }
+
+  if (elements.collectionModalSubmitButton) {
+    elements.collectionModalSubmitButton.textContent = "Save collection";
+  }
+
+  collectionModalFlash.clear();
+}
+
+function openCollectionModalCreate() {
+  if (!hasSession()) {
+    statusFlash.show("Sign in to manage collections.", "error");
+    window.location.href = "./index.html";
+    return;
+  }
+
+  resetCollectionModal();
+  elements.collectionModal?.showModal();
+}
+
+function openCollectionModalEdit(collectionId) {
+  const collection = getManagedCollection(collectionId);
+  if (!collection || !elements.collectionModalForm) {
+    return;
+  }
+
+  resetCollectionModal();
+  state.editingCollectionId = String(collectionId);
+  elements.collectionModalForm.querySelector("[name='title']").value = collection.title ?? "";
+  elements.collectionModalForm.querySelector("[name='description']").value = collection.description ?? "";
+  elements.collectionModalForm.querySelector("[name='tags']").value = Array.isArray(collection.tags)
+    ? collection.tags.join(", ")
+    : "";
+
+  if (elements.collectionModalTitle) {
+    elements.collectionModalTitle.textContent = "Edit collection";
+  }
+
+  if (elements.collectionModalSubmitButton) {
+    elements.collectionModalSubmitButton.textContent = "Save changes";
+  }
+
+  elements.collectionModal?.showModal();
+}
+
+async function submitCollectionModal(event) {
+  event.preventDefault();
+  if (!elements.collectionModalForm || state.isManagingCollections) {
+    return;
+  }
+
+  const formData = new FormData(elements.collectionModalForm);
+  const payload = {
+    title: String(formData.get("title") ?? "").trim(),
+    description: String(formData.get("description") ?? "").trim(),
+    tags: parseCsvTags(formData.get("tags")),
+  };
+
+  state.isManagingCollections = true;
+  collectionModalFlash.show(
+    state.editingCollectionId ? "Saving collection changes..." : "Creating collection...",
+    "info",
+  );
+
+  try {
+    if (state.editingCollectionId) {
+      await api.collections.update(state.editingCollectionId, payload);
+      collectionsFlash.show("Collection updated.", "success");
+    } else {
+      await api.collections.create(payload);
+      collectionsFlash.show("Collection created.", "success");
+    }
+
+    await refreshCollectionManagement();
+    elements.collectionModal?.close();
+  } catch (error) {
+    collectionModalFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isManagingCollections = false;
+  }
+}
+
+async function deleteCollection(collectionId) {
+  if (!collectionId || state.isManagingCollections) {
+    return;
+  }
+
+  state.isManagingCollections = true;
+  collectionsFlash.show("Deleting collection...", "info");
+
+  try {
+    await api.collections.delete(collectionId);
+    await refreshCollectionManagement();
+    collectionsFlash.show("Collection deleted.", "success");
+  } catch (error) {
+    collectionsFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isManagingCollections = false;
+  }
+}
+
+async function addPostToCollection(collectionId, postId) {
+  if (!collectionId || !postId || state.isManagingCollections) {
+    return;
+  }
+
+  state.isManagingCollections = true;
+  collectionsFlash.show("Adding post to collection...", "info");
+
+  try {
+    await api.collections.addItems(collectionId, [postId]);
+    await refreshCollectionManagement();
+    collectionsFlash.show("Post added to the collection.", "success");
+  } catch (error) {
+    collectionsFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isManagingCollections = false;
+  }
+}
+
+async function removePostFromCollection(collectionId, postId) {
+  if (!collectionId || !postId || state.isManagingCollections) {
+    return;
+  }
+
+  state.isManagingCollections = true;
+  collectionsFlash.show("Removing post from collection...", "info");
+
+  try {
+    await api.collections.removeItem(collectionId, postId);
+    await refreshCollectionManagement();
+    collectionsFlash.show("Post removed from the collection.", "success");
+  } catch (error) {
+    collectionsFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isManagingCollections = false;
+  }
+}
+
+async function reorderCollectionItem(collectionId, postId, direction) {
+  const collection = getManagedCollection(collectionId);
+  if (!collection || state.isManagingCollections) {
+    return;
+  }
+
+  const items = Array.isArray(collection.items) ? [...collection.items] : [];
+  const index = items.findIndex((item) => String(item.id) === String(postId));
+  if (index === -1) {
+    return;
+  }
+
+  const nextIndex = direction === "up" ? index - 1 : index + 1;
+  if (nextIndex < 0 || nextIndex >= items.length) {
+    return;
+  }
+
+  const [moved] = items.splice(index, 1);
+  items.splice(nextIndex, 0, moved);
+
+  state.isManagingCollections = true;
+  collectionsFlash.show("Reordering collection...", "info");
+
+  try {
+    await api.collections.reorderItems(collectionId, items.map((item) => item.id));
+    await refreshCollectionManagement();
+    collectionsFlash.show("Collection reordered.", "success");
+  } catch (error) {
+    collectionsFlash.show(resolveMessage(error), "error");
+  } finally {
+    state.isManagingCollections = false;
+  }
+}
+
 function renderFeed() {
   if (!elements.list) {
     return;
@@ -389,11 +637,17 @@ const postModalController = createPostModalController({
   },
   async onMediaChanged({ action }) {
     if (action === "delete") {
-      await loadFeed();
+      await Promise.all([
+        loadFeed(),
+        refreshCollectionManagement(),
+      ]);
     }
   },
   async onAfterSuccess({ mode, mediaError, mediaErrorMessage }) {
-    await loadFeed();
+    await Promise.all([
+      loadFeed(),
+      refreshCollectionManagement(),
+    ]);
     if (mode === "edit") {
       statusFlash.show(
         mediaError
@@ -417,8 +671,11 @@ async function syncViewerContext() {
   if (!hasSession()) {
     state.viewerRole = null;
     state.viewerId = null;
+    state.ownedPosts = [];
+    state.collections = [];
     setFollowedTags([]);
     renderFollowedTagsPanel();
+    renderCollectionsPanel();
     return;
   }
 
@@ -443,6 +700,7 @@ async function syncViewerContext() {
   }
 
   renderFollowedTagsPanel();
+  renderCollectionsPanel();
 }
 
 async function toggleFollowTag(tag, currentlyFollowing) {
@@ -593,7 +851,10 @@ async function deleteFeedPost(postId) {
   statusFlash.show("Deleting post...", "info");
   try {
     await api.posts.delete(postId);
-    await loadFeed();
+    await Promise.all([
+      loadFeed(),
+      refreshCollectionManagement(),
+    ]);
     statusFlash.show("Post deleted.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
@@ -638,6 +899,33 @@ function bindEvents() {
 
   if (elements.followTagForm) {
     elements.followTagForm.addEventListener("submit", handleManualFollowTag);
+  }
+
+  if (elements.openCollectionModalButton) {
+    elements.openCollectionModalButton.addEventListener("click", openCollectionModalCreate);
+  }
+
+  if (elements.openCollectionModalPanelButton) {
+    elements.openCollectionModalPanelButton.addEventListener("click", openCollectionModalCreate);
+  }
+
+  if (elements.collectionModalCancelButton) {
+    elements.collectionModalCancelButton.addEventListener("click", () => {
+      elements.collectionModal?.close();
+    });
+  }
+
+  if (elements.collectionModal) {
+    elements.collectionModal.addEventListener("click", (event) => {
+      if (event.target === elements.collectionModal) {
+        elements.collectionModal.close();
+      }
+    });
+    elements.collectionModal.addEventListener("close", resetCollectionModal);
+  }
+
+  if (elements.collectionModalForm) {
+    elements.collectionModalForm.addEventListener("submit", submitCollectionModal);
   }
 
   if (elements.followTagsAuth) {
@@ -728,6 +1016,59 @@ function bindEvents() {
       deleteFeedPost(postId);
     });
   }
+
+  if (elements.collectionsList) {
+    elements.collectionsList.addEventListener("click", (event) => {
+      const editButton = event.target.closest("[data-edit-collection-id]");
+      if (editButton && elements.collectionsList.contains(editButton)) {
+        const collectionId = String(editButton.dataset.editCollectionId ?? "").trim();
+        if (collectionId) {
+          openCollectionModalEdit(collectionId);
+        }
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-collection-id]");
+      if (deleteButton && elements.collectionsList.contains(deleteButton)) {
+        const collectionId = String(deleteButton.dataset.deleteCollectionId ?? "").trim();
+        if (collectionId) {
+          deleteCollection(collectionId);
+        }
+        return;
+      }
+
+      const addButton = event.target.closest("[data-add-collection-post-button]");
+      if (addButton && elements.collectionsList.contains(addButton)) {
+        const collectionId = String(addButton.dataset.addCollectionPostButton ?? "").trim();
+        const select = elements.collectionsList.querySelector(`[data-collection-post-select="${collectionId}"]`);
+        const postId = String(select?.value ?? "").trim();
+        if (collectionId && postId) {
+          addPostToCollection(collectionId, postId);
+        }
+        return;
+      }
+
+      const removeButton = event.target.closest("[data-remove-collection-post-id]");
+      if (removeButton && elements.collectionsList.contains(removeButton)) {
+        const collectionId = String(removeButton.dataset.collectionId ?? "").trim();
+        const postId = String(removeButton.dataset.removeCollectionPostId ?? "").trim();
+        if (collectionId && postId) {
+          removePostFromCollection(collectionId, postId);
+        }
+        return;
+      }
+
+      const moveButton = event.target.closest("[data-move-collection-post-id]");
+      if (moveButton && elements.collectionsList.contains(moveButton)) {
+        const collectionId = String(moveButton.dataset.collectionId ?? "").trim();
+        const postId = String(moveButton.dataset.moveCollectionPostId ?? "").trim();
+        const direction = String(moveButton.dataset.direction ?? "").trim();
+        if (collectionId && postId && direction) {
+          reorderCollectionItem(collectionId, postId, direction);
+        }
+      }
+    });
+  }
 }
 
 async function init() {
@@ -739,6 +1080,7 @@ async function init() {
   navbar.refresh();
   syncSearchControls();
   renderFollowedTagsPanel();
+  renderCollectionsPanel();
   try {
     const pendingNotice = window.sessionStorage.getItem(FEED_NOTICE_KEY);
     if (pendingNotice) {
@@ -751,6 +1093,7 @@ async function init() {
 
   await syncViewerContext();
   bindEvents();
+  await refreshCollectionManagement({ showLoading: true });
   await loadFeed();
 }
 

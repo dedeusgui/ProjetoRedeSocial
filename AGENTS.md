@@ -83,10 +83,17 @@ Agents must stop and ask when:
 - security/auth implications are uncertain
 - requested scope conflicts with project principles
 
-## 9) Compliance Checklist
+## 9) Repository Hygiene
+
+- Temporary helper files used for one-off debugging, rewriting, or inspection must not remain committed after the supported change is finished.
+- Disposable scratch scripts should be deleted before handoff unless they are promoted into a documented permanent utility under `scripts/`.
+- Cleanup changes must stay targeted and must not remove placeholders, tests, or documented utilities without explicit evidence they are unused.
+
+## 10) Compliance Checklist
 
 - [ ] relevant docs were read first
 - [ ] decision gate applied for high-impact choices
 - [ ] options + recommendation were provided
 - [ ] assumptions were explicit
 - [ ] docs were updated with implementation
+- [ ] temporary helper files were removed or promoted into a documented permanent utility

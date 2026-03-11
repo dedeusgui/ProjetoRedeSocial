@@ -1624,6 +1624,74 @@ select:focus-visible {
   box-shadow: inset 0 0 0 1px rgba(104, 131, 168, 0.32);
 }
 
+.profile-content-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.modal-questionnaire-section,
+.questionnaire-preview,
+.questionnaire-panel,
+.questionnaire-editor-card,
+.questionnaire-question-card,
+.managed-collection-card,
+.collection-hero,
+.collection-post-card,
+.sequence-item,
+.collection-item-row,
+.questionnaire-preview-card,
+.questionnaire-panel-summary,
+.questionnaire-editor-empty,
+.questionnaire-editor-correct,
+.questionnaire-preview-option,
+.questionnaire-option {
+  border-color: var(--line-0);
+  background: rgba(18, 25, 38, 0.82);
+}
+
+.questionnaire-editor-badge,
+.questionnaire-count,
+.questionnaire-preview-chip,
+.questionnaire-question-number,
+.post-context-pill,
+.managed-collection-count {
+  border-color: var(--line-1);
+  background: rgba(23, 32, 45, 0.7);
+  color: var(--text-0);
+}
+
+.questionnaire-option-index {
+  border-color: var(--line-1);
+  background: rgba(22, 31, 46, 0.82);
+}
+
+.questionnaire-editor-empty {
+  border-style: dashed;
+}
+
+.modal-card,
+.modal-card label,
+.modal-card .muted,
+.modal-card .questionnaire-eyebrow,
+.modal-card .questionnaire-editor-badge,
+.modal-card .questionnaire-question-number,
+.modal-card .file-picker-summary,
+.modal-card .modal-media-heading {
+  color: var(--text-0);
+}
+
+.modal-card .muted[data-state="success"] {
+  color: var(--ok-0);
+}
+
+.modal-card .muted[data-state="error"] {
+  color: var(--bad-0);
+}
+
+.modal-card .muted[data-state="info"] {
+  color: var(--text-0);
+}
+
 @media (max-width: 640px) {
   .post-type-toggle {
     grid-template-columns: 1fr;
