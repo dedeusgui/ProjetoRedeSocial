@@ -23,50 +23,42 @@
         </nav>
       </header>
 
-      <section class="card">
-        <form class="feed-search" data-feed-search-form>
-          <label class="feed-search-field">
-            <span data-feed-search-label>Search posts</span>
-            <input
-              type="search"
-              name="search"
-              placeholder="Search by title, content, or tag"
-              maxlength="120"
-              data-feed-search-input
-            />
-          </label>
-          <div class="feed-search-actions">
-            <button type="submit" data-feed-search-submit>Search</button>
-            <button type="button" class="button-ghost" data-feed-search-reset hidden>Clear</button>
-          </div>
-        </form>
-      </section>
+      <section class="card feed-discovery-panel">
+        <div class="feed-discovery-top">
+          <form class="feed-search" data-feed-search-form>
+            <label class="feed-search-field">
+              <span data-feed-search-label>Search posts</span>
+              <input
+                type="search"
+                name="search"
+                placeholder="Search by title, content, or tag"
+                maxlength="120"
+                data-feed-search-input
+              />
+            </label>
+            <div class="feed-search-actions">
+              <button type="submit" data-feed-search-submit>Search</button>
+              <button type="button" class="button-ghost" data-feed-search-reset hidden>Clear</button>
+            </div>
+          </form>
 
-      <section class="card follow-tags-panel">
-        <div class="feed-discovery-bar">
-          <div class="feed-mode-toggle" role="tablist" aria-label="Feed type">
-            <button type="button" data-feed-type-button="posts" aria-pressed="true">Posts</button>
-            <button type="button" class="button-ghost" data-feed-type-button="collections" aria-pressed="false">Collections</button>
-          </div>
+          <div class="feed-discovery-controls">
+            <div class="feed-mode-toggle" role="tablist" aria-label="Feed type">
+              <button type="button" data-feed-type-button="posts" aria-pressed="true">Posts</button>
+              <button type="button" class="button-ghost" data-feed-type-button="collections" aria-pressed="false">Collections</button>
+            </div>
 
-          <div class="feed-follow-toggle" data-feed-follow-toggle-shell hidden>
-            <span class="muted" data-feed-follow-toggle-label>Followed tags</span>
-            <button type="button" class="button-ghost" data-feed-following-toggle aria-pressed="false">Off</button>
+            <div class="feed-follow-toggle" data-feed-follow-toggle-shell hidden>
+              <span class="muted">Followed tags</span>
+              <button type="button" class="button-ghost" data-feed-following-toggle aria-pressed="false">Off</button>
+            </div>
           </div>
         </div>
 
-        <div class="follow-tags-guest" data-follow-tags-guest>
-          <h2 class="ink-underline">Tag radar</h2>
-          <p class="muted">Sign in to follow tags and filter either feed without changing its chronological order.</p>
-        </div>
+        <p class="muted follow-tags-guest" data-follow-tags-guest>Sign in to follow tags.</p>
 
         <div class="follow-tags-auth" data-follow-tags-auth hidden>
           <div class="follow-tags-toolbar">
-            <div class="follow-tags-copy">
-              <h2 class="ink-underline">Tag radar</h2>
-              <p class="muted" data-follow-tags-help></p>
-            </div>
-
             <form class="follow-tag-form" data-follow-tag-form>
               <label>
                 Follow a tag manually
@@ -80,9 +72,13 @@
               </label>
               <button type="submit" data-follow-tag-submit>Follow tag</button>
             </form>
+
+            <details class="followed-tags-dropdown" data-followed-tags-dropdown>
+              <summary data-followed-tags-summary>Followed tags</summary>
+              <div class="followed-tags-list" data-followed-tags-list></div>
+            </details>
           </div>
 
-          <div class="followed-tags-list" data-followed-tags-list></div>
           <p class="muted status-line" data-follow-tag-status></p>
         </div>
       </section>

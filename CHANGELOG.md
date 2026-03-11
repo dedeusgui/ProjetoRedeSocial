@@ -16,10 +16,12 @@ All notable changes to this project should be documented in this file.
 - Removed owner collection CRUD from `feed.html` and turned the page into the shared browsing surface for `Posts` vs `Collections` switching.
 - Simplified collection CTA flow so `feed.html` keeps a single `My collections` link and `collections.html` keeps a single `New collection` trigger.
 - Documented that the future followed-tags mode for the collections feed matches collection tags only.
+- Consolidated the feed search and followed-tags controls into one compact discovery panel below the header, replaced the always-visible followed-tags list with a dropdown, and removed redundant helper copy from that panel.
 
 ### Docs
 
 - Updated architecture and API docs to describe the dedicated owner collections page and the collections-feed groundwork endpoints.
+- Updated frontend docs to describe the compact feed discovery panel and followed-tags dropdown behavior.
 
 ### Fixed
 
@@ -241,4 +243,3 @@ All notable changes to this project should be documented in this file.
 ### Notes
 
 - This update focused on documentation and process assets for better idea refinement, bugfix workflows, and feature implementation consistency.
-

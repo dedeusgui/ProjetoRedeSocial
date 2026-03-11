@@ -38,10 +38,11 @@ const elements = {
   searchResetButton: document.querySelector("[data-feed-search-reset]"),
   followTagsGuest: document.querySelector("[data-follow-tags-guest]"),
   followTagsAuth: document.querySelector("[data-follow-tags-auth]"),
-  followTagsHelp: document.querySelector("[data-follow-tags-help]"),
   followTagForm: document.querySelector("[data-follow-tag-form]"),
   followTagInput: document.querySelector("[data-follow-tag-input]"),
   followTagSubmit: document.querySelector("[data-follow-tag-submit]"),
+  followedTagsDropdown: document.querySelector("[data-followed-tags-dropdown]"),
+  followedTagsSummary: document.querySelector("[data-followed-tags-summary]"),
   followedTagsList: document.querySelector("[data-followed-tags-list]"),
   followTagStatus: document.querySelector("[data-follow-tag-status]"),
   feedTypeButtons: Array.from(document.querySelectorAll("[data-feed-type-button]")),
@@ -236,6 +237,10 @@ function renderFollowedTagsPanel() {
   });
 
   if (!authenticated) {
+    if (elements.followedTagsDropdown) {
+      elements.followedTagsDropdown.hidden = true;
+      elements.followedTagsDropdown.open = false;
+    }
     return;
   }
 
@@ -244,18 +249,6 @@ function renderFollowedTagsPanel() {
     elements.followToggleButton.setAttribute("aria-pressed", state.followedOnly ? "true" : "false");
     elements.followToggleButton.classList.toggle("button-ghost", !state.followedOnly);
     elements.followToggleButton.disabled = state.isLoading || state.isManagingTags;
-  }
-
-  if (elements.followTagsHelp) {
-    if (isCollectionsFeed()) {
-      elements.followTagsHelp.textContent = state.followedOnly
-        ? "Showing collections whose own tags match any tag you follow."
-        : "Switch on followed tags to filter public collections by collection tags only.";
-    } else {
-      elements.followTagsHelp.textContent = state.followedOnly
-        ? "Your personal posts feed stays chronological and shows posts matching any tag you follow."
-        : "Follow tags to filter the posts feed without changing chronological order.";
-    }
   }
 
   if (elements.followTagInput) {
@@ -270,8 +263,18 @@ function renderFollowedTagsPanel() {
     return;
   }
 
+  if (elements.followedTagsDropdown) {
+    elements.followedTagsDropdown.hidden = false;
+  }
+
+  if (elements.followedTagsSummary) {
+    elements.followedTagsSummary.textContent = hasFollowedTags()
+      ? `Followed tags (${state.followedTags.length})`
+      : "Followed tags";
+  }
+
   if (!hasFollowedTags()) {
-    elements.followedTagsList.innerHTML = "<p class='muted'>You are not following any tags yet.</p>";
+    elements.followedTagsList.innerHTML = "<p class='muted'>No followed tags yet.</p>";
     return;
   }
 
