@@ -4,6 +4,7 @@ import {
   formatPercent,
 } from "../../core/formatters.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
+import { renderPostContextLinks } from "../posts/context-renderers.js";
 import { renderQuestionnairePreview } from "../questionnaire/renderers.js";
 
 export function ensureChronologicalOrder(items) {
@@ -41,12 +42,12 @@ function renderFeedMedia(media, fallbackText) {
       <img
         class="post-media-image"
         src="${escapeHtml(firstMedia.url)}"
-        alt="${escapeHtml(firstMedia.originalName ?? fallbackText ?? "Imagem do post")}"
+        alt="${escapeHtml(firstMedia.originalName ?? fallbackText ?? "Post image")}"
         loading="lazy"
       />
       ${
         extraCount > 0
-          ? `<figcaption class="muted">+${escapeHtml(String(extraCount))} imagem(ns)</figcaption>`
+          ? `<figcaption class="muted">+${escapeHtml(String(extraCount))} more image(s)</figcaption>`
           : ""
       }
     </figure>
@@ -55,11 +56,11 @@ function renderFeedMedia(media, fallbackText) {
 
 function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
   if (!Array.isArray(tags) || tags.length === 0) {
-    return "<p class='muted post-tags'>Sem tags.</p>";
+    return "<p class='muted post-tags'>No tags yet.</p>";
   }
 
   return `
-    <ul class="tag-list" aria-label="Tags do post">
+    <ul class="tag-list" aria-label="Post tags">
       ${tags
         .map((tag) => {
           const followTag = normalizeTagForFollow(tag);
@@ -79,7 +80,7 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
                       data-following="${isFollowing ? "true" : "false"}"
                       aria-pressed="${isFollowing ? "true" : "false"}"
                     >
-                      ${isFollowing ? "Seguindo" : "Seguir"}
+                      ${isFollowing ? "Following" : "Follow"}
                     </button>
                   `
                   : ""
@@ -122,20 +123,25 @@ export function createPostCard(
         avatarClassName: "author-avatar-sm",
         className: "post-author-summary",
       })}
-      <p class="trend-chip status-neutral">Aprovação: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+      <p class="trend-chip status-neutral">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>
     ${renderFeedMedia(post.media, post.title)}
     ${renderQuestionnairePreview(post.questionnaire)}
+    ${renderPostContextLinks({
+      postId: post.id,
+      sequence: post.sequence,
+      collections: post.collections,
+    })}
     ${renderTags(tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">
-      <button type="button" class="link-inline post-link" data-nav-href="./post.html?id=${postId}">Abrir discussão</button>
+      <button type="button" class="button-link button-link-inline" data-nav-href="./post.html?id=${postId}">Open discussion</button>
       <div class="review-actions review-actions-inline">
-        ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Aprovar</button>` : ""}
-        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">Não relevante</button>` : ""}
-        ${canEditPost ? `<button type="button" class="button-ghost" data-edit-post-id="${postIdAttr}">Editar post</button>` : ""}
-        ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Excluir post</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${postIdAttr}">Approve</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${postIdAttr}">Not relevant</button>` : ""}
+        ${canEditPost ? `<button type="button" class="button-ghost" data-edit-post-id="${postIdAttr}">Edit</button>` : ""}
+        ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${postIdAttr}">Delete</button>` : ""}
       </div>
     </div>
   `;

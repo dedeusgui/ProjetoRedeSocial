@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,14 +12,14 @@
         <div class="header-copy">
           <img src="../images/logo-transparent.png" alt="TSN" height="48" />
           <h1 class="ink-underline">Post</h1>
-          <p class="muted">Detalhes do post e discussão.</p>
-          <p class="tone-note">Comentários em ordem cronológica.</p>
+          <p class="muted">Post details, questionnaire flow, and discussion.</p>
+          <p class="tone-note">Comments stay chronological.</p>
         </div>
         <nav class="row app-nav">
           <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
-          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>Meu perfil</button>
-          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
-          <button type="button" data-logout hidden>Sair</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+          <button type="button" data-logout hidden>Sign out</button>
         </nav>
       </header>
 
@@ -27,13 +27,13 @@
       <div data-post-view></div>
 
       <section class="card" data-comment-compose>
-        <h2 class="ink-underline">Adicionar comentário</h2>
+        <h2 class="ink-underline">Add comment</h2>
         <form data-comment-form>
           <label>
-            Comentário
-            <textarea name="content" rows="4" placeholder="Seu comentário" required></textarea>
+            Comment
+            <textarea name="content" rows="4" placeholder="Write your comment" required></textarea>
           </label>
-          <button type="submit">Enviar comentário</button>
+          <button type="submit">Post comment</button>
         </form>
         <p class="muted status-line" data-comment-help></p>
       </section>
@@ -41,59 +41,66 @@
     <dialog class="modal" data-post-modal>
       <section class="card modal-card">
         <div class="row modal-header">
-          <h2 class="ink-underline" data-post-modal-title>Publicar post</h2>
-          <button type="button" class="button-ghost" data-post-modal-cancel>Fechar</button>
+          <h2 class="ink-underline" data-post-modal-title>Publish post</h2>
+          <button type="button" class="button-ghost" data-post-modal-cancel>Close</button>
         </div>
         <form class="modal-form-layout" data-post-modal-form>
           <section class="modal-form-section modal-post-type-section">
             <div class="modal-form-section-copy">
-              <h3 class="ink-underline">Tipo de publicação</h3>
-              <p class="muted">Escolha se este conteúdo será um post normal ou um post com questionário.</p>
+              <h3 class="ink-underline">Post type</h3>
+              <p class="muted">Choose whether this content is a regular post or an interactive questionnaire post.</p>
             </div>
-            <div class="post-type-toggle" role="radiogroup" aria-label="Tipo de post">
+            <div class="post-type-toggle" role="radiogroup" aria-label="Post type">
               <label class="post-type-option">
                 <input type="radio" name="postType" value="regular" data-post-type-input checked />
-                <span>Post normal</span>
+                <span>Regular post</span>
               </label>
               <label class="post-type-option">
                 <input type="radio" name="postType" value="questionnaire" data-post-type-input />
-                <span>Post com questionário</span>
+                <span>Questionnaire post</span>
               </label>
             </div>
           </section>
 
           <section class="modal-form-section">
             <div class="modal-form-section-copy">
-              <h3 class="ink-underline">Conteúdo principal</h3>
-              <p class="muted">Essas informações aparecem em qualquer tipo de post.</p>
+              <h3 class="ink-underline">Core content</h3>
+              <p class="muted">These fields appear in every post type.</p>
             </div>
             <label>
-              Título
-              <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="100" />
+              Title
+              <input name="title" placeholder="Example: How to structure Node.js study sessions" required maxlength="100" />
             </label>
             <label>
-              Conteúdo
+              Content
               <textarea
                 name="content"
                 rows="6"
-                placeholder="Explique a ideia de forma objetiva."
+                placeholder="Explain the idea clearly and directly."
                 required
                 maxlength="3000"
               ></textarea>
             </label>
             <label>
               Tags
-              <input name="tags" placeholder="node, backend, estudo" />
-              <span class="muted">Use vírgulas para separar tags.</span>
+              <input name="tags" placeholder="node, backend, study" />
+              <span class="muted">Separate tags with commas.</span>
+            </label>
+            <label>
+              Continue one of your posts?
+              <select name="previousPostId" data-post-previous-select>
+                <option value="">Standalone post</option>
+              </select>
+              <span class="muted">Use this only to continue a sequence you own.</span>
             </label>
           </section>
 
           <section class="modal-form-section">
             <div class="modal-form-section-copy">
-              <h3 class="ink-underline">Imagens do post</h3>
-              <p class="muted">Até 4 imagens JPG, PNG ou WebP, com no máximo 5 MB cada.</p>
+              <h3 class="ink-underline">Post images</h3>
+              <p class="muted">Up to 4 JPG, PNG, or WebP images, with a maximum of 5 MB each.</p>
             </div>
-            <label class="file-picker" aria-label="Selecionar imagens do post">
+            <label class="file-picker" aria-label="Select post images">
               <input
                 type="file"
                 name="media"
@@ -102,8 +109,8 @@
                 data-post-media-input
               />
               <span class="file-picker-ui">
-                <span class="file-picker-trigger">Selecionar imagens</span>
-                <span class="file-picker-summary" data-post-media-summary>Nenhuma imagem selecionada.</span>
+                <span class="file-picker-trigger">Choose images</span>
+                <span class="file-picker-summary" data-post-media-summary>No images selected.</span>
               </span>
             </label>
             <section class="modal-media-section" data-existing-post-media hidden></section>
@@ -112,15 +119,15 @@
 
           <section class="modal-form-section modal-questionnaire-block" data-post-questionnaire-block hidden>
             <div class="modal-form-section-copy">
-              <h3 class="ink-underline">Questionário</h3>
+              <h3 class="ink-underline">Questionnaire</h3>
               <p class="muted" data-post-questionnaire-helper>
-                Configure perguntas de múltipla escolha para este post.
+                Configure multiple-choice questions for this post.
               </p>
             </div>
             <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
           </section>
 
-          <button type="submit" data-post-modal-submit>Publicar</button>
+          <button type="submit" data-post-modal-submit>Publish</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>
       </section>
@@ -128,4 +135,3 @@
     <script type="module" src="../js/pages/post.js"></script>
   </body>
 </html>
-

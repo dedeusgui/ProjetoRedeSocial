@@ -2,7 +2,15 @@ import { escapeHtml } from "../../core/formatters.js";
 
 function buildQuestionnaireHeading(questionnaire) {
   const title = String(questionnaire?.title ?? "").trim();
-  return title || "Question\u00e1rio";
+  return title || "Questionnaire";
+}
+
+function buildQuestionCountLabel(count) {
+  return `${escapeHtml(String(count))} question${count === 1 ? "" : "s"}`;
+}
+
+function buildOptionLetter(index) {
+  return String.fromCharCode(65 + index);
 }
 
 export function renderQuestionnairePreview(questionnaire) {
@@ -12,24 +20,40 @@ export function renderQuestionnairePreview(questionnaire) {
   }
 
   const firstQuestion = questions[0];
-  const extraQuestions = Math.max(0, questions.length - 1);
 
   return `
-    <section class="questionnaire-preview" aria-label="Preview do question\u00e1rio">
+    <section class="questionnaire-preview" aria-label="Questionnaire preview">
       <div class="row questionnaire-preview-header">
-        <strong>${escapeHtml(buildQuestionnaireHeading(questionnaire))}</strong>
-        <span class="tag-item">Quiz ${escapeHtml(String(questions.length))} pergunta(s)</span>
+        <div class="questionnaire-preview-copy">
+          <p class="questionnaire-eyebrow">Interactive layer</p>
+          <strong class="questionnaire-title">${escapeHtml(buildQuestionnaireHeading(questionnaire))}</strong>
+          <p class="muted questionnaire-preview-summary">This post includes a self-check questionnaire.</p>
+        </div>
+        <div class="questionnaire-meta">
+          <span class="tag-item questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
+          <span class="tag-item questionnaire-count status-neutral">Preview</span>
+        </div>
       </div>
-      <p class="questionnaire-preview-prompt">${escapeHtml(firstQuestion.prompt ?? "")}</p>
-      <ol class="questionnaire-preview-options">
-        ${(Array.isArray(firstQuestion.options) ? firstQuestion.options : [])
-          .slice(0, 4)
-          .map((option) => `<li>${escapeHtml(option)}</li>`)
-          .join("")}
-      </ol>
-      <p class="muted">
-        ${extraQuestions > 0 ? `Mais ${escapeHtml(String(extraQuestions))} pergunta(s) no post completo.` : "Abra o post para responder."}
-      </p>
+      <article class="questionnaire-preview-card">
+        <div class="row questionnaire-question-head">
+          <span class="questionnaire-question-number">Question 1</span>
+          <span class="questionnaire-preview-chip">Preview</span>
+        </div>
+        <p class="questionnaire-preview-prompt">${escapeHtml(firstQuestion.prompt ?? "")}</p>
+        <ol class="questionnaire-preview-options">
+          ${(Array.isArray(firstQuestion.options) ? firstQuestion.options : [])
+            .slice(0, 4)
+            .map(
+              (option, optionIndex) => `
+                <li class="questionnaire-preview-option">
+                  <span class="questionnaire-option-index">${escapeHtml(buildOptionLetter(optionIndex))}</span>
+                  <span>${escapeHtml(option)}</span>
+                </li>
+              `,
+            )
+            .join("")}
+        </ol>
+      </article>
     </section>
   `;
 }
@@ -48,21 +72,40 @@ export function renderQuestionnaireDetail(
   }
 
   const isSubmitted = Boolean(result);
+  const correctCount = Number.parseInt(result?.correctCount ?? 0, 10) || 0;
+  const totalQuestions = Number.parseInt(result?.totalQuestions ?? questions.length, 10) || questions.length;
+  const scorePercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
   const summaryText = isSubmitted
-    ? `Voc\u00ea acertou ${result.correctCount} de ${result.totalQuestions} pergunta(s).`
+    ? `You answered ${correctCount} of ${totalQuestions} correctly.`
     : canAnswer
-      ? "Escolha uma alternativa por pergunta e confira o resultado."
-      : "Fa\u00e7a login para responder ao question\u00e1rio deste post.";
+      ? "Choose one option per question, then check your result."
+      : "Sign in to answer this post questionnaire.";
 
   return `
     <section class="questionnaire-panel" data-questionnaire-panel>
       <div class="row questionnaire-panel-header">
         <div class="questionnaire-panel-copy">
+          <p class="questionnaire-eyebrow">Interactive layer</p>
           <h3 class="ink-underline">${escapeHtml(buildQuestionnaireHeading(questionnaire))}</h3>
           <p class="muted">${escapeHtml(summaryText)}</p>
         </div>
-        <span class="tag-item">Quiz ${escapeHtml(String(questions.length))} pergunta(s)</span>
+        <div class="questionnaire-meta">
+          <span class="tag-item questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
+          ${
+            isSubmitted
+              ? `<span class="tag-item questionnaire-count ${scorePercent >= 70 ? "status-positive" : "status-negative"}">${escapeHtml(String(scorePercent))}%</span>`
+              : '<span class="tag-item questionnaire-count status-neutral">Browser self-check</span>'
+          }
+        </div>
       </div>
+      ${
+        isSubmitted
+          ? `<div class="questionnaire-panel-summary">
+              <strong>Result</strong>
+              <p class="muted">Review each question below to see what you got right and wrong.</p>
+            </div>`
+          : ""
+      }
       <form data-questionnaire-form>
         <div class="questionnaire-question-list">
           ${questions
@@ -74,11 +117,11 @@ export function renderQuestionnaireDetail(
               return `
                 <article class="questionnaire-question-card">
                   <div class="row questionnaire-question-head">
-                    <strong>Pergunta ${escapeHtml(String(questionIndex + 1))}</strong>
+                    <span class="questionnaire-question-number">Question ${escapeHtml(String(questionIndex + 1))}</span>
                     ${
                       questionResult
                         ? `<span class="questionnaire-result-chip ${questionResult.isCorrect ? "status-positive" : "status-negative"}">${
-                            questionResult.isCorrect ? "Correta" : "Incorreta"
+                            questionResult.isCorrect ? "Correct" : "Incorrect"
                           }</span>`
                         : ""
                     }
@@ -108,6 +151,7 @@ export function renderQuestionnaireDetail(
                               ${isSelected ? "checked" : ""}
                               ${canAnswer ? "" : "disabled"}
                             />
+                            <span class="questionnaire-option-index">${escapeHtml(buildOptionLetter(optionIndex))}</span>
                             <span>${escapeHtml(option)}</span>
                           </label>
                         `;
@@ -120,16 +164,21 @@ export function renderQuestionnaireDetail(
             .join("")}
         </div>
         <div class="row questionnaire-panel-actions">
-          ${
-            canAnswer
-              ? `<button type="submit">${isSubmitted ? "Conferir novamente" : "Conferir respostas"}</button>`
-              : ""
-          }
-          ${
-            canAnswer && isSubmitted
-              ? '<button type="button" class="button-ghost" data-reset-questionnaire>Responder novamente</button>'
-              : ""
-          }
+          <p class="questionnaire-panel-note muted">
+            ${canAnswer ? "Answer everything before checking. Results are not saved." : "The questionnaire stays visible, but answering requires a signed-in session."}
+          </p>
+          <div class="row questionnaire-panel-button-group">
+            ${
+              canAnswer
+                ? `<button type="submit">${isSubmitted ? "Check again" : "Check answers"}</button>`
+                : ""
+            }
+            ${
+              canAnswer && isSubmitted
+                ? '<button type="button" class="button-ghost" data-reset-questionnaire>Try again</button>'
+                : ""
+            }
+          </div>
         </div>
       </form>
     </section>

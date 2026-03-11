@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import fs from "node:fs";
 import path from "node:path";
@@ -11,6 +11,7 @@ import AppError from "./common/errors/AppError.js";
 import createAuthModule from "./modules/auth/index.js";
 import createUsersModule from "./modules/users/index.js";
 import createCommentsModule from "./modules/comments/index.js";
+import createCollectionsModule from "./modules/collections/index.js";
 import createPostsModule from "./modules/posts/index.js";
 import createFeedModule from "./modules/feed/index.js";
 import createModerationModule from "./modules/moderation/index.js";
@@ -30,12 +31,15 @@ function createApp() {
 
   const usersModule = createUsersModule();
   const commentsModule = createCommentsModule();
+  const collectionsModule = createCollectionsModule();
   const postsModule = createPostsModule({
     commentService: commentsModule.service,
     userService: usersModule.service,
+    collectionService: collectionsModule.service,
   });
   const feedModule = createFeedModule({
     userService: usersModule.service,
+    collectionService: collectionsModule.service,
   });
   const adminModule = createAdminModule({
     adminEmails: env.adminEmails,
@@ -59,6 +63,7 @@ function createApp() {
 
   app.use("/api/v1", authModule.router);
   app.use("/api/v1", usersModule.router);
+  app.use("/api/v1", collectionsModule.router);
   app.use("/api/v1", postsModule.router);
   app.use("/api/v1", commentsModule.router);
   app.use("/api/v1", feedModule.router);

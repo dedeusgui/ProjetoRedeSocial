@@ -13,7 +13,7 @@ class CommentService {
     const normalizedContent = String(content).trim();
     if (normalizedContent.length > 2000) {
       throw new AppError(
-        "O comentário deve ter no máximo 2000 caracteres.",
+        "The comment must be at most 2000 characters.",
         "VALIDATION_ERROR",
         400,
         {
@@ -62,7 +62,7 @@ class CommentService {
     const content = String(payload.content).trim();
     if (content.length > 2000) {
       throw new AppError(
-        "O comentário deve ter no máximo 2000 caracteres.",
+        "The comment must be at most 2000 characters.",
         "VALIDATION_ERROR",
         400,
         {
@@ -75,17 +75,17 @@ class CommentService {
 
     const comment = await this.commentRepository.findByIdOrNull(commentId);
     if (!comment) {
-      throw new AppError("Comentário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     const isOwner = String(comment.authorId) === String(requester?.id ?? "");
     if (!isOwner) {
-      throw new AppError("Você não tem permissão para editar este comentário.", "FORBIDDEN", 403);
+      throw new AppError("You do not have permission to edit this comment.", "FORBIDDEN", 403);
     }
 
     const updated = await this.commentRepository.updateById(commentId, { content });
     if (!updated) {
-      throw new AppError("Comentário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     return {
@@ -101,18 +101,18 @@ class CommentService {
 
     const comment = await this.commentRepository.findByIdOrNull(commentId);
     if (!comment) {
-      throw new AppError("Comentário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     const isOwner = String(comment.authorId) === String(requester?.id ?? "");
     const isPrivileged = ["moderator", "admin"].includes(requester?.role ?? "");
     if (!isOwner && !isPrivileged) {
-      throw new AppError("Você não tem permissão para excluir este comentário.", "FORBIDDEN", 403);
+      throw new AppError("You do not have permission to delete this comment.", "FORBIDDEN", 403);
     }
 
     const deleted = await this.commentRepository.deleteById(commentId);
     if (!deleted) {
-      throw new AppError("Comentário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     return {

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Perfil | The Social Network</title>
+    <title>Profile | The Social Network</title>
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
@@ -11,26 +11,164 @@
       <header class="card app-header">
         <div class="header-copy">
           <img src="../images/logo-transparent.png" alt="TSN" height="48" />
-          <h1 class="ink-underline">Meu perfil</h1>
-          <p class="muted">Dados da sua conta, reputa&ccedil;&atilde;o e controles do perfil.</p>
+          <h1 class="ink-underline">My profile</h1>
+          <p class="muted">Your account details, private moderation metrics, and content management.</p>
         </div>
         <nav class="row app-nav">
           <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
-          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
-          <button type="button" data-logout hidden>Sair</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+          <button type="button" data-logout hidden>Sign out</button>
         </nav>
       </header>
-      <p class="muted" data-profile-status></p>
+
+      <p class="muted status-line" data-profile-status></p>
       <div data-profile></div>
+
+      <section class="card profile-content-panel">
+        <div class="row content-panel-header">
+          <div>
+            <h2 class="ink-underline">My posts</h2>
+            <p class="muted">Edit your posts, continue sequences, and review published content.</p>
+          </div>
+          <button type="button" data-open-post-modal>New post</button>
+        </div>
+        <p class="muted status-line" data-profile-posts-status></p>
+        <div class="profile-content-list" data-profile-posts></div>
+      </section>
+
+      <section class="card profile-content-panel">
+        <div class="row content-panel-header">
+          <div>
+            <h2 class="ink-underline">My collections</h2>
+            <p class="muted">Group your posts in manual order and publish guided reading paths.</p>
+          </div>
+          <button type="button" data-open-collection-modal>New collection</button>
+        </div>
+        <p class="muted status-line" data-profile-collections-status></p>
+        <div class="profile-content-list" data-profile-collections></div>
+      </section>
+
       <section class="card admin-panel" data-admin-tools hidden>
         <div class="row">
-          <h2 class="ink-underline">Ferramentas de admin</h2>
-          <button type="button" class="button-ghost" data-admin-users-refresh>Atualizar usu&aacute;rios</button>
+          <h2 class="ink-underline">Admin tools</h2>
+          <button type="button" class="button-ghost" data-admin-users-refresh>Refresh users</button>
         </div>
         <p class="muted status-line" data-admin-users-status></p>
         <div class="admin-user-grid" data-admin-users-list></div>
       </section>
     </main>
+
+    <dialog class="modal" data-post-modal>
+      <section class="card modal-card">
+        <div class="row modal-header">
+          <h2 class="ink-underline" data-post-modal-title>Publish post</h2>
+          <button type="button" class="button-ghost" data-post-modal-cancel>Close</button>
+        </div>
+        <form class="modal-form-layout" data-post-modal-form>
+          <section class="modal-form-section modal-post-type-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Post type</h3>
+              <p class="muted">Choose whether this content is a regular post or an interactive questionnaire post.</p>
+            </div>
+            <div class="post-type-toggle" role="radiogroup" aria-label="Post type">
+              <label class="post-type-option">
+                <input type="radio" name="postType" value="regular" data-post-type-input checked />
+                <span>Regular post</span>
+              </label>
+              <label class="post-type-option">
+                <input type="radio" name="postType" value="questionnaire" data-post-type-input />
+                <span>Questionnaire post</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Core content</h3>
+              <p class="muted">These fields appear in every post type.</p>
+            </div>
+            <label>
+              Title
+              <input name="title" placeholder="Example: How to structure Node.js study sessions" required maxlength="100" />
+            </label>
+            <label>
+              Content
+              <textarea name="content" rows="6" placeholder="Explain the idea clearly and directly." required maxlength="3000"></textarea>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="node, backend, study" />
+              <span class="muted">Separate tags with commas.</span>
+            </label>
+            <label>
+              Continue one of your posts?
+              <select name="previousPostId" data-post-previous-select>
+                <option value="">Standalone post</option>
+              </select>
+              <span class="muted">Use this only to continue a sequence you own.</span>
+            </label>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Post images</h3>
+              <p class="muted">Up to 4 JPG, PNG, or WebP images, with a maximum of 5 MB each.</p>
+            </div>
+            <label class="file-picker" aria-label="Select post images">
+              <input type="file" name="media" accept="image/jpeg,image/png,image/webp" multiple data-post-media-input />
+              <span class="file-picker-ui">
+                <span class="file-picker-trigger">Choose images</span>
+                <span class="file-picker-summary" data-post-media-summary>No images selected.</span>
+              </span>
+            </label>
+            <section class="modal-media-section" data-existing-post-media hidden></section>
+            <section class="modal-media-section" data-selected-post-media></section>
+          </section>
+
+          <section class="modal-form-section modal-questionnaire-block" data-post-questionnaire-block hidden>
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Questionnaire</h3>
+              <p class="muted" data-post-questionnaire-helper>
+                Configure multiple-choice questions for this post.
+              </p>
+            </div>
+            <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
+          </section>
+
+          <button type="submit" data-post-modal-submit>Publish</button>
+        </form>
+        <p class="muted status-line" data-post-modal-status></p>
+      </section>
+    </dialog>
+
+    <dialog class="modal" data-collection-modal>
+      <section class="card modal-card">
+        <div class="row modal-header">
+          <h2 class="ink-underline" data-collection-modal-title>New collection</h2>
+          <button type="button" class="button-ghost" data-collection-modal-cancel>Close</button>
+        </div>
+        <form class="modal-form-layout" data-collection-modal-form>
+          <section class="modal-form-section">
+            <label>
+              Title
+              <input name="title" placeholder="Example: Full Node.js learning path" required maxlength="120" />
+            </label>
+            <label>
+              Description
+              <textarea name="description" rows="4" maxlength="500" placeholder="Explain the focus of this collection."></textarea>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="node, backend, study" />
+              <span class="muted">Separate tags with commas.</span>
+            </label>
+          </section>
+          <button type="submit" data-collection-modal-submit>Save collection</button>
+        </form>
+        <p class="muted status-line" data-collection-modal-status></p>
+      </section>
+    </dialog>
+
     <script type="module" src="../js/pages/profile.js"></script>
   </body>
 </html>

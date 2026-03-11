@@ -17,7 +17,7 @@ class ModerationService {
     requireFields({ decision }, ["decision"]);
 
     if (!["approved", "not_relevant"].includes(decision)) {
-      throw new AppError("A decisão informada é inválida.", "VALIDATION_ERROR", 400, {
+      throw new AppError("The provided decision is invalid.", "VALIDATION_ERROR", 400, {
         field: "decision",
         allowedValues: ["approved", "not_relevant"],
       });
@@ -54,3 +54,4 @@ class ModerationService {
 }
 
 export default ModerationService;
+

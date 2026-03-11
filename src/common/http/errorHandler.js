@@ -19,7 +19,7 @@ function resolveUploadFieldName(error) {
 }
 
 function resolveUploadFieldLabel(fieldName) {
-  return fieldName === AVATAR_MEDIA_FIELD_NAME ? "imagem de perfil" : "imagem";
+  return fieldName === AVATAR_MEDIA_FIELD_NAME ? "profile image" : "image";
 }
 
 function resolveUploadLimits(fieldName) {
@@ -62,10 +62,10 @@ function errorHandler(error, req, res, next) {
     const isFileSizeError = error.code === "LIMIT_FILE_SIZE";
     const isFileCountError = error.code === "LIMIT_FILE_COUNT";
     const message = isFileSizeError
-      ? `Cada ${fieldLabel} deve ter no máximo ${limits.maxFileSizeMb} MB.`
+      ? `Each ${fieldLabel} must be at most ${limits.maxFileSizeMb} MB.`
       : isFileCountError
-        ? `Você pode enviar até ${limits.maxItemsPerRequest} ${fieldLabel}${limits.maxItemsPerRequest > 1 ? "s" : ""} por envio.`
-        : "Os arquivos enviados são inválidos.";
+        ? `You can upload up to ${limits.maxItemsPerRequest} ${fieldLabel}${limits.maxItemsPerRequest > 1 ? "s" : ""} per request.`
+        : "The uploaded files are invalid.";
     const details = isFileSizeError
       ? {
           field: fieldName,
@@ -92,11 +92,23 @@ function errorHandler(error, req, res, next) {
     return;
   }
 
+  if (error?.code === 11000) {
+    sendError(
+      res,
+      {
+        code: "CONFLICT",
+        message: "The provided resource conflicts with an existing record.",
+      },
+      409,
+    );
+    return;
+  }
+
   sendError(
     res,
     {
       code: "INTERNAL_ERROR",
-      message: "Ocorreu um erro interno inesperado.",
+      message: "An unexpected internal error occurred.",
     },
     500,
   );

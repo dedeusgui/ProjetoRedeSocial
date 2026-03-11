@@ -1,10 +1,12 @@
-import { sendSuccess } from "../../../common/http/responses.js";
+﻿import { sendSuccess } from "../../../common/http/responses.js";
 
 class PostController {
   constructor(postService) {
     this.postService = postService;
     this.createPost = this.createPost.bind(this);
+    this.listMyPosts = this.listMyPosts.bind(this);
     this.getPostById = this.getPostById.bind(this);
+    this.getPostSequence = this.getPostSequence.bind(this);
     this.updatePost = this.updatePost.bind(this);
     this.uploadPostMedia = this.uploadPostMedia.bind(this);
     this.deletePostMedia = this.deletePostMedia.bind(this);
@@ -16,8 +18,18 @@ class PostController {
     return sendSuccess(res, result, 201);
   }
 
+  async listMyPosts(req, res) {
+    const result = await this.postService.listPostsByRequester(req.user.id);
+    return sendSuccess(res, result);
+  }
+
   async getPostById(req, res) {
     const result = await this.postService.getPostWithComments(req.params.id);
+    return sendSuccess(res, result);
+  }
+
+  async getPostSequence(req, res) {
+    const result = await this.postService.getPostSequence(req.params.id);
     return sendSuccess(res, result);
   }
 

@@ -17,7 +17,7 @@ function validateQuestionnaireShape(questionnaire) {
   }
 
   if (!questionnaire || typeof questionnaire !== "object" || Array.isArray(questionnaire)) {
-    throw new AppError("O questionario do post deve ser um objeto.", "VALIDATION_ERROR", 400, {
+    throw new AppError("The post questionnaire must be an object.", "VALIDATION_ERROR", 400, {
       field: "questionnaire",
     });
   }
@@ -28,7 +28,7 @@ function validateQuestionnaireShape(questionnaire) {
 
   if (title !== null && title.length > QUESTIONNAIRE_TITLE_MAX_LENGTH) {
     throw new AppError(
-      `O titulo do questionario deve ter no maximo ${QUESTIONNAIRE_TITLE_MAX_LENGTH} caracteres.`,
+      `The questionnaire title must be at most ${QUESTIONNAIRE_TITLE_MAX_LENGTH} characters.`,
       "VALIDATION_ERROR",
       400,
       {
@@ -41,7 +41,7 @@ function validateQuestionnaireShape(questionnaire) {
 
   if (!Array.isArray(questionnaire.questions)) {
     throw new AppError(
-      "As perguntas do questionario devem ser enviadas em uma lista.",
+      "Questionnaire questions must be sent as a list.",
       "VALIDATION_ERROR",
       400,
       {
@@ -52,7 +52,7 @@ function validateQuestionnaireShape(questionnaire) {
 
   if (questionnaire.questions.length === 0) {
     throw new AppError(
-      "Adicione pelo menos uma pergunta ao questionario.",
+      "Add at least one question to the questionnaire.",
       "VALIDATION_ERROR",
       400,
       {
@@ -64,7 +64,7 @@ function validateQuestionnaireShape(questionnaire) {
 
   if (questionnaire.questions.length > QUESTIONNAIRE_MAX_QUESTIONS) {
     throw new AppError(
-      `Um questionario pode ter no maximo ${QUESTIONNAIRE_MAX_QUESTIONS} perguntas.`,
+      `A questionnaire can include at most ${QUESTIONNAIRE_MAX_QUESTIONS} questions.`,
       "VALIDATION_ERROR",
       400,
       {
@@ -78,7 +78,7 @@ function validateQuestionnaireShape(questionnaire) {
   const questions = questionnaire.questions.map((question, questionIndex) => {
     if (!question || typeof question !== "object" || Array.isArray(question)) {
       throw new AppError(
-        `A pergunta ${questionIndex + 1} do questionario eh invalida.`,
+        `Question ${questionIndex + 1} is invalid.`,
         "VALIDATION_ERROR",
         400,
         {
@@ -90,7 +90,7 @@ function validateQuestionnaireShape(questionnaire) {
     const prompt = String(question.prompt ?? "").trim();
     if (!prompt) {
       throw new AppError(
-        `Preencha o enunciado da pergunta ${questionIndex + 1}.`,
+        `Fill in the prompt for question ${questionIndex + 1}.`,
         "VALIDATION_ERROR",
         400,
         {
@@ -101,7 +101,7 @@ function validateQuestionnaireShape(questionnaire) {
 
     if (prompt.length > QUESTIONNAIRE_QUESTION_PROMPT_MAX_LENGTH) {
       throw new AppError(
-        `O enunciado da pergunta ${questionIndex + 1} deve ter no maximo ${QUESTIONNAIRE_QUESTION_PROMPT_MAX_LENGTH} caracteres.`,
+        `The prompt for question ${questionIndex + 1} must be at most ${QUESTIONNAIRE_QUESTION_PROMPT_MAX_LENGTH} characters.`,
         "VALIDATION_ERROR",
         400,
         {
@@ -114,7 +114,7 @@ function validateQuestionnaireShape(questionnaire) {
 
     if (!Array.isArray(question.options)) {
       throw new AppError(
-        `As alternativas da pergunta ${questionIndex + 1} devem ser enviadas em uma lista.`,
+        `The options for question ${questionIndex + 1} must be sent as a list.`,
         "VALIDATION_ERROR",
         400,
         {
@@ -125,7 +125,7 @@ function validateQuestionnaireShape(questionnaire) {
 
     if (question.options.length < QUESTIONNAIRE_MIN_OPTIONS) {
       throw new AppError(
-        `A pergunta ${questionIndex + 1} precisa de pelo menos ${QUESTIONNAIRE_MIN_OPTIONS} alternativas.`,
+        `Question ${questionIndex + 1} needs at least ${QUESTIONNAIRE_MIN_OPTIONS} options.`,
         "VALIDATION_ERROR",
         400,
         {
@@ -137,7 +137,7 @@ function validateQuestionnaireShape(questionnaire) {
 
     if (question.options.length > QUESTIONNAIRE_MAX_OPTIONS) {
       throw new AppError(
-        `A pergunta ${questionIndex + 1} pode ter no maximo ${QUESTIONNAIRE_MAX_OPTIONS} alternativas.`,
+        `Question ${questionIndex + 1} can have at most ${QUESTIONNAIRE_MAX_OPTIONS} options.`,
         "VALIDATION_ERROR",
         400,
         {
@@ -152,7 +152,7 @@ function validateQuestionnaireShape(questionnaire) {
       const optionText = String(option ?? "").trim();
       if (!optionText) {
         throw new AppError(
-          `Preencha a alternativa ${optionIndex + 1} da pergunta ${questionIndex + 1}.`,
+          `Fill in option ${optionIndex + 1} for question ${questionIndex + 1}.`,
           "VALIDATION_ERROR",
           400,
           {
@@ -163,7 +163,7 @@ function validateQuestionnaireShape(questionnaire) {
 
       if (optionText.length > QUESTIONNAIRE_OPTION_TEXT_MAX_LENGTH) {
         throw new AppError(
-          `A alternativa ${optionIndex + 1} da pergunta ${questionIndex + 1} deve ter no maximo ${QUESTIONNAIRE_OPTION_TEXT_MAX_LENGTH} caracteres.`,
+          `Option ${optionIndex + 1} for question ${questionIndex + 1} must be at most ${QUESTIONNAIRE_OPTION_TEXT_MAX_LENGTH} characters.`,
           "VALIDATION_ERROR",
           400,
           {
@@ -185,7 +185,7 @@ function validateQuestionnaireShape(questionnaire) {
 
     if (!hasValidCorrectOption) {
       throw new AppError(
-        `Escolha uma alternativa correta valida para a pergunta ${questionIndex + 1}.`,
+        `Choose a valid correct option for question ${questionIndex + 1}.`,
         "VALIDATION_ERROR",
         400,
         {

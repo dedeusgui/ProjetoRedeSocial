@@ -18,7 +18,7 @@ class UserService {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     return {
@@ -88,7 +88,7 @@ class UserService {
     const updated = await this.userRepository.updatePrivateMetrics(userId, privateMetrics);
 
     if (!updated) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     return updated;
@@ -98,7 +98,7 @@ class UserService {
     const user = await this.userRepository.findFollowedTagsById(userId);
 
     if (!user) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     return normalizeFollowedTags(user.followedTags);
@@ -107,14 +107,14 @@ class UserService {
   async followTag(userId, payload) {
     const tag = normalizeFollowedTag(payload?.tag);
     if (!tag) {
-      throw new AppError("Informe uma tag válida para seguir.", "VALIDATION_ERROR", 400, {
+      throw new AppError("Provide a valid tag to follow.", "VALIDATION_ERROR", 400, {
         field: "tag",
       });
     }
 
     const updated = await this.userRepository.addFollowedTag(userId, tag);
     if (!updated) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     const followedTags = normalizeFollowedTags(updated.followedTags);
@@ -129,14 +129,14 @@ class UserService {
   async unfollowTag(userId, tagValue) {
     const tag = normalizeFollowedTag(tagValue);
     if (!tag) {
-      throw new AppError("Informe uma tag válida para remover.", "VALIDATION_ERROR", 400, {
+      throw new AppError("Provide a valid tag to remove.", "VALIDATION_ERROR", 400, {
         field: "tag",
       });
     }
 
     const updated = await this.userRepository.removeFollowedTag(userId, tag);
     if (!updated) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     return {
@@ -147,7 +147,7 @@ class UserService {
 
   async uploadAvatar(userId, file) {
     if (!file?.path) {
-      throw new AppError("Envie uma imagem de perfil.", "VALIDATION_ERROR", 400, {
+      throw new AppError("Upload a profile image.", "VALIDATION_ERROR", 400, {
         field: "avatar",
       });
     }
@@ -155,7 +155,7 @@ class UserService {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       await this.safeDeleteFiles([file.path]);
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     const nextProfileImage = this.buildProfileImagePayload(file);
@@ -163,7 +163,7 @@ class UserService {
     try {
       const updatedUser = await this.userRepository.updateProfileImage(userId, nextProfileImage);
       if (!updatedUser) {
-        throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+        throw new AppError("User not found.", "NOT_FOUND", 404);
       }
 
       await this.safeDeleteFiles([user.profileImage?.storagePath]);
@@ -182,12 +182,12 @@ class UserService {
   async deleteAvatar(userId) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     const updatedUser = await this.userRepository.clearProfileImage(userId);
     if (!updatedUser) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     await this.safeDeleteFiles([user.profileImage?.storagePath]);
@@ -205,3 +205,6 @@ class UserService {
 }
 
 export default UserService;
+
+
+

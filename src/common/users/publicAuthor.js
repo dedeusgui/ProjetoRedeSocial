@@ -12,20 +12,20 @@ export function resolvePublicReputation(privateMetrics = null) {
   if (score >= 70) {
     return {
       tier: "high",
-      label: "Alta",
+      label: "High",
     };
   }
 
   if (score >= 40) {
     return {
       tier: "medium",
-      label: "Média",
+      label: "Medium",
     };
   }
 
   return {
     tier: "low",
-    label: "Baixa",
+    label: "Low",
   };
 }
 
@@ -42,3 +42,4 @@ export function buildPublicAuthorSummary(user = null) {
     reputation: resolvePublicReputation(user?.privateMetrics),
   };
 }
+

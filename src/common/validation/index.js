@@ -2,20 +2,22 @@ import mongoose from "mongoose";
 import AppError from "../errors/AppError.js";
 
 const FIELD_LABELS = Object.freeze({
-  action: "ação",
-  commentId: "comentário",
-  content: "conteúdo",
-  decision: "decisão",
+  action: "action",
+  collectionId: "collection",
+  commentId: "comment",
+  content: "content",
+  decision: "decision",
   email: "e-mail",
-  id: "identificador",
-  password: "senha",
+  id: "identifier",
+  password: "password",
   postId: "post",
-  requesterId: "solicitante",
-  reviewerId: "avaliador",
+  previousPostId: "previous post",
+  requesterId: "requester",
+  reviewerId: "reviewer",
   tag: "tag",
-  title: "título",
-  userId: "usuário",
-  username: "nome de usuário",
+  title: "title",
+  userId: "user",
+  username: "username",
 });
 
 function resolveFieldLabel(field) {
@@ -40,7 +42,7 @@ function requireFields(payload, fields) {
   if (missing.length > 0) {
     const missingLabels = missing.map((field) => resolveFieldLabel(field));
     throw new AppError(
-      `Preencha os campos obrigatórios: ${missingLabels.join(", ")}.`,
+      `Fill in the required fields: ${missingLabels.join(", ")}.`,
       "VALIDATION_ERROR",
       400,
       { missing, missingLabels },
@@ -51,7 +53,7 @@ function requireFields(payload, fields) {
 function ensureObjectId(id, fieldName = "id") {
   if (!mongoose.isValidObjectId(id)) {
     throw new AppError(
-      `O identificador informado para ${resolveFieldLabel(fieldName)} é inválido.`,
+      `The identifier provided for ${resolveFieldLabel(fieldName)} is invalid.`,
       "VALIDATION_ERROR",
       400,
       { field: fieldName },

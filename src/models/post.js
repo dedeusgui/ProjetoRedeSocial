@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 
 const PostMediaSchema = new mongoose.Schema(
   {
@@ -42,6 +42,19 @@ const PostQuestionnaireSchema = new mongoose.Schema(
   },
 );
 
+const PostSequenceSchema = new mongoose.Schema(
+  {
+    previousPostId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: null,
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 const PostSchema = new mongoose.Schema(
   {
     authorId: {
@@ -55,6 +68,7 @@ const PostSchema = new mongoose.Schema(
     tags: { type: [String], default: [] },
     media: { type: [PostMediaSchema], default: [] },
     questionnaire: { type: PostQuestionnaireSchema, default: null },
+    sequence: { type: PostSequenceSchema, default: null },
     status: {
       type: String,
       enum: ["published", "hidden", "pending_review"],
@@ -80,6 +94,7 @@ const PostSchema = new mongoose.Schema(
 );
 
 PostSchema.index({ createdAt: -1, _id: -1 });
+PostSchema.index({ "sequence.previousPostId": 1 }, { unique: true, sparse: true });
 
 const Post = mongoose.model("Post", PostSchema);
 

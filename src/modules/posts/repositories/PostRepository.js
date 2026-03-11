@@ -1,7 +1,7 @@
+﻿import mongoose from "mongoose";
 import Post from "../../../models/post.js";
 import Comment from "../../../models/comment.js";
 import PostReview from "../../../models/post_review.js";
-import mongoose from "mongoose";
 
 class PostRepository {
   async create(payload) {
@@ -21,7 +21,7 @@ class PostRepository {
       postId,
       { $set: payload },
       { returnDocument: "after" },
-    );
+    ).populate("authorId", "username privateMetrics profileImage");
   }
 
   async appendMedia(postId, mediaItems) {
@@ -35,7 +35,7 @@ class PostRepository {
         },
       },
       { returnDocument: "after" },
-    );
+    ).populate("authorId", "username privateMetrics profileImage");
   }
 
   async removeMedia(postId, mediaId) {
@@ -47,7 +47,7 @@ class PostRepository {
         },
       },
       { returnDocument: "after" },
-    );
+    ).populate("authorId", "username privateMetrics profileImage");
   }
 
   async updateTrend(postId, trend) {
@@ -78,6 +78,36 @@ class PostRepository {
 
   async listByAuthorId(authorId) {
     return Post.find({ authorId }).select("_id");
+  }
+
+  async listByAuthorIdWithAuthor(authorId) {
+    return Post.find({ authorId })
+      .sort({ createdAt: -1, _id: -1 })
+      .populate("authorId", "username privateMetrics profileImage");
+  }
+
+  async findByPreviousPostId(previousPostId) {
+    return Post.findOne({
+      "sequence.previousPostId": previousPostId,
+    }).populate("authorId", "username privateMetrics profileImage");
+  }
+
+  async findVisibleByPreviousPostId(previousPostId) {
+    return Post.findOne({
+      "sequence.previousPostId": previousPostId,
+      status: { $ne: "hidden" },
+    }).populate("authorId", "username privateMetrics profileImage");
+  }
+
+  async findByPreviousPostIds(previousPostIds) {
+    if (!Array.isArray(previousPostIds) || previousPostIds.length === 0) {
+      return [];
+    }
+
+    return Post.find({
+      "sequence.previousPostId": { $in: previousPostIds },
+      status: { $ne: "hidden" },
+    }).select("_id sequence.previousPostId");
   }
 
   async summarizeAuthorModeration(authorId) {

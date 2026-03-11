@@ -145,7 +145,7 @@ class AdminService {
     requireFields({ action }, ["action"]);
 
     if (!["grant", "revoke"].includes(action)) {
-      throw new AppError("A ação informada é inválida.", "VALIDATION_ERROR", 400, {
+      throw new AppError("A a��o informada � inv�lida.", "VALIDATION_ERROR", 400, {
         field: "action",
         allowedValues: ["grant", "revoke"],
       });
@@ -153,12 +153,12 @@ class AdminService {
 
     const user = await this.adminRepository.findById(userId);
     if (!user) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
       throw new AppError(
-        "O papel de administrador é controlado pela configuração do projeto.",
+        "The administrator role is controlled by the project configuration.",
         "FORBIDDEN",
         403,
       );
@@ -173,7 +173,7 @@ class AdminService {
       const postCount = postCountMap.get(String(user._id)) ?? 0;
       if (!this.isEligibleForModerator(user, postCount)) {
         throw new AppError(
-          "O usuário não atende aos requisitos para moderador.",
+          "The user does not meet the moderator requirements.",
           "FORBIDDEN",
           403,
         );
@@ -231,17 +231,17 @@ class AdminService {
     ensureObjectId(requesterId, "requesterId");
 
     if (String(userId) === String(requesterId)) {
-      throw new AppError("Um administrador não pode excluir a própria conta.", "FORBIDDEN", 403);
+      throw new AppError("An administrator cannot delete their own account.", "FORBIDDEN", 403);
     }
 
     const user = await this.adminRepository.findById(userId);
     if (!user) {
-      throw new AppError("Usuário não encontrado.", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
       throw new AppError(
-        "O papel de administrador é controlado pela configuração do projeto.",
+        "The administrator role is controlled by the project configuration.",
         "FORBIDDEN",
         403,
       );
@@ -249,6 +249,7 @@ class AdminService {
 
     const postIds = await this.adminRepository.findPostIdsByAuthorId(userId);
     await Promise.all([
+      this.adminRepository.deleteCollectionsByAuthorId(userId),
       this.adminRepository.deleteCommentsByAuthorId(userId),
       this.adminRepository.deleteReviewsByReviewerId(userId),
       this.adminRepository.deletePostRelationsByPostIds(postIds),
@@ -270,3 +271,4 @@ class AdminService {
 }
 
 export default AdminService;
+

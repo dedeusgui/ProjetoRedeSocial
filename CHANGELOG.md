@@ -2,6 +2,37 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-11
+
+### Added
+
+- Added post sequencing with:
+  - `GET /api/v1/me/posts`
+  - `GET /api/v1/posts/:id/sequence`
+  - optional `previousPostId` on post create/update
+- Added public collections with:
+  - `GET /api/v1/collections/:id`
+  - `GET /api/v1/me/collections`
+  - `POST /api/v1/collections`
+  - `PATCH /api/v1/collections/:id`
+  - `DELETE /api/v1/collections/:id`
+  - `POST /api/v1/collections/:id/items`
+  - `DELETE /api/v1/collections/:id/items/:postId`
+  - `PATCH /api/v1/collections/:id/items/reorder`
+- Added public collection page and profile collection-management UI.
+- Added sequence-aware create/edit support in the shared post modal.
+- Added RFC `docs/rfcs/collections-post-sequencing.md`.
+
+### Changed
+
+- Extended feed, owned-post, and post-detail payloads with `sequence` and `collections[]` context.
+- Extended feed search so both feed modes may also match collection tags while preserving chronological ordering.
+- Updated post deletion and admin user deletion flows to remove post references from collections.
+
+### Docs
+
+- Updated architecture, API, frontend, and frontend-guide docs to describe collections, sequencing, and their UI/API surfaces.
+
 ## 2026-03-10
 
 ### Added

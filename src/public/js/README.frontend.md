@@ -5,20 +5,23 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 
 ## Folder layout
 - `api.js`: HTTP client and endpoint facade for `/api/v1`
-- `core/`: shared helpers (session, formatters, API error mapping)
+- `core/`: shared helpers (session, formatters, API error mapping, shared UI copy)
 - `components/`: reusable UI behaviors used across pages
 - `features/<domain>/renderers.js`: domain-specific rendering
 - `pages/`: page bootstrap + event binding + orchestration
-- `features/admin/renderers.js`: admin-oriented renderers (user/role list for testing)
+- `features/admin/renderers.js`: admin-oriented renderers
+- `features/posts/post-modal.js`: shared create/edit modal orchestration, including sequence selection for owned posts
+- `features/profile/content-renderers.js`: owner post and collection management surfaces
+- `features/collections/renderers.js`: public collection detail rendering
 
 ## Responsibilities
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.
 - `features/*/renderers.js`: receive data and return/update DOM.
 - `core/session.js`: token lifecycle and auth checks.
-- `core/formatters.js`: shared formatting utilities for percentages, dates, and localized labels used by renderers.
+- `core/formatters.js`: shared formatting utilities for percentages, dates, and labels used by renderers.
 - `core/http-state.js`: normalize API error messages for UI.
-- `core/followed-tags.js`: shared normalization for followed-tag values and collections.
-- `core/ui-text.js`: shared PT-BR UI copy to avoid duplicated status/auth text across pages.
+- `core/followed-tags.js`: shared normalization for followed-tag values.
+- `core/ui-text.js`: shared English UI copy for auth/session/status feedback.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.
 - `components/flash.js`: transient status/feedback messaging.
@@ -37,8 +40,10 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
-- For the feed page, keep `All posts` and `Tags que sigo` orchestration in `pages/feed.js`; renderer code should stay limited to card/tag markup.
-- Keep the shared post modal explicit about post type (`normal` vs `com questionário`) and avoid mixing questionnaire controls into the base post fields visually.
+- For the feed page, keep `All posts` and `Followed tags` orchestration in `pages/feed.js`; renderer code should stay limited to card, tag, sequence, and collection context markup.
+- Keep collection management on `pages/profile.js` and public collection reads on `pages/collection.js`.
+- Keep the shared post modal explicit about post type (`regular` vs `questionnaire`) and avoid mixing questionnaire controls into the base post fields visually.
+- Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
 
 ## Review checklist for new pages

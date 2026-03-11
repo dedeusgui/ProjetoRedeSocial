@@ -24,6 +24,7 @@ This directory is the source of truth for architecture, API behavior, and delive
   - [rfcs/follow-tags-feed.md](rfcs/follow-tags-feed.md)
   - [rfcs/post-image-uploads.md](rfcs/post-image-uploads.md)
   - [rfcs/post-questionnaires.md](rfcs/post-questionnaires.md)
+  - [rfcs/collections-post-sequencing.md](rfcs/collections-post-sequencing.md)
   - [rfcs/profile-avatar-public-author-summary.md](rfcs/profile-avatar-public-author-summary.md)
 - Engineering Workflows
   - [workflows/bugfix-process.md](workflows/bugfix-process.md)

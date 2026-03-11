@@ -8,7 +8,7 @@ import { renderAvatar, renderReputationBadge } from "../authors/renderers.js";
 export function renderProfileView(
   target,
   profile,
-  { isAvatarBusy = false, avatarFileLabel = "Nenhum arquivo selecionado." } = {},
+  { isAvatarBusy = false, avatarFileLabel = "No file selected." } = {},
 ) {
   if (!target) {
     return;
@@ -20,7 +20,7 @@ export function renderProfileView(
   target.innerHTML = `
     <section class="card profile-card">
       <div class="profile-topline">
-        <p class="profile-privacy-badge">Perfil privado</p>
+        <p class="profile-privacy-badge">Private profile</p>
       </div>
 
       <div class="profile-layout">
@@ -30,7 +30,7 @@ export function renderProfileView(
               ${renderAvatar({
                 avatarUrl: profile.avatarUrl,
                 username: profile.username,
-                alt: `Foto de perfil de @${profile.username}`,
+                alt: `Profile image for @${profile.username}`,
                 className: "profile-avatar-image",
               })}
             </div>
@@ -41,24 +41,24 @@ export function renderProfileView(
               </div>
               <div class="profile-meta-grid">
                 <p class="profile-meta-item"><span class="muted">Email</span><strong>${escapeHtml(profile.email)}</strong></p>
-                <p class="profile-meta-item"><span class="muted">Papel</span><strong>${escapeHtml(profile.role)}</strong></p>
-                <p class="profile-meta-item"><span class="muted">Criado em</span><strong>${escapeHtml(formatDateTime(profile.createdAt))}</strong></p>
+                <p class="profile-meta-item"><span class="muted">Role</span><strong>${escapeHtml(profile.role)}</strong></p>
+                <p class="profile-meta-item"><span class="muted">Created</span><strong>${escapeHtml(formatDateTime(profile.createdAt))}</strong></p>
               </div>
             </div>
           </div>
 
           <div class="metrics-grid">
             <article class="card metric-box">
-              <h3 class="ink-underline">Avaliação geral</h3>
-              <p><strong>Aprovação: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
-              <p class="muted">Avaliações recebidas: ${escapeHtml(totalReviews)}</p>
+              <h3 class="ink-underline">Private moderation metrics</h3>
+              <p><strong>Approval: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
+              <p class="muted">Reviews received: ${escapeHtml(totalReviews)}</p>
             </article>
           </div>
         </div>
 
         <aside class="card profile-avatar-panel">
-          <h3 class="ink-underline">Foto de perfil</h3>
-          <label class="profile-avatar-field file-picker" aria-label="Atualizar foto de perfil">
+          <h3 class="ink-underline">Profile image</h3>
+          <label class="profile-avatar-field file-picker" aria-label="Update profile image">
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -66,16 +66,16 @@ export function renderProfileView(
               ${isAvatarBusy ? "disabled" : ""}
             />
             <span class="file-picker-ui">
-              <span class="file-picker-trigger">Selecionar arquivo</span>
+              <span class="file-picker-trigger">Choose file</span>
               <span class="file-picker-summary" data-avatar-file-summary>${escapeHtml(avatarFileLabel)}</span>
             </span>
           </label>
-          <p class="muted">JPG, PNG ou WebP, até 5 MB.</p>
+          <p class="muted">JPG, PNG, or WebP up to 5 MB.</p>
           ${
             profile.avatarUrl
               ? `
                 <button type="button" class="button-ghost" data-remove-avatar ${isAvatarBusy ? "disabled" : ""}>
-                  Remover foto
+                  Remove image
                 </button>
               `
               : ""

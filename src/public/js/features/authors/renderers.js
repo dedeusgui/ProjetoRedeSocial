@@ -11,7 +11,7 @@ function resolveAvatarInitial(username) {
 
 export function renderAvatar({ avatarUrl = null, username = "", alt = "", className = "" } = {}) {
   const resolvedClassName = ["author-avatar", className].filter(Boolean).join(" ");
-  const rawFallbackLabel = String(username ?? "").trim() || "usuário";
+  const rawFallbackLabel = String(username ?? "").trim() || "user";
   const fallbackInitial = escapeHtml(resolveAvatarInitial(username));
   const fallbackLabel = escapeHtml(rawFallbackLabel);
 
@@ -20,14 +20,14 @@ export function renderAvatar({ avatarUrl = null, username = "", alt = "", classN
       <img
         class="${escapeHtml(resolvedClassName)}"
         src="${escapeHtml(avatarUrl)}"
-        alt="${escapeHtml(alt || `Foto de perfil de ${rawFallbackLabel}`)}"
+        alt="${escapeHtml(alt || `Profile image for ${rawFallbackLabel}`)}"
         loading="lazy"
       />
     `;
   }
 
   return `
-    <span class="${escapeHtml(`${resolvedClassName} author-avatar-fallback`)}" aria-label="Avatar padrão de ${fallbackLabel}">
+    <span class="${escapeHtml(`${resolvedClassName} author-avatar-fallback`)}" aria-label="Default avatar for ${fallbackLabel}">
       ${fallbackInitial}
     </span>
   `;
@@ -35,13 +35,13 @@ export function renderAvatar({ avatarUrl = null, username = "", alt = "", classN
 
 export function renderReputationBadge(reputation = null, className = "") {
   const tier = reputation?.tier ?? "low";
-  const label = reputation?.label ?? "Baixa";
+  const label = reputation?.label ?? "Low";
   const toneClass =
     tier === "high" ? "status-positive" : tier === "medium" ? "status-neutral" : "status-negative";
 
   return `
     <span class="reputation-badge ${escapeHtml(toneClass)} ${escapeHtml(className)}">
-      Reputação ${escapeHtml(label)}
+      Reputation ${escapeHtml(label)}
     </span>
   `;
 }
@@ -54,7 +54,7 @@ export function renderAuthorSummary(
     className = "",
   } = {},
 ) {
-  const username = author?.username ?? "desconhecido";
+  const username = author?.username ?? "unknown";
 
   return `
     <div class="author-summary ${escapeHtml(className)}">
@@ -73,3 +73,5 @@ export function renderAuthorSummary(
     </div>
   `;
 }
+
+

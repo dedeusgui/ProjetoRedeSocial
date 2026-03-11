@@ -76,10 +76,10 @@ async function handleRegister(event) {
 
     saveSessionToken(data.token);
     elements.registerForm.reset();
-    redirectToFeed("Conta criada. Bem-vindo ao feed.");
+    redirectToFeed("Account created. Welcome to the feed.");
   } catch (error) {
     authFlash.show(
-      resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),
+      resolveApiMessage(error, "Unexpected error while communicating with the API."),
       "error",
     );
   }
@@ -101,10 +101,10 @@ async function handleLogin(event) {
 
     saveSessionToken(data.token);
     elements.loginForm.reset();
-    redirectToFeed("Login realizado. Voc\u00ea entrou no feed.");
+    redirectToFeed("Signed in. You are now in the feed.");
   } catch (error) {
     authFlash.show(
-      resolveApiMessage(error, "Erro inesperado ao comunicar com a API."),
+      resolveApiMessage(error, "Unexpected error while communicating with the API."),
       "error",
     );
   }

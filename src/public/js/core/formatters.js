@@ -1,6 +1,6 @@
 /**
  * Escapa caracteres HTML especiais para evitar XSS ao interpolar
- * valores de usuário em innerHTML.
+ * user-provided values in innerHTML.
  * @param {unknown} value
  * @returns {string}
  */
@@ -61,3 +61,5 @@ export function trendClass(trend) {
   if (trend === "negative") return "status-negative";
   return "status-neutral";
 }
+
+

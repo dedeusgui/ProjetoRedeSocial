@@ -51,7 +51,7 @@ Example request:
 - Query:
   - `cursor` (optional): `<createdAtMillis>_<postId>`
   - `limit` (optional): default `20`, max `50`
-  - `search` (optional): case-insensitive partial match on `title`, `content`, or `tags`
+  - `search` (optional): case-insensitive partial match on `title`, `content`, `tags`, or collection tags resolved to matching post ids
 - Success: `200`
 - Returns:
   - matched published posts in reverse chronological order
@@ -90,7 +90,7 @@ Example request:
 - Query:
   - `cursor` (optional): `<createdAtMillis>_<postId>`
   - `limit` (optional): default `20`, max `50`
-  - `search` (optional): case-insensitive partial match on `title`, `content`, or `tags`, applied only inside posts matching followed tags
+  - `search` (optional): case-insensitive partial match on `title`, `content`, `tags`, or collection tags resolved to matching post ids, applied only inside posts matching followed tags
 - Success: `200`
 - Returns:
   - published posts in reverse chronological order whose `tags` match any followed tag
@@ -108,6 +108,7 @@ Example request:
   - `title` (required string, non-empty, max `100`)
   - `content` (required string, non-empty, max `3000`)
   - `tags` (optional array of strings)
+  - `previousPostId` (optional ObjectId for a visible post by the same author)
   - `questionnaire` (optional object)
     - `title` (optional string, max `120`)
     - `questions` (required array when questionnaire is present, `1..10`)
@@ -116,7 +117,7 @@ Example request:
       - `correctOptionIndex` (required integer matching exactly one option)
 - Success: `201`
 - Returns:
-  - created post summary including `media[]` and optional `questionnaire`
+  - created post summary including `media[]`, optional `questionnaire`, `sequence`, and `collections[]`
 - Side effects:
   - creates post with `status: "published"` and `trend: "neutral"`
   - initializes moderation metrics counters/percentages with zeros
@@ -131,6 +132,7 @@ Example request:
   - only post author, `moderator`, or `admin` can delete
 - Side effects:
   - permanently deletes the post
+  - removes the post from all collections
   - removes uploaded post images from local storage
   - permanently deletes related comments and reviews
   - recomputes post-author private metrics
@@ -145,13 +147,14 @@ Example request:
   - `content` (optional string, non-empty, max `3000`)
   - `tags` (optional array of strings)
   - `questionnaire` (optional object or `null`)
+  - `previousPostId` (optional ObjectId or `null`; send `null` to remove the sequence parent)
     - same structure and limits as `POST /api/v1/posts`
     - send `null` to remove the questionnaire from the post
 - Success: `200`
 - Rules:
   - only post author can edit
 - Returns:
-  - updated post summary including `media[]` and optional `questionnaire`
+  - updated post summary including `media[]`, optional `questionnaire`, `sequence`, and `collections[]`
 
 ### `POST /api/v1/posts/:id/media`
 
@@ -204,6 +207,12 @@ Example request:
       - `label`
   - `media[]` with uploaded post image metadata
   - optional `questionnaire`
+  - `sequence`:
+    - `isPartOfSequence`
+    - `previousPostId`
+    - `hasNext`
+    - `nextPostId`
+  - `collections[]` collection summaries
     - `title` (`string | null`)
     - `questionCount`
     - `questions[]`
@@ -229,6 +238,126 @@ Example request:
 - Notes:
   - questionnaire answers are checked client-side in v1, so `correctOptionIndex` is included in the response payload
   - the current frontend only allows signed-in users to submit questionnaire answers
+
+### `GET /api/v1/me/posts`
+
+- Auth: required (`user` or higher)
+- Success: `200`
+- Returns:
+  - authenticated owner posts in reverse chronological order
+  - each item uses the post summary shape from feed, including `author`, `sequence`, and `collections[]`
+- Rules:
+  - owner-only listing used by profile management and sequence selection
+
+### `GET /api/v1/posts/:id/sequence`
+
+- Auth: none
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Returns:
+  - `postId`
+  - `rootPostId`
+  - `items[]` with ordered post summaries from the first visible post in the chain through the last visible continuation
+- Notes:
+  - traversal walks backward to the earliest visible parent, then forward through visible continuations
+  - traversal stops on missing, hidden, or repeated posts
+
+## Collections
+
+### `GET /api/v1/collections/:id`
+
+- Auth: none
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Returns:
+  - collection summary fields
+  - public `author`
+  - ordered `items[]` with post summaries
+  - each `item.sequence` uses the same summary shape returned by posts/feed responses
+
+### `GET /api/v1/me/collections`
+
+- Auth: required (`user` or higher)
+- Success: `200`
+- Returns:
+  - authenticated owner collections with ordered `items[]`
+
+### `POST /api/v1/collections`
+
+- Auth: required (`user` or higher)
+- Body:
+  - `title` (required string, non-empty, max `120`)
+  - `description` (optional string, max `500`)
+  - `tags` (optional array of strings, normalized to lowercase without leading `#`)
+- Success: `201`
+- Returns:
+  - created collection detail payload
+
+### `PATCH /api/v1/collections/:id`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Body (at least one field required):
+  - `title` (optional string, non-empty, max `120`)
+  - `description` (optional string, max `500`)
+  - `tags` (optional array of strings)
+- Success: `200`
+- Rules:
+  - only collection owner can edit
+- Returns:
+  - updated collection detail payload
+
+### `DELETE /api/v1/collections/:id`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Rules:
+  - only collection owner can delete
+
+### `POST /api/v1/collections/:id/items`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Body:
+  - `postIds` (required array of post ObjectIds)
+- Success: `200`
+- Rules:
+  - only collection owner can mutate items
+  - only the owner's visible posts may be added
+  - duplicate insertion is rejected
+- Returns:
+  - updated collection detail payload
+
+### `DELETE /api/v1/collections/:id/items/:postId`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+  - `postId` must be a valid ObjectId
+- Success: `200`
+- Rules:
+  - only collection owner can mutate items
+- Returns:
+  - updated collection detail payload
+
+### `PATCH /api/v1/collections/:id/items/reorder`
+
+- Auth: required (`user` or higher)
+- Path params:
+  - `id` must be a valid ObjectId
+- Body:
+  - `postIds` (required array with exactly the same post ids already present in the collection, in a new order)
+- Success: `200`
+- Rules:
+  - only collection owner can reorder items
+- Returns:
+  - updated collection detail payload
 
 ## Comments
 
@@ -332,6 +461,8 @@ Example request:
   - config-managed admins cannot be deleted
 - Side effects:
   - deletes user-authored posts, comments, and reviews
+  - deletes authored collections
+  - removes user-authored posts from all collections
   - deletes user-authored comments and reviews on other posts
   - recomputes post trends and private metrics for remaining data
 

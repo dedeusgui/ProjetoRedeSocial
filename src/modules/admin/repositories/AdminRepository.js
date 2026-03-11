@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import Post from "../../../models/post.js";
+import Collection from "../../../models/collection.js";
 import User from "../../../models/user.js";
 import Comment from "../../../models/comment.js";
 import PostReview from "../../../models/post_review.js";
@@ -123,10 +124,22 @@ class AdminRepository {
     }
 
     await Promise.all([
+      Collection.updateMany(
+        { "items.postId": { $in: postIds } },
+        {
+          $pull: {
+            items: { postId: { $in: postIds } },
+          },
+        },
+      ),
       Comment.deleteMany({ postId: { $in: postIds } }),
       PostReview.deleteMany({ postId: { $in: postIds } }),
       Post.deleteMany({ _id: { $in: postIds } }),
     ]);
+  }
+
+  async deleteCollectionsByAuthorId(authorId) {
+    return Collection.deleteMany({ authorId });
   }
 
   async listAllPostIds() {

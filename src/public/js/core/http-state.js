@@ -8,37 +8,38 @@ function formatList(items) {
 
 function resolveValidationDetailsMessage(error) {
   const details = error.details ?? {};
-  const isAvatarField = details.field === "avatar";
-  const uploadSubject = isAvatarField ? "imagem de perfil" : "imagem";
+  const fieldLabel = String(details.fieldLabel ?? details.field ?? "").trim().toLowerCase();
+  const isAvatarField = details.field === "avatar" || fieldLabel.includes("avatar") || fieldLabel.includes("profile");
+  const uploadSubject = isAvatarField ? "profile image" : "image";
 
   if (Array.isArray(details.missingLabels) && details.missingLabels.length > 0) {
-    return `Preencha os campos obrigatórios: ${formatList(details.missingLabels)}.`;
+    return `Fill in the required fields: ${formatList(details.missingLabels)}.`;
   }
 
   if (details.field === "media" && typeof details.maxItems === "number") {
-    return `Um post pode ter no máximo ${details.maxItems} imagens.`;
+    return `A post can include up to ${details.maxItems} images.`;
   }
 
   if (details.field === "media" && typeof details.maxItemsPerRequest === "number") {
-    return `Você pode enviar até ${details.maxItemsPerRequest} imagens por envio.`;
+    return `You can upload up to ${details.maxItemsPerRequest} images per request.`;
   }
 
   if (details.field === "media" && typeof details.maxFileSizeMb === "number") {
-    return `Cada imagem deve ter no máximo ${details.maxFileSizeMb} MB.`;
+    return `Each image must be at most ${details.maxFileSizeMb} MB.`;
   }
 
   if (isAvatarField && typeof details.maxItemsPerRequest === "number") {
-    return `Você pode enviar até ${details.maxItemsPerRequest} ${uploadSubject} por envio.`;
+    return `You can upload up to ${details.maxItemsPerRequest} ${uploadSubject}${details.maxItemsPerRequest > 1 ? "s" : ""} per request.`;
   }
 
   if (isAvatarField && typeof details.maxFileSizeMb === "number") {
-    return `Cada ${uploadSubject} deve ter no máximo ${details.maxFileSizeMb} MB.`;
+    return `Each ${uploadSubject} must be at most ${details.maxFileSizeMb} MB.`;
   }
 
   if (Array.isArray(details.allowedExtensions) && details.allowedExtensions.length > 0) {
     return isAvatarField
-      ? `Envie apenas imagens de perfil nos formatos ${formatList(details.allowedExtensions)}.`
-      : `Envie apenas imagens nos formatos ${formatList(details.allowedExtensions)}.`;
+      ? `Upload profile images only in these formats: ${formatList(details.allowedExtensions)}.`
+      : `Upload images only in these formats: ${formatList(details.allowedExtensions)}.`;
   }
 
   return error.message;
@@ -82,11 +83,11 @@ export function resolveModerationApiMessage(error, fallbackMessage) {
   }
 
   if (error.code === "UNAUTHENTICATED" || error.status === 401) {
-    return "Autenticação necessária para avaliar posts.";
+    return "Authentication required to review posts.";
   }
 
   if (error.code === "FORBIDDEN" || error.status === 403) {
-    return "Você não pode avaliar este post.";
+    return "You cannot review this post.";
   }
 
   return resolveDetailedApiMessage(error, fallbackMessage);

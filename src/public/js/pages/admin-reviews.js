@@ -42,13 +42,13 @@ init();
 
 function resolveMessage(error) {
   if (error instanceof ApiError && (error.code === "FORBIDDEN" || error.status === 403)) {
-    return "Acesso restrito a administradores.";
+    return "Access restricted to administrators.";
   }
 
   return resolveAuthApiMessage(
     error,
-    "Autentica\u00e7\u00e3o necess\u00e1ria. Fa\u00e7a login para acessar o painel administrativo.",
-    "Erro inesperado ao carregar o painel administrativo.",
+    "Authentication required. Sign in to access the admin panel.",
+    "Unexpected error while loading the admin panel.",
   );
 }
 
@@ -72,10 +72,10 @@ function renderUserCards(target, users, emptyMessage, actionLabel, actionKind, b
       return `
         <article class="card managed-user-card">
           <p><strong>@${escapeHtml(user.username)}</strong> <span class="muted">(${escapeHtml(user.email)})</span></p>
-          <p class="muted">Papel: ${escapeHtml(user.role)}</p>
-          <p class="muted">Aprova&ccedil;&atilde;o: ${formatPercent(user.score ?? 0)} | Posts: ${user.postCount}</p>
-          <p class="muted">Avalia\u00e7\u00f5es recebidas: ${escapeHtml(user.totalReviews ?? 0)}</p>
-          <p class="muted">Criado em: ${formatDateTime(user.createdAt)}</p>
+          <p class="muted">Role: ${escapeHtml(user.role)}</p>
+          <p class="muted">Approval: ${formatPercent(user.score ?? 0)} | Posts: ${user.postCount}</p>
+          <p class="muted">Reviews received: ${escapeHtml(user.totalReviews ?? 0)}</p>
+          <p class="muted">Created: ${formatDateTime(user.createdAt)}</p>
           <button
             type="button"
             class="${buttonClasses.join(" ")}"
@@ -97,9 +97,9 @@ function renderRequirements(requirements) {
   }
 
   elements.requirements.textContent =
-    `Requisitos atuais: ${requirements.minPosts} posts, ` +
-    `conta com ${requirements.minAccountAgeDays}+ dias e ` +
-    `aprova\u00e7\u00e3o >= ${formatPercent(requirements.minScore)}.`;
+    `Current requirements: ${requirements.minPosts} posts, ` +
+    `account age ${requirements.minAccountAgeDays}+ days, and ` +
+    `approval >= ${formatPercent(requirements.minScore)}.`;
 }
 
 function renderPanel(data) {
@@ -108,8 +108,8 @@ function renderPanel(data) {
   renderUserCards(
     elements.eligibleList,
     data?.eligibleUsers ?? [],
-    "Nenhum usu\u00e1rio eleg\u00edvel no momento.",
-    "Conceder moderador",
+    "No eligible users right now.",
+    "Grant moderator",
     "grant",
     "button-approve",
   );
@@ -117,8 +117,8 @@ function renderPanel(data) {
   renderUserCards(
     elements.moderatorsList,
     data?.moderators ?? [],
-    "Nenhum moderador ativo.",
-    "Remover moderador",
+    "No active moderators.",
+    "Remove moderator",
     "revoke",
     "button-reject",
   );
@@ -128,7 +128,7 @@ async function ensureAdminProfile() {
   const profile = await api.users.meProfile();
   if (profile.role !== "admin") {
     throw new ApiError({
-      message: "Acesso restrito a administradores.",
+      message: "Access restricted to administrators.",
       code: "FORBIDDEN",
       status: 403,
     });
@@ -141,7 +141,7 @@ async function loadAdminPanel() {
   }
 
   if (!hasSession()) {
-    statusFlash.show("Fa\u00e7a login para acessar o painel administrativo.", "error");
+    statusFlash.show("Sign in to access the admin panel.", "error");
     window.location.href = "../index.html";
     return;
   }
@@ -150,7 +150,7 @@ async function loadAdminPanel() {
   if (elements.refreshButton) {
     elements.refreshButton.disabled = true;
   }
-  statusFlash.show("Carregando painel administrativo...", "info");
+  statusFlash.show("Loading admin panel...", "info");
 
   try {
     await ensureAdminProfile();
@@ -185,11 +185,11 @@ async function handleRoleAction(button) {
   }
 
   state.isUpdating = true;
-  statusFlash.show("Aplicando altera\u00e7\u00e3o de papel...", "info");
+  statusFlash.show("Applying role change...", "info");
   try {
     await api.admin.setModeratorRole(userId, action);
     await loadAdminPanel();
-    statusFlash.show("Papel atualizado com sucesso.", "success");
+    statusFlash.show("Role updated successfully.", "success");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
   } finally {
