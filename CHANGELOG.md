@@ -46,6 +46,9 @@ All notable changes to this project should be documented in this file.
 - Improved user-facing validation/auth/upload error messages with clearer PT-BR descriptions and actionable upload limits/details.
 - Tightened post title/content validation to `100` / `3000` characters and enforced the same limits on both post create and edit flows.
 - Improved shared post/comment wrapping and spacing so long text no longer breaks feed/post layouts, with clearer separation between post detail and comments.
+- Reorganized the shared post create/edit modal into clearer sections with explicit post-type selection (`post normal` vs `post com questionário`) while preserving existing creation, edit, image upload, and questionnaire capabilities.
+- Updated the questionnaire editor UI with cleaner hierarchy, clearer limits, and improved action labels for pergunta/alternativa management.
+- Replaced native-looking file inputs in post/profile flows with a custom file-picker presentation that keeps real upload behavior and accessibility.
 
 ### Docs
 

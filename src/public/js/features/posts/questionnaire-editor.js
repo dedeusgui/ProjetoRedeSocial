@@ -139,7 +139,7 @@ export function createQuestionnaireEditor({ target } = {}) {
     }
 
     if (state.questions.length === 0) {
-      throw new Error("Adicione pelo menos uma pergunta ou limpe o questionario.");
+      throw new Error("Adicione pelo menos uma pergunta ou limpe o questionário.");
     }
 
     const questions = state.questions.map((question, questionIndex) => {
@@ -186,7 +186,7 @@ export function createQuestionnaireEditor({ target } = {}) {
     if (state.questions.length === 0) {
       return `
         <div class="questionnaire-editor-empty">
-          <p class="muted">Nenhum questionario configurado neste post.</p>
+          <p class="muted">Nenhum questionário configurado neste post.</p>
         </div>
       `;
     }
@@ -256,14 +256,14 @@ export function createQuestionnaireEditor({ target } = {}) {
             </label>
             <div class="questionnaire-editor-options">
               <div class="row questionnaire-editor-options-header">
-                <strong>Alternativas</strong>
+                <strong>Alternativas (${escapeHtml(String(question.options.length))}/${escapeHtml(String(MAX_OPTIONS))})</strong>
                 <button
                   type="button"
                   class="button-ghost"
                   data-add-questionnaire-option="${escapeHtml(question.id)}"
                   ${state.disabled || question.options.length >= MAX_OPTIONS ? "disabled" : ""}
                 >
-                  Nova alternativa
+                  Adicionar alternativa
                 </button>
               </div>
               <ul class="questionnaire-editor-option-list">
@@ -282,20 +282,21 @@ export function createQuestionnaireEditor({ target } = {}) {
     }
 
     target.innerHTML = `
-      <section class="modal-questionnaire-section" aria-label="Questionario do post">
+      <section class="modal-questionnaire-section" aria-label="Questionário do post">
         <div class="row questionnaire-editor-header">
           <div class="questionnaire-editor-copy">
-            <h3 class="ink-underline">Questionario</h3>
-            <p class="muted">Adicione perguntas de multipla escolha com uma unica resposta correta.</p>
+            <h3 class="ink-underline">Questionário</h3>
+            <p class="muted">Monte perguntas de múltipla escolha com uma única resposta correta.</p>
           </div>
           <div class="row questionnaire-editor-actions">
+            <span class="questionnaire-editor-count muted">${escapeHtml(String(state.questions.length))}/${escapeHtml(String(MAX_QUESTIONS))} perguntas</span>
             <button
               type="button"
               class="button-ghost"
               data-add-questionnaire-question
               ${state.disabled || state.questions.length >= MAX_QUESTIONS ? "disabled" : ""}
             >
-              Nova pergunta
+              Adicionar pergunta
             </button>
             <button
               type="button"
@@ -307,12 +308,12 @@ export function createQuestionnaireEditor({ target } = {}) {
             </button>
           </div>
         </div>
-        <label>
-          Titulo do questionario
+        <label class="questionnaire-editor-title-field">
+          Título do questionário
           <input
             type="text"
             maxlength="120"
-            placeholder="Ex: Teste rapido"
+            placeholder="Ex: Quiz rápido de Node.js"
             data-questionnaire-title
             value="${escapeHtml(state.title)}"
             ${state.disabled ? "disabled" : ""}
@@ -321,7 +322,7 @@ export function createQuestionnaireEditor({ target } = {}) {
         <div class="questionnaire-editor-list">
           ${renderQuestions()}
         </div>
-        <p class="muted">Maximo de ${MAX_QUESTIONS} perguntas e ${MAX_OPTIONS} alternativas por pergunta.</p>
+        <p class="muted">Limites: até ${MAX_QUESTIONS} perguntas e até ${MAX_OPTIONS} alternativas por pergunta.</p>
       </section>
     `;
   }

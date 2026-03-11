@@ -28,14 +28,25 @@ export function createPostModalController({
   const questionnaireEditor = createQuestionnaireEditor({
     target: questionnaireTarget,
   });
+
+  const postTypeInputs = Array.from(form?.querySelectorAll("[data-post-type-input]") ?? []);
+  const questionnaireBlock = form?.querySelector("[data-post-questionnaire-block]") ?? null;
+  const questionnaireHelper = form?.querySelector("[data-post-questionnaire-helper]") ?? null;
+  const mediaSummary = form?.querySelector("[data-post-media-summary]") ?? null;
+
   const state = {
     mode: "create",
+    postType: "regular",
     editingPostId: null,
     isSubmitting: false,
     isRemovingMedia: false,
     existingMedia: [],
     hadExistingQuestionnaire: false,
   };
+
+  function isQuestionnaireMode() {
+    return state.postType === "questionnaire";
+  }
 
   function setModalUi() {
     if (title) {
@@ -49,6 +60,33 @@ export function createPostModalController({
     if (cancelButton) {
       cancelButton.textContent = state.mode === "edit" ? "Cancelar" : "Fechar";
     }
+  }
+
+  function updateQuestionnaireUi() {
+    if (questionnaireBlock) {
+      questionnaireBlock.hidden = !isQuestionnaireMode();
+    }
+
+    if (questionnaireHelper) {
+      if (isQuestionnaireMode()) {
+        questionnaireHelper.textContent = "Configure perguntas de múltipla escolha para este post.";
+        return;
+      }
+
+      questionnaireHelper.textContent = state.hadExistingQuestionnaire && state.mode === "edit"
+        ? "Este post tinha questionário. Ao salvar como post normal, o questionário será removido."
+        : "Ative a opção de post com questionário para configurar perguntas.";
+    }
+  }
+
+  function setPostType(nextType = "regular") {
+    state.postType = nextType === "questionnaire" ? "questionnaire" : "regular";
+
+    postTypeInputs.forEach((input) => {
+      input.checked = input.value === state.postType;
+    });
+
+    updateQuestionnaireUi();
   }
 
   function setMode(nextMode) {
@@ -68,7 +106,12 @@ export function createPostModalController({
       tags: parseCsvTags(formData.get("tags")),
     };
 
-    const questionnaire = questionnaireEditor.getPayload();
+    const questionnaire = isQuestionnaireMode() ? questionnaireEditor.getPayload() : null;
+
+    if (isQuestionnaireMode() && !questionnaire) {
+      throw new Error("Adicione pelo menos uma pergunta ou selecione post normal.");
+    }
+
     if (state.mode === "create") {
       if (questionnaire) {
         payload.questionnaire = questionnaire;
@@ -76,9 +119,12 @@ export function createPostModalController({
       return payload;
     }
 
-    if (questionnaire) {
+    if (isQuestionnaireMode()) {
       payload.questionnaire = questionnaire;
-    } else if (state.hadExistingQuestionnaire) {
+      return payload;
+    }
+
+    if (state.hadExistingQuestionnaire) {
       payload.questionnaire = null;
     }
 
@@ -89,18 +135,39 @@ export function createPostModalController({
     return Array.from(mediaInput?.files ?? []);
   }
 
+  function renderMediaSummary(files) {
+    if (!mediaSummary) {
+      return;
+    }
+
+    if (!Array.isArray(files) || files.length === 0) {
+      mediaSummary.textContent = "Nenhuma imagem selecionada.";
+      return;
+    }
+
+    if (files.length === 1) {
+      mediaSummary.textContent = files[0].name;
+      return;
+    }
+
+    mediaSummary.textContent = `${files.length} imagens selecionadas.`;
+  }
+
   function renderSelectedMedia() {
     if (!selectedMediaTarget) {
       return;
     }
 
     const files = getSelectedFiles();
+    renderMediaSummary(files);
+
     if (files.length === 0) {
       selectedMediaTarget.innerHTML = "<p class='muted'>Nenhuma nova imagem selecionada.</p>";
       return;
     }
 
     selectedMediaTarget.innerHTML = `
+      <h4 class="modal-media-heading">Novas imagens</h4>
       <ul class="modal-media-list" aria-label="Novas imagens selecionadas">
         ${files
           .map(
@@ -139,6 +206,7 @@ export function createPostModalController({
     }
 
     existingMediaTarget.innerHTML = `
+      <h4 class="modal-media-heading">Imagens atuais</h4>
       <ul class="modal-media-list" aria-label="Imagens atuais do post">
         ${state.existingMedia
           .map(
@@ -146,8 +214,8 @@ export function createPostModalController({
               <li class="modal-media-item">
                 <img
                   class="modal-media-thumb"
-                  src="${escapeHtml(media.url ?? "")}"
-                  alt="${escapeHtml(media.originalName ?? "Imagem do post")}"
+                  src="${escapeHtml(media.url ?? "")}" 
+                  alt="${escapeHtml(media.originalName ?? "Imagem do post")}" 
                   loading="lazy"
                 />
                 <div class="modal-media-copy">
@@ -157,7 +225,7 @@ export function createPostModalController({
                 <button
                   type="button"
                   class="button-reject"
-                  data-remove-post-media-id="${escapeHtml(media.id ?? "")}"
+                  data-remove-post-media-id="${escapeHtml(media.id ?? "")}" 
                   ${state.isRemovingMedia ? "disabled" : ""}
                 >
                   Remover
@@ -170,12 +238,20 @@ export function createPostModalController({
     `;
   }
 
-  function syncMediaControls() {
+  function syncControls() {
     if (mediaInput) {
       mediaInput.disabled = state.isSubmitting || state.isRemovingMedia;
     }
 
-    questionnaireEditor.setDisabled(state.isSubmitting || state.isRemovingMedia);
+    postTypeInputs.forEach((input) => {
+      input.disabled = state.isSubmitting || state.isRemovingMedia;
+    });
+
+    questionnaireEditor.setDisabled(
+      state.isSubmitting || state.isRemovingMedia || !isQuestionnaireMode(),
+    );
+
+    updateQuestionnaireUi();
     renderSelectedMedia();
     renderExistingMedia();
   }
@@ -205,7 +281,8 @@ export function createPostModalController({
     state.existingMedia = Array.isArray(post?.media) ? [...post.media] : [];
     state.hadExistingQuestionnaire = Boolean(post?.questionnaire);
     questionnaireEditor.setQuestionnaire(post?.questionnaire ?? null);
-    syncMediaControls();
+    setPostType(state.hadExistingQuestionnaire ? "questionnaire" : "regular");
+    syncControls();
   }
 
   function resetPostModalState() {
@@ -219,12 +296,15 @@ export function createPostModalController({
     state.existingMedia = [];
     state.hadExistingQuestionnaire = false;
     setMode("create");
+    setPostType("regular");
     statusFlash.clear();
+
     if (mediaInput) {
       mediaInput.value = "";
     }
+
     questionnaireEditor.reset();
-    syncMediaControls();
+    syncControls();
   }
 
   function closePostModal() {
@@ -269,9 +349,7 @@ export function createPostModalController({
     state.editingPostId = String(post.id);
     fillFormFromPost(post);
     statusFlash.clear();
-    state.existingMedia = Array.isArray(post?.media) ? [...post.media] : [];
-    state.hadExistingQuestionnaire = Boolean(post?.questionnaire);
-    syncMediaControls();
+    syncControls();
     modal.showModal();
   }
 
@@ -284,7 +362,7 @@ export function createPostModalController({
     const payload = buildPayload();
     const selectedFiles = getSelectedFiles();
     state.isSubmitting = true;
-    syncMediaControls();
+    syncControls();
     statusFlash.show(
       state.mode === "edit" ? "Salvando alterações..." : "Publicando post...",
       "info",
@@ -294,6 +372,7 @@ export function createPostModalController({
       let result = null;
       let mediaResult = null;
       let mediaError = null;
+
       if (state.mode === "edit") {
         if (typeof submitPostUpdate !== "function" || !state.editingPostId) {
           throw new Error("Atualização de post indisponível.");
@@ -315,7 +394,7 @@ export function createPostModalController({
           if (mediaInput) {
             mediaInput.value = "";
           }
-          syncMediaControls();
+          syncControls();
           if (typeof onMediaChanged === "function") {
             await onMediaChanged({
               postId: targetPostId,
@@ -333,6 +412,7 @@ export function createPostModalController({
           mediaError && typeof resolveErrorMessage === "function"
             ? resolveErrorMessage(mediaError)
             : mediaError?.message ?? null;
+
         await onAfterSuccess({
           mode: state.mode,
           payload,
@@ -353,7 +433,7 @@ export function createPostModalController({
       statusFlash.show(message, "error");
     } finally {
       state.isSubmitting = false;
-      syncMediaControls();
+      syncControls();
     }
   }
 
@@ -369,7 +449,7 @@ export function createPostModalController({
     }
 
     state.isRemovingMedia = true;
-    syncMediaControls();
+    syncControls();
     statusFlash.show("Removendo imagem...", "info");
 
     try {
@@ -392,7 +472,7 @@ export function createPostModalController({
       statusFlash.show(message, "error");
     } finally {
       state.isRemovingMedia = false;
-      syncMediaControls();
+      syncControls();
     }
   }
 
@@ -407,6 +487,17 @@ export function createPostModalController({
 
     if (mediaInput) {
       mediaInput.addEventListener("change", renderSelectedMedia);
+    }
+
+    if (postTypeInputs.length > 0) {
+      postTypeInputs.forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) {
+            setPostType(input.value);
+            syncControls();
+          }
+        });
+      });
     }
 
     if (modal) {
@@ -430,7 +521,8 @@ export function createPostModalController({
   }
 
   setModalUi();
-  syncMediaControls();
+  setPostType("regular");
+  syncControls();
   bindEvents();
 
   return {
@@ -443,3 +535,4 @@ export function createPostModalController({
     },
   };
 }
+

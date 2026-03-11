@@ -27,6 +27,7 @@ const state = {
   isDeletingUser: false,
   isUpdatingAvatar: false,
   profile: null,
+  avatarFileLabel: "Nenhum arquivo selecionado.",
 };
 
 const navbar = initNavbar({
@@ -60,6 +61,7 @@ function renderProfile() {
 
   renderProfileView(elements.profile, state.profile, {
     isAvatarBusy: state.isUpdatingAvatar,
+    avatarFileLabel: state.avatarFileLabel,
   });
 }
 
@@ -170,6 +172,7 @@ async function uploadAvatar(file) {
       };
     }
     statusFlash.show("Foto de perfil atualizada.", "success");
+    state.avatarFileLabel = "Nenhum arquivo selecionado.";
   } catch (error) {
     if (handleAuthFailure(error)) {
       return;
@@ -201,6 +204,7 @@ async function removeAvatar() {
       };
     }
     statusFlash.show("Foto de perfil removida.", "success");
+    state.avatarFileLabel = "Nenhum arquivo selecionado.";
   } catch (error) {
     if (handleAuthFailure(error)) {
       return;
@@ -251,6 +255,8 @@ function bindProfileEvents() {
     }
 
     const [file] = Array.from(input.files ?? []);
+    state.avatarFileLabel = file?.name ? String(file.name) : "Nenhum arquivo selecionado.";
+    renderProfile();
     input.value = "";
     uploadAvatar(file ?? null);
   });

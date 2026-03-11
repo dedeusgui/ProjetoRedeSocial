@@ -32,7 +32,7 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: chronological public feed with search, authenticated `Tags que sigo` mode, manual tag follow form, tag follow/unfollow actions, post create/edit image upload, questionnaire authoring in the shared post modal, questionnaire first-question preview on cards, and public author chips (avatar, username, reputation tier).
+- `feed.html`: chronological public feed with search, authenticated `Tags que sigo` mode, manual tag follow form, tag follow/unfollow actions, post create/edit image upload, explicit post-type selection (`normal` vs `com questionário`) in the shared post modal, questionnaire authoring, questionnaire first-question preview on cards, and public author chips (avatar, username, reputation tier).
 - `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, post edit image upload/removal, full questionnaire rendering with logged-in self-check, and public author chips for the post author and comment authors.
 - `profile.html`: authenticated profile with private approval metrics, avatar upload/removal controls, larger owner identity header, and admin tools for admins.
 - `admin/reviews.html`: moderation review flow + admin-only moderator management panel.

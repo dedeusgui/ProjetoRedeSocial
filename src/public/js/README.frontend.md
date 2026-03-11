@@ -38,6 +38,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
 - For the feed page, keep `All posts` and `Tags que sigo` orchestration in `pages/feed.js`; renderer code should stay limited to card/tag markup.
+- Keep the shared post modal explicit about post type (`normal` vs `com questionário`) and avoid mixing questionnaire controls into the base post fields visually.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
 
 ## Review checklist for new pages

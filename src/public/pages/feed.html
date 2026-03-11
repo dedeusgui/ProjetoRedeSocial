@@ -12,7 +12,7 @@
         <div class="header-copy">
           <img src="../images/logo-transparent.png" alt="TSN" height="48" />
           <h1 class="ink-underline">Feed</h1>
-          <p class="muted">Publica&ccedil;&otilde;es recentes da comunidade.</p>
+          <p class="muted">Publicações recentes da comunidade.</p>
         </div>
         <nav class="row app-nav">
           <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>Meu perfil</button>
@@ -29,7 +29,7 @@
             <input
               type="search"
               name="search"
-              placeholder="Busque por t&iacute;tulo, conte&uacute;do ou tag"
+              placeholder="Busque por título, conteúdo ou tag"
               maxlength="120"
               data-feed-search-input
             />
@@ -92,39 +92,82 @@
           <h2 class="ink-underline" data-post-modal-title>Publicar post</h2>
           <button type="button" class="button-ghost" data-post-modal-cancel>Fechar</button>
         </div>
-        <form data-post-modal-form>
-          <label>
-            T&iacute;tulo
-            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="100" />
-          </label>
-          <label>
-            Conte&uacute;do
-            <textarea
-              name="content"
-              rows="6"
-              placeholder="Explique a ideia de forma objetiva."
-              required
-              maxlength="3000"
-            ></textarea>
-          </label>
-          <label>
-            Tags
-            <input name="tags" placeholder="node, backend, estudo" />
-          </label>
-          <label>
-            Imagens
-            <input
-              type="file"
-              name="media"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              data-post-media-input
-            />
-            <span class="muted">Até 4 imagens JPG, PNG ou WebP, com no máximo 5 MB cada.</span>
-          </label>
-          <section class="modal-media-section" data-existing-post-media hidden></section>
-          <section class="modal-media-section" data-selected-post-media></section>
-          <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
+        <form class="modal-form-layout" data-post-modal-form>
+          <section class="modal-form-section modal-post-type-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Tipo de publicação</h3>
+              <p class="muted">Escolha se este conteúdo será um post normal ou um post com questionário.</p>
+            </div>
+            <div class="post-type-toggle" role="radiogroup" aria-label="Tipo de post">
+              <label class="post-type-option">
+                <input type="radio" name="postType" value="regular" data-post-type-input checked />
+                <span>Post normal</span>
+              </label>
+              <label class="post-type-option">
+                <input type="radio" name="postType" value="questionnaire" data-post-type-input />
+                <span>Post com questionário</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Conteúdo principal</h3>
+              <p class="muted">Essas informações aparecem em qualquer tipo de post.</p>
+            </div>
+            <label>
+              Título
+              <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="100" />
+            </label>
+            <label>
+              Conteúdo
+              <textarea
+                name="content"
+                rows="6"
+                placeholder="Explique a ideia de forma objetiva."
+                required
+                maxlength="3000"
+              ></textarea>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="node, backend, estudo" />
+              <span class="muted">Use vírgulas para separar tags.</span>
+            </label>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Imagens do post</h3>
+              <p class="muted">Até 4 imagens JPG, PNG ou WebP, com no máximo 5 MB cada.</p>
+            </div>
+            <label class="file-picker" aria-label="Selecionar imagens do post">
+              <input
+                type="file"
+                name="media"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                data-post-media-input
+              />
+              <span class="file-picker-ui">
+                <span class="file-picker-trigger">Selecionar imagens</span>
+                <span class="file-picker-summary" data-post-media-summary>Nenhuma imagem selecionada.</span>
+              </span>
+            </label>
+            <section class="modal-media-section" data-existing-post-media hidden></section>
+            <section class="modal-media-section" data-selected-post-media></section>
+          </section>
+
+          <section class="modal-form-section modal-questionnaire-block" data-post-questionnaire-block hidden>
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Questionário</h3>
+              <p class="muted" data-post-questionnaire-helper>
+                Configure perguntas de múltipla escolha para este post.
+              </p>
+            </div>
+            <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
+          </section>
+
           <button type="submit" data-post-modal-submit>Publicar</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>
@@ -133,3 +176,4 @@
     <script type="module" src="../js/pages/feed.js"></script>
   </body>
 </html>
+
