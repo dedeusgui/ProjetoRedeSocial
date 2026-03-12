@@ -25,9 +25,9 @@ export function renderQuestionnairePreview(questionnaire) {
     <section class="questionnaire-preview" aria-label="Questionnaire preview">
       <div class="row questionnaire-preview-header">
         <div class="questionnaire-preview-copy">
-          <p class="questionnaire-eyebrow">Interactive layer</p>
+          <p class="questionnaire-eyebrow">Questionnaire</p>
           <strong class="questionnaire-title">${escapeHtml(buildQuestionnaireHeading(questionnaire))}</strong>
-          <p class="muted questionnaire-preview-summary">This post includes a self-check questionnaire.</p>
+          <p class="muted questionnaire-preview-summary">Self-check questions attached to this post.</p>
         </div>
         <div class="questionnaire-meta">
           <span class="tag-item questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
@@ -85,7 +85,7 @@ export function renderQuestionnaireDetail(
     <section class="questionnaire-panel" data-questionnaire-panel>
       <div class="row questionnaire-panel-header">
         <div class="questionnaire-panel-copy">
-          <p class="questionnaire-eyebrow">Interactive layer</p>
+          <p class="questionnaire-eyebrow">Questionnaire</p>
           <h3 class="ink-underline">${escapeHtml(buildQuestionnaireHeading(questionnaire))}</h3>
           <p class="muted">${escapeHtml(summaryText)}</p>
         </div>

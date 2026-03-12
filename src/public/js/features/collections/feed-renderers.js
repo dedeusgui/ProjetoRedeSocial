@@ -60,7 +60,7 @@ function createCollectionFeedCard(
   } = {},
 ) {
   const article = document.createElement("article");
-  article.className = "card managed-collection-card";
+  article.className = "card post-card managed-collection-card";
 
   article.innerHTML = `
     <header class="post-header">
@@ -71,10 +71,15 @@ function createCollectionFeedCard(
       })}
       <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? 0))} post(s)</span>
     </header>
-    <div class="managed-collection-header-copy">
-      <p class="questionnaire-eyebrow">Public collection</p>
+    <div class="collection-feed-copy">
+      <p class="questionnaire-eyebrow">Curated collection</p>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
+    </div>
+    <div class="post-context-strip" aria-label="Collection context">
+      <div class="post-context-group">
+        <span class="post-context-pill post-context-pill-static">Manual order</span>
+      </div>
     </div>
     ${renderTags(collection.tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">

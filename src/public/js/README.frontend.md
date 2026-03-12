@@ -46,6 +46,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
+- Keep collection and questionnaire blocks visually aligned with post/feed cards by reusing the same spacing rhythm, chip treatment, and Patrick accent labels.
 
 ## Review checklist for new pages
 1. Page script only orchestrates flow.

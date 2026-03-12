@@ -35,7 +35,11 @@ function renderCollectionItemRow(item, index, itemCount) {
   return `
     <li class="collection-item-row">
       <div class="collection-item-copy">
-        <strong>${escapeHtml(item.title ?? "Untitled")}</strong>
+        <div class="collection-card-order">
+          <p class="questionnaire-eyebrow">Collection post</p>
+          <span class="questionnaire-question-number">Step ${escapeHtml(String(index + 1))}</span>
+        </div>
+        <strong class="collection-item-title">${escapeHtml(item.title ?? "Untitled")}</strong>
         <span class="muted">${escapeHtml(formatDateTime(item.createdAt))}</span>
       </div>
       <div class="review-actions review-actions-inline">
@@ -64,14 +68,17 @@ function renderCollectionCard(collection, availablePosts = []) {
   );
 
   return `
-    <article class="card managed-collection-card">
-      <div class="row collection-post-header">
+    <article class="card post-card managed-collection-card">
+      <div class="managed-collection-header">
         <div class="managed-collection-header-copy">
-          <p class="questionnaire-eyebrow">Public collection</p>
-          <h3>${escapeHtml(collection.title ?? "Untitled")}</h3>
+          <p class="questionnaire-eyebrow">Curated collection</p>
+          <h3 class="post-title collection-item-title">${escapeHtml(collection.title ?? "Untitled")}</h3>
           <p class="muted">${escapeHtml(collection.description ?? "")}</p>
         </div>
-        <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? collectionItems.length ?? 0))} post(s)</span>
+        <div class="collection-hero-meta">
+          <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? collectionItems.length ?? 0))} post(s)</span>
+          <span class="post-context-pill post-context-pill-static">Manual order</span>
+        </div>
       </div>
       ${renderCollectionPillList([{ id: collection.id, title: collection.title }], {
         emptyLabel: "",

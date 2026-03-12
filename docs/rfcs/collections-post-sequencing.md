@@ -57,6 +57,19 @@ Add `sequence.previousPostId` to posts, enforced by a sparse unique index so a p
   - sequencing is linear only
   - collection order is manual only
 
+## Visual Consistency Update
+
+- Date:
+  - 2026-03-12
+- What changed:
+  - collection feed cards, owner collection cards, and the public collection page were visually realigned to the same spacing, chip rhythm, and typography treatment used by post/feed cards
+  - collection-facing copy now consistently uses `collection` terminology instead of mixing in `reading path` presentation
+- Why it changed:
+  - the earlier collection surfaces still felt visually separate from the main feed and post detail screens, especially when opening a collection
+- Impact:
+  - no API or data-model changes
+  - renderer markup and shared CSS now treat collection surfaces as part of the same frontend design system as posts
+
 ## API and Interface Impact
 
 - New endpoints:

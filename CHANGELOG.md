@@ -11,12 +11,15 @@ All notable changes to this project should be documented in this file.
 - Integrated questionnaire authoring into one optional expandable `Add questionnaire / poll` section inside the same modal while preserving the existing post payload shape and backend behavior.
 - Kept questionnaire removal on edit tied to clearing the questionnaire draft and saving, instead of using the expand/collapse control as a destructive toggle.
 - Repositioned the optional poll section below `Post images` and restyled it as a neutral disclosure row so it no longer competes visually with uploads or the `Publish` action.
+- Realigned collection feed cards, owner collection cards, public collection detail, and questionnaire blocks to the same spacing and chip rhythm used by post/feed cards.
+- Replaced remaining collection-facing `reading path` copy with consistent `collection` terminology and shifted collection/questionnaire accent labels to the existing Patrick typography treatment.
 
 ### Docs
 
 - Updated frontend docs to describe the feed page as one unified header/discovery surface instead of a separate header plus discovery panel.
 - Updated frontend architecture and frontend guide docs to describe the integrated expandable questionnaire flow.
 - Updated the questionnaire RFC with the March 12, 2026 UI decision record.
+- Updated the collections/questionnaire frontend docs and RFCs to record the visual unification with the post/feed card system.
 
 ## 2026-03-11
 

@@ -32,11 +32,11 @@ Reference guide:
 ## UI Pages
 
 - `index.html`: authentication entrypoint.
-- `feed.html`: unified chronological browsing page for public posts and public collections, with one unified header/discovery surface for search, same-page `Posts` vs `Collections` switching, an authenticated followed-tags toggle, manual tag follow form, and a followed-tags dropdown; plus tag follow/unfollow actions, post create/edit image upload, and a neutral disclosure-style `Add poll (optional)` section placed below `Post images` inside the shared post modal, questionnaire authoring, questionnaire first-question preview on post cards, visible sequence membership on post cards, and public author chips (avatar, username, reputation tier).
+- `feed.html`: unified chronological browsing page for public posts and public collections, with one unified header/discovery surface for search, same-page `Posts` vs `Collections` switching, an authenticated followed-tags toggle, manual tag follow form, and a followed-tags dropdown; plus tag follow/unfollow actions, post create/edit image upload, and a neutral disclosure-style `Add poll (optional)` section placed below `Post images` inside the shared post modal, questionnaire authoring, questionnaire first-question preview on post cards, visible sequence membership on post cards, public author chips (avatar, username, reputation tier), and collection cards styled to follow the same spacing and chip rhythm as post cards.
 - `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, sequence context links, full sequence panel, collection membership links, post edit image upload/removal, full questionnaire rendering with logged-in self-check, and public author chips for the post author and comment authors.
 - `profile.html`: authenticated profile with private approval metrics, avatar upload/removal controls, owner post management, and admin tools for admins.
-- `collections.html`: authenticated owner page for collection creation and collection-item management, with a single in-page `New collection` modal trigger.
-- `collection.html`: public collection page with ordered collection items and sequence context for each item.
+- `collections.html`: authenticated owner page for collection creation and collection-item management, with a single in-page `New collection` modal trigger and owner cards that keep the same visual cadence as feed/post cards.
+- `collection.html`: public collection page with ordered collection items and sequence context for each item, using collection terminology and post-card-like spacing instead of a separate reading-path presentation.
 - `admin/reviews.html`: moderation review flow and admin-only moderator management panel.
 
 ## Navigation Pattern
@@ -67,5 +67,6 @@ Reference guide:
 - Questionnaire answers are checked locally in the browser for v1, so frontend state must avoid inventing score persistence or cross-user history.
 - Feed personalization must stay chronological; `Followed tags` filters by followed tags but does not replace the public feed with ranked results.
 - On the collections feed inside `feed.html`, the followed-tags toggle matches collection tags only, not tags on posts inside the collection.
+- Collection and questionnaire surfaces should reuse the shared post/feed card spacing, chip hierarchy, and Patrick accent typography instead of introducing a separate visual language.
 
 

@@ -893,8 +893,9 @@ select:focus-visible {
 
 .questionnaire-eyebrow {
   margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
+  font-family: "Patrick Hand", "Space Grotesk", sans-serif;
+  font-size: 0.96rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-2);
 }
@@ -918,7 +919,7 @@ select:focus-visible {
 .questionnaire-editor-card,
 .questionnaire-preview,
 .questionnaire-panel {
-  padding: var(--space-3);
+  padding: var(--space-4);
 }
 
 .questionnaire-editor-badges {
@@ -942,6 +943,7 @@ select:focus-visible {
   padding: 4px 10px;
   font-size: 0.79rem;
   letter-spacing: 0.04em;
+  font-family: "Patrick Hand", "Space Grotesk", sans-serif;
 }
 
 .questionnaire-editor-badge,
@@ -991,16 +993,18 @@ select:focus-visible {
 }
 
 .questionnaire-preview-card {
-  padding: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid rgba(143, 183, 160, 0.24);
   border-radius: var(--radius-1);
   background: rgba(11, 18, 24, 0.78);
+  display: grid;
+  gap: var(--space-3);
 }
 
 .questionnaire-preview-prompt,
 .questionnaire-question-prompt {
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 1.02rem;
+  line-height: 1.72;
 }
 
 .questionnaire-preview-options {
@@ -1025,7 +1029,7 @@ select:focus-visible {
 
 .questionnaire-option-stack {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .questionnaire-option input {
@@ -1064,13 +1068,13 @@ select:focus-visible {
 }
 
 .questionnaire-question-card {
-  padding: var(--space-3);
+  padding: var(--space-4);
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .questionnaire-panel-summary {
-  padding: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid rgba(143, 183, 160, 0.24);
   border-radius: var(--radius-1);
   background: rgba(12, 20, 24, 0.74);
@@ -1748,6 +1752,7 @@ select:focus-visible {
 
 .profile-content-panel,
 .collection-hero,
+.collection-view-shell,
 .collection-hero-copy,
 .collection-post-list,
 .collection-item-list,
@@ -1821,6 +1826,11 @@ select:focus-visible {
 }
 
 .managed-collection-header-copy,
+.collection-feed-copy,
+.collection-detail-copy,
+.collection-item-body,
+.managed-collection-header,
+.collection-card-order,
 .collection-hero-meta {
   display: grid;
   gap: var(--space-2);
@@ -1828,6 +1838,56 @@ select:focus-visible {
 
 .managed-collection-select {
   gap: var(--space-2);
+}
+
+.collection-hero,
+.managed-collection-card,
+.collection-post-card {
+  gap: var(--space-3);
+}
+
+.collection-hero-header,
+.managed-collection-header {
+  align-items: start;
+}
+
+.collection-feed-copy,
+.collection-detail-copy,
+.collection-item-body,
+.managed-collection-header-copy {
+  gap: var(--space-2);
+}
+
+.collection-card-order {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.collection-item-title,
+.questionnaire-title {
+  font-family: "Patrick Hand", "Space Grotesk", sans-serif;
+  line-height: 1.1;
+}
+
+.collection-description,
+.questionnaire-preview-summary,
+.questionnaire-panel-copy .muted {
+  max-width: 60ch;
+}
+
+.managed-collection-count {
+  font-family: "Patrick Hand", "Space Grotesk", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.collection-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .managed-collection-card {
@@ -1848,6 +1908,23 @@ select:focus-visible {
 .sequence-item {
   background:
     linear-gradient(180deg, rgba(16, 22, 32, 0.96) 0%, rgba(11, 17, 26, 0.96) 100%);
+}
+
+.collection-post-list {
+  gap: var(--space-4);
+}
+
+.collection-view-shell {
+  gap: calc(var(--space-5) + var(--space-4));
+}
+
+.collection-item-list {
+  gap: var(--space-3);
+}
+
+.collection-item-row {
+  gap: var(--space-3);
+  padding: var(--space-3);
 }
 
 .profile-content-panel {
@@ -1947,5 +2024,9 @@ select:focus-visible {
   .managed-content-grid,
   .collection-post-list {
     grid-template-columns: 1fr;
+  }
+
+  .collection-card-order {
+    align-items: flex-start;
   }
 }

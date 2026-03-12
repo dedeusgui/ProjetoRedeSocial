@@ -92,6 +92,19 @@ Extend the `Post` document with an optional `questionnaire` object stored direct
   - no API, auth, or data-model changes
   - post create/update still use the same optional `questionnaire` field
 
+## Visual Consistency Update
+
+- Date:
+  - 2026-03-12
+- What changed:
+  - questionnaire preview, detail, and editor surfaces were restyled to match the post/feed card spacing and chip hierarchy more closely
+  - questionnaire accent labels now consistently use the project's Patrick typography treatment
+- Why it changed:
+  - the questionnaire UI still looked visually separate from the core post/feed experience even after the modal-flow simplification
+- Impact:
+  - no API, auth, or data-model changes
+  - questionnaire renderer markup and shared CSS now keep the interaction inside the same visual system as post and collection cards
+
 ## API and Interface Impact
 
 - New/changed endpoints:
