@@ -43,7 +43,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
 - For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including `Posts` vs `Collections` switching, the authenticated followed-tags toggle, manual follow form, and followed-tags dropdown; renderer code should stay limited to card, tag, sequence, and collection context markup.
 - Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; avoid duplicating collection-create CTAs across those pages.
-- Keep the shared post modal explicit about post type (`regular` vs `questionnaire`) and avoid mixing questionnaire controls into the base post fields visually.
+- Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
 
