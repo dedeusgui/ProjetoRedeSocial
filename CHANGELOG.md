@@ -4,6 +4,10 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-12
 
+### Added
+
+- Added `npm run test:populate`, a destructive local-only heavy seed + smoke runner that resets an explicit seed database, creates fake users/content/media, verifies key API flows, and leaves the seeded data available for later manual browsing.
+
 ### Changed
 
 - Unified the `feed.html` page header and search/discovery controls into a single header surface, removed the redundant feed helper copy, and hid the inline search label text while preserving the existing search behavior.

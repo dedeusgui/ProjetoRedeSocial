@@ -50,6 +50,44 @@ Notes:
 7. Admin can list users and delete posts/comments through admin-only routes.
 8. Admin user deletion endpoint recalculates trends/private metrics after removal.
 
+## Heavy Seed + Smoke Runner
+
+Use `npm run test:populate` when you need a resettable local dataset with fake users, posts, collections, comments, reviews, avatars, and post images plus a smoke verification pass.
+
+Required environment:
+
+- `SEED_MONGO_URI`: explicit Mongo database to reset for the seed run
+- `SEED_ALLOW_RESET=true`: required destructive-reset safeguard
+- `ADMIN_EMAILS`: must include at least one email; the first one becomes the seeded admin account
+
+Optional environment:
+
+- `SEED_PORT` (default: `3101`)
+- `SEED_UPLOAD_ROOT` (default: `uploads/seed-populate`)
+- `SEED_PASSWORD` (default: `SeedPass123!`)
+
+PowerShell example:
+
+```powershell
+$env:SEED_MONGO_URI="mongodb://localhost:27017/thesocial_seed"
+$env:SEED_ALLOW_RESET="true"
+$env:ADMIN_EMAILS="admin@seed.local"
+npm run test:populate
+```
+
+Behavior:
+
+- drops only the database referenced by `SEED_MONGO_URI`
+- clears only the configured seed upload root
+- seeds a heavy dataset and recalculates derived moderation/private metrics
+- starts the app locally, runs smoke assertions through the real HTTP API, then shuts the temporary server down cleanly
+- leaves the seeded Mongo data and upload files in place for later manual browsing
+
+Manual browsing after the run:
+
+- start the app again with the same `MONGO_URI`, `UPLOAD_ROOT`, `PORT`, and `ADMIN_EMAILS`
+- use the credentials printed by the runner summary
+
 ## Common Issues
 
 Mongo connection failure:
