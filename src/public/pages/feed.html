@@ -8,80 +8,83 @@
   </head>
   <body>
     <main class="page">
-      <header class="card app-header">
-        <div class="header-copy">
-          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
-          <h1 class="ink-underline">Feed</h1>
-          <p class="muted">Browse the latest posts and public collections without leaving the same page.</p>
+      <header class="card app-header app-header-feed">
+        <div class="app-header-feed-inner">
+          <div class="app-header-feed-top">
+            <div class="header-copy">
+              <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+              <h1 class="ink-underline">Feed</h1>
+            </div>
+            <nav class="row app-nav">
+              <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
+              <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+              <button type="button" class="nav-link" data-nav-href="./collections.html" data-collections-link>My collections</button>
+              <button type="button" data-open-post-modal>New post</button>
+              <button type="button" data-logout hidden>Sign out</button>
+            </nav>
+          </div>
+
+          <div class="feed-discovery-panel">
+            <div class="feed-discovery-top">
+              <form class="feed-search" data-feed-search-form>
+                <label class="feed-search-field">
+                  <span class="sr-only" data-feed-search-label>Search posts</span>
+                  <input
+                    type="search"
+                    name="search"
+                    placeholder="Search by title, content, or tag"
+                    maxlength="120"
+                    data-feed-search-input
+                  />
+                </label>
+                <div class="feed-search-actions">
+                  <button type="submit" data-feed-search-submit>Search</button>
+                  <button type="button" class="button-ghost" data-feed-search-reset hidden>Clear</button>
+                </div>
+              </form>
+
+              <div class="feed-discovery-controls">
+                <div class="feed-mode-toggle" role="tablist" aria-label="Feed type">
+                  <button type="button" data-feed-type-button="posts" aria-pressed="true">Posts</button>
+                  <button type="button" class="button-ghost" data-feed-type-button="collections" aria-pressed="false">Collections</button>
+                </div>
+
+                <div class="feed-follow-toggle" data-feed-follow-toggle-shell hidden>
+                  <span class="muted">Followed tags</span>
+                  <button type="button" class="button-ghost" data-feed-following-toggle aria-pressed="false">Off</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="muted follow-tags-guest" data-follow-tags-guest>Sign in to follow tags.</p>
+
+            <div class="follow-tags-auth" data-follow-tags-auth hidden>
+              <div class="follow-tags-toolbar">
+                <form class="follow-tag-form" data-follow-tag-form>
+                  <label>
+                    Follow a tag manually
+                    <input
+                      type="text"
+                      name="tag"
+                      placeholder="Example: nodejs"
+                      maxlength="40"
+                      data-follow-tag-input
+                    />
+                  </label>
+                  <button type="submit" data-follow-tag-submit>Follow tag</button>
+                </form>
+
+                <details class="followed-tags-dropdown" data-followed-tags-dropdown>
+                  <summary data-followed-tags-summary>Followed tags</summary>
+                  <div class="followed-tags-list" data-followed-tags-list></div>
+                </details>
+              </div>
+
+              <p class="muted status-line" data-follow-tag-status></p>
+            </div>
+          </div>
         </div>
-        <nav class="row app-nav">
-          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
-          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
-          <button type="button" class="nav-link" data-nav-href="./collections.html" data-collections-link>My collections</button>
-          <button type="button" data-open-post-modal>New post</button>
-          <button type="button" data-logout hidden>Sign out</button>
-        </nav>
       </header>
-
-      <section class="card feed-discovery-panel">
-        <div class="feed-discovery-top">
-          <form class="feed-search" data-feed-search-form>
-            <label class="feed-search-field">
-              <span data-feed-search-label>Search posts</span>
-              <input
-                type="search"
-                name="search"
-                placeholder="Search by title, content, or tag"
-                maxlength="120"
-                data-feed-search-input
-              />
-            </label>
-            <div class="feed-search-actions">
-              <button type="submit" data-feed-search-submit>Search</button>
-              <button type="button" class="button-ghost" data-feed-search-reset hidden>Clear</button>
-            </div>
-          </form>
-
-          <div class="feed-discovery-controls">
-            <div class="feed-mode-toggle" role="tablist" aria-label="Feed type">
-              <button type="button" data-feed-type-button="posts" aria-pressed="true">Posts</button>
-              <button type="button" class="button-ghost" data-feed-type-button="collections" aria-pressed="false">Collections</button>
-            </div>
-
-            <div class="feed-follow-toggle" data-feed-follow-toggle-shell hidden>
-              <span class="muted">Followed tags</span>
-              <button type="button" class="button-ghost" data-feed-following-toggle aria-pressed="false">Off</button>
-            </div>
-          </div>
-        </div>
-
-        <p class="muted follow-tags-guest" data-follow-tags-guest>Sign in to follow tags.</p>
-
-        <div class="follow-tags-auth" data-follow-tags-auth hidden>
-          <div class="follow-tags-toolbar">
-            <form class="follow-tag-form" data-follow-tag-form>
-              <label>
-                Follow a tag manually
-                <input
-                  type="text"
-                  name="tag"
-                  placeholder="Example: nodejs"
-                  maxlength="40"
-                  data-follow-tag-input
-                />
-              </label>
-              <button type="submit" data-follow-tag-submit>Follow tag</button>
-            </form>
-
-            <details class="followed-tags-dropdown" data-followed-tags-dropdown>
-              <summary data-followed-tags-summary>Followed tags</summary>
-              <div class="followed-tags-list" data-followed-tags-list></div>
-            </details>
-          </div>
-
-          <p class="muted status-line" data-follow-tag-status></p>
-        </div>
-      </section>
 
       <p class="muted status-line" data-feed-status></p>
       <div class="feed-list" data-feed-list></div>

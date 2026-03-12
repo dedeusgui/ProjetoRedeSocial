@@ -2,6 +2,16 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-12
+
+### Changed
+
+- Unified the `feed.html` page header and search/discovery controls into a single header surface, removed the redundant feed helper copy, and hid the inline search label text while preserving the existing search behavior.
+
+### Docs
+
+- Updated frontend docs to describe the feed page as one unified header/discovery surface instead of a separate header plus discovery panel.
+
 ## 2026-03-11
 
 ### Added

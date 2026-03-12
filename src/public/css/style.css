@@ -260,6 +260,18 @@ p {
   color: var(--bad-0);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .muted[data-state="info"] {
   color: var(--text-1);
 }
@@ -389,10 +401,57 @@ select:focus-visible {
   gap: var(--space-2);
 }
 
+.app-header-feed {
+  display: block;
+}
+
+.app-header-feed-inner {
+  display: grid;
+  gap: var(--space-4);
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+
+.app-header-feed-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.app-header-feed-inner .header-copy {
+  justify-items: center;
+  text-align: center;
+  max-width: none;
+}
+
+.app-header-feed-inner .app-nav {
+  margin-left: 0;
+  justify-content: center;
+  width: 100%;
+}
+
+.app-header-feed-inner .feed-discovery-panel {
+  display: grid;
+  justify-items: stretch;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-0);
+  width: 100%;
+  max-width: none;
+}
+
 .feed-discovery-top {
   grid-template-columns: minmax(0, 1.6fr) auto;
   gap: var(--space-2);
   align-items: end;
+}
+
+.app-header-feed-inner .feed-discovery-top {
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+  align-items: stretch;
+  width: 100%;
 }
 
 .feed-discovery-controls {
@@ -407,7 +466,16 @@ select:focus-visible {
   margin-top: 0;
 }
 
+.app-header-feed-inner .feed-search {
+  width: 100%;
+  max-width: none;
+}
+
 .feed-search-field {
+  width: 100%;
+}
+
+.app-header-feed-inner .feed-search-field {
   width: 100%;
 }
 
@@ -415,6 +483,10 @@ select:focus-visible {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+}
+
+.app-header-feed-inner .feed-search-actions {
+  justify-content: center;
 }
 
 .feed-mode-toggle {
@@ -430,11 +502,63 @@ select:focus-visible {
   gap: var(--space-2);
 }
 
+.app-header-feed-inner .feed-discovery-controls {
+  width: 100%;
+  justify-items: center;
+  align-content: center;
+}
+
+.app-header-feed-inner .feed-follow-toggle {
+  justify-content: center;
+}
+
 .follow-tags-toolbar {
   display: grid;
   grid-template-columns: minmax(160px, 200px) minmax(280px, 1fr);
   gap: var(--space-2);
   align-items: end;
+}
+
+.app-header-feed-inner .follow-tags-auth,
+.app-header-feed-inner .follow-tags-guest {
+  width: 100%;
+}
+
+.app-header-feed-inner .follow-tags-auth {
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.app-header-feed-inner .follow-tags-guest,
+.app-header-feed-inner [data-follow-tag-status] {
+  text-align: center;
+}
+
+.app-header-feed-inner .follow-tags-toolbar {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: 1fr;
+  justify-items: stretch;
+  align-items: stretch;
+}
+
+.app-header-feed-inner .follow-tag-form {
+  width: 100%;
+  max-width: none;
+}
+
+.app-header-feed-inner .follow-tag-form label {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.app-header-feed-inner .followed-tags-dropdown {
+  width: 100%;
+  max-width: none;
+}
+
+.app-header-feed-inner .followed-tags-dropdown summary {
+  text-align: center;
 }
 
 .follow-tag-form {
@@ -1287,6 +1411,39 @@ select:focus-visible {
     flex-direction: column;
   }
 
+  .app-header-feed-inner {
+    width: 100%;
+  }
+
+  .app-header-feed-top {
+    align-items: center;
+  }
+
+  .app-header-feed-inner .app-nav {
+    justify-content: center;
+  }
+
+  .app-header-feed-inner .feed-discovery-top {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    align-items: stretch;
+  }
+
+  .app-header-feed-inner .feed-discovery-controls {
+    justify-items: center;
+    align-content: center;
+    width: 100%;
+  }
+
+  .app-header-feed-inner .feed-follow-toggle {
+    justify-content: center;
+  }
+
+  .app-header-feed-inner .follow-tags-toolbar {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
   .auth-grid {
     grid-template-columns: 1fr;
   }
@@ -1339,6 +1496,15 @@ select:focus-visible {
 
   .followed-tags-dropdown {
     width: 100%;
+  }
+
+  .app-header-feed-inner .app-nav,
+  .app-header-feed-inner .feed-search-actions,
+  .app-header-feed-inner .feed-mode-toggle,
+  .app-header-feed-inner .feed-follow-toggle,
+  .app-header-feed-inner .feed-discovery-controls {
+    justify-content: center;
+    justify-items: center;
   }
 
   .profile-hero {

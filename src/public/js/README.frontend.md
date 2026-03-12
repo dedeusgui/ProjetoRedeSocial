@@ -41,7 +41,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
-- For the feed page, keep the compact discovery panel behavior in `pages/feed.js`, including `Posts` vs `Collections` switching, the authenticated followed-tags toggle, manual follow form, and followed-tags dropdown; renderer code should stay limited to card, tag, sequence, and collection context markup.
+- For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including `Posts` vs `Collections` switching, the authenticated followed-tags toggle, manual follow form, and followed-tags dropdown; renderer code should stay limited to card, tag, sequence, and collection context markup.
 - Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; avoid duplicating collection-create CTAs across those pages.
 - Keep the shared post modal explicit about post type (`regular` vs `questionnaire`) and avoid mixing questionnaire controls into the base post fields visually.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
@@ -53,3 +53,4 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 3. API errors are mapped through `core/http-state.js`.
 4. Public post-level approval percentage is allowed in feed/post; user aggregate metrics stay private to profile/admin screens, except for the coarse public reputation tier derived by the backend.
 5. Direct URL access works without broken dependencies.
+
