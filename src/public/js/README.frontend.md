@@ -47,6 +47,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Keep profile avatar management attached to the avatar itself on `profile.html`; `pages/profile.js` should orchestrate the contextual upload/remove menu and outside-click closing while reusing the existing avatar API methods.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
+- Keep collection and questionnaire blocks visually aligned with post/feed cards by reusing the same spacing rhythm, chip treatment, and Patrick accent labels.
 
 ## Review checklist for new pages
 1. Page script only orchestrates flow.
