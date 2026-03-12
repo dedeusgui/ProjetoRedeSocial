@@ -12,6 +12,10 @@ All notable changes to this project should be documented in this file.
 - Kept questionnaire removal on edit tied to clearing the questionnaire draft and saving, instead of using the expand/collapse control as a destructive toggle.
 - Repositioned the optional poll section below `Post images` and restyled it as a neutral disclosure row so it no longer competes visually with uploads or the `Publish` action.
 
+### Fixed
+
+- Kept the post detail comment composer collapsed on initial load so opening a post no longer auto-expands the comment area before the user explicitly chooses to comment.
+
 ### Docs
 
 - Updated frontend docs to describe the feed page as one unified header/discovery surface instead of a separate header plus discovery panel.
