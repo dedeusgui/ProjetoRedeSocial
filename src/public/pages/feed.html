@@ -97,27 +97,10 @@
           <button type="button" class="button-ghost" data-post-modal-cancel>Close</button>
         </div>
         <form class="modal-form-layout" data-post-modal-form>
-          <section class="modal-form-section modal-post-type-section">
-            <div class="modal-form-section-copy">
-              <h3 class="ink-underline">Post type</h3>
-              <p class="muted">Choose whether this content is a regular post or an interactive questionnaire post.</p>
-            </div>
-            <div class="post-type-toggle" role="radiogroup" aria-label="Post type">
-              <label class="post-type-option">
-                <input type="radio" name="postType" value="regular" data-post-type-input checked />
-                <span>Regular post</span>
-              </label>
-              <label class="post-type-option">
-                <input type="radio" name="postType" value="questionnaire" data-post-type-input />
-                <span>Questionnaire post</span>
-              </label>
-            </div>
-          </section>
-
           <section class="modal-form-section">
             <div class="modal-form-section-copy">
               <h3 class="ink-underline">Core content</h3>
-              <p class="muted">These fields appear in every post type.</p>
+              <p class="muted">Start with the main post content, then add optional extras below.</p>
             </div>
             <label>
               Title
@@ -169,14 +152,21 @@
             <section class="modal-media-section" data-selected-post-media></section>
           </section>
 
-          <section class="modal-form-section modal-questionnaire-block" data-post-questionnaire-block hidden>
-            <div class="modal-form-section-copy">
-              <h3 class="ink-underline">Questionnaire</h3>
-              <p class="muted" data-post-questionnaire-helper>
-                Configure multiple-choice questions for this post.
-              </p>
+          <section class="modal-form-section">
+            <div class="modal-disclosure" data-post-questionnaire-shell data-open="false">
+              <button type="button" class="modal-disclosure-trigger" data-post-questionnaire-toggle aria-expanded="false">
+                <span class="modal-disclosure-copy">
+                  <span class="modal-disclosure-title">Add poll (optional)</span>
+                </span>
+                <span class="modal-disclosure-caret" aria-hidden="true"></span>
+              </button>
+              <div class="modal-disclosure-panel" data-post-questionnaire-panel hidden>
+                <p class="muted" data-post-questionnaire-helper>
+                  Build an optional multiple-choice questionnaire below, or leave it empty to publish a regular post.
+                </p>
+                <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
+              </div>
             </div>
-            <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
           </section>
 
           <button type="submit" data-post-modal-submit>Publish</button>

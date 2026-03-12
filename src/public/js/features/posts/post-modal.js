@@ -31,14 +31,22 @@ export function createPostModalController({
     target: questionnaireTarget,
   });
 
-  const postTypeInputs = Array.from(form?.querySelectorAll("[data-post-type-input]") ?? []);
-  const questionnaireBlock = form?.querySelector("[data-post-questionnaire-block]") ?? null;
+  const questionnaireShell = form?.querySelector("[data-post-questionnaire-shell]") ?? null;
+  const questionnaireToggle = form?.querySelector("[data-post-questionnaire-toggle]") ?? null;
+  const questionnairePanel = form?.querySelector("[data-post-questionnaire-panel]") ?? null;
   const questionnaireHelper = form?.querySelector("[data-post-questionnaire-helper]") ?? null;
   const mediaSummary = form?.querySelector("[data-post-media-summary]") ?? null;
 
+  if (questionnaireToggle && questionnairePanel) {
+    if (!questionnairePanel.id) {
+      questionnairePanel.id = "post-questionnaire-panel";
+    }
+
+    questionnaireToggle.setAttribute("aria-controls", questionnairePanel.id);
+  }
+
   const state = {
     mode: "create",
-    postType: "regular",
     editingPostId: null,
     isSubmitting: false,
     isRemovingMedia: false,
@@ -48,8 +56,22 @@ export function createPostModalController({
     ownedPosts: [],
   };
 
-  function isQuestionnaireMode() {
-    return state.postType === "questionnaire";
+  function setQuestionnaireExpanded(shouldExpand = false) {
+    const isExpanded = Boolean(shouldExpand);
+
+    if (questionnaireShell) {
+      questionnaireShell.dataset.open = isExpanded ? "true" : "false";
+    }
+
+    if (questionnaireToggle) {
+      questionnaireToggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    }
+
+    if (questionnairePanel) {
+      questionnairePanel.hidden = !isExpanded;
+    }
+
+    updateQuestionnaireUi();
   }
 
   function setModalUi() {
@@ -66,31 +88,26 @@ export function createPostModalController({
     }
   }
 
-  function updateQuestionnaireUi() {
-    if (questionnaireBlock) {
-      questionnaireBlock.hidden = !isQuestionnaireMode();
+  function buildQuestionnaireHelperText(summary) {
+    if (summary.hasContent) {
+      return state.mode === "edit" && state.hadExistingQuestionnaire
+        ? "Edit the questionnaire below. Clear it and save to remove it from this post."
+        : "This optional questionnaire will be saved with the post when every question is complete.";
     }
 
-    if (questionnaireHelper) {
-      if (isQuestionnaireMode()) {
-        questionnaireHelper.textContent = "Configure multiple-choice questions for this post.";
-        return;
-      }
-
-      questionnaireHelper.textContent = state.hadExistingQuestionnaire && state.mode === "edit"
-        ? "This post already had a questionnaire. Saving it as a regular post will remove it."
-        : "Switch to questionnaire mode to configure the interactive section.";
+    if (state.mode === "edit" && state.hadExistingQuestionnaire) {
+      return "This post already had a questionnaire. Save now to remove it, or add new questions before saving.";
     }
+
+    return "Build an optional multiple-choice questionnaire below, or leave it empty to publish a regular post.";
   }
 
-  function setPostType(nextType = "regular") {
-    state.postType = nextType === "questionnaire" ? "questionnaire" : "regular";
+  function updateQuestionnaireUi() {
+    const summary = questionnaireEditor.getSummary();
 
-    postTypeInputs.forEach((input) => {
-      input.checked = input.value === state.postType;
-    });
-
-    updateQuestionnaireUi();
+    if (questionnaireHelper) {
+      questionnaireHelper.textContent = buildQuestionnaireHelperText(summary);
+    }
   }
 
   function setMode(nextMode) {
@@ -162,11 +179,8 @@ export function createPostModalController({
       tags: parseCsvTags(formData.get("tags")),
     };
     const previousPostId = String(formData.get("previousPostId") ?? "").trim();
-    const questionnaire = isQuestionnaireMode() ? questionnaireEditor.getPayload() : null;
-
-    if (isQuestionnaireMode() && !questionnaire) {
-      throw new Error("Add at least one question or switch back to a regular post.");
-    }
+    const questionnaireSummary = questionnaireEditor.getSummary();
+    const questionnaire = questionnaireSummary.hasContent ? questionnaireEditor.getPayload() : null;
 
     if (previousPostId) {
       payload.previousPostId = previousPostId;
@@ -181,7 +195,7 @@ export function createPostModalController({
       return payload;
     }
 
-    if (isQuestionnaireMode()) {
+    if (questionnaire) {
       payload.questionnaire = questionnaire;
       return payload;
     }
@@ -307,13 +321,11 @@ export function createPostModalController({
       previousPostSelect.disabled = state.isSubmitting || state.isRemovingMedia;
     }
 
-    postTypeInputs.forEach((input) => {
-      input.disabled = state.isSubmitting || state.isRemovingMedia;
-    });
+    if (questionnaireToggle) {
+      questionnaireToggle.disabled = state.isSubmitting || state.isRemovingMedia;
+    }
 
-    questionnaireEditor.setDisabled(
-      state.isSubmitting || state.isRemovingMedia || !isQuestionnaireMode(),
-    );
+    questionnaireEditor.setDisabled(state.isSubmitting || state.isRemovingMedia);
 
     updateQuestionnaireUi();
     renderSelectedMedia();
@@ -345,7 +357,7 @@ export function createPostModalController({
     state.hadExistingQuestionnaire = Boolean(post?.questionnaire);
     state.hadExistingPreviousPost = Boolean(post?.sequence?.previousPostId);
     questionnaireEditor.setQuestionnaire(post?.questionnaire ?? null);
-    setPostType(state.hadExistingQuestionnaire ? "questionnaire" : "regular");
+    setQuestionnaireExpanded(state.hadExistingQuestionnaire);
     await syncPreviousPostOptions({
       excludePostId: post?.id ?? null,
       selectedPostId: post?.sequence?.previousPostId ?? "",
@@ -365,7 +377,6 @@ export function createPostModalController({
     state.hadExistingQuestionnaire = false;
     state.hadExistingPreviousPost = false;
     setMode("create");
-    setPostType("regular");
     statusFlash.clear();
 
     if (mediaInput) {
@@ -377,6 +388,7 @@ export function createPostModalController({
     }
 
     questionnaireEditor.reset();
+    setQuestionnaireExpanded(false);
     syncControls();
   }
 
@@ -566,13 +578,17 @@ export function createPostModalController({
       mediaInput.addEventListener("change", renderSelectedMedia);
     }
 
-    if (postTypeInputs.length > 0) {
-      postTypeInputs.forEach((input) => {
-        input.addEventListener("change", () => {
-          if (input.checked) {
-            setPostType(input.value);
-            syncControls();
-          }
+    if (questionnaireToggle) {
+      questionnaireToggle.addEventListener("click", () => {
+        const isExpanded = questionnaireToggle.getAttribute("aria-expanded") === "true";
+        setQuestionnaireExpanded(!isExpanded);
+      });
+    }
+
+    if (questionnaireTarget) {
+      ["input", "change", "click"].forEach((eventName) => {
+        questionnaireTarget.addEventListener(eventName, () => {
+          updateQuestionnaireUi();
         });
       });
     }
@@ -598,7 +614,7 @@ export function createPostModalController({
   }
 
   setModalUi();
-  setPostType("regular");
+  setQuestionnaireExpanded(false);
   syncControls();
   bindEvents();
 

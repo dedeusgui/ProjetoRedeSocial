@@ -2,6 +2,20 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-12
+
+### Changed
+
+- Refactored the shared post create/edit modal to remove the explicit `regular` vs `questionnaire` post-type selector.
+- Integrated questionnaire authoring into one optional expandable `Add questionnaire / poll` section inside the same modal while preserving the existing post payload shape and backend behavior.
+- Kept questionnaire removal on edit tied to clearing the questionnaire draft and saving, instead of using the expand/collapse control as a destructive toggle.
+- Repositioned the optional poll section below `Post images` and restyled it as a neutral disclosure row so it no longer competes visually with uploads or the `Publish` action.
+
+### Docs
+
+- Updated frontend architecture and frontend guide docs to describe the integrated expandable questionnaire flow.
+- Updated the questionnaire RFC with the March 12, 2026 UI decision record.
+
 ## 2026-03-11
 
 ### Added

@@ -78,6 +78,20 @@ Extend the `Post` document with an optional `questionnaire` object stored direct
   - correct answers remain in the API payload for v1 so the browser can self-check locally
   - answer gating is a frontend interaction rule because there is no answer-submission endpoint
 
+## Decision Update
+
+- Date:
+  - 2026-03-12
+- What changed:
+  - the shared post modal no longer asks the author to choose between `regular` and `questionnaire` post types
+  - questionnaire authoring now lives inside a neutral disclosure-style section below `Post images` in the shared post modal
+- Why it changed:
+  - the explicit type split added extra branching to the modal without changing the backend payload or data model
+  - the integrated expandable section keeps the questionnaire optional while reducing UI friction for normal posts
+- Impact:
+  - no API, auth, or data-model changes
+  - post create/update still use the same optional `questionnaire` field
+
 ## API and Interface Impact
 
 - New/changed endpoints:

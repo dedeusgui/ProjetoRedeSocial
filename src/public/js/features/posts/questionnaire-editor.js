@@ -306,11 +306,9 @@ export function createQuestionnaireEditor({ target } = {}) {
     target.innerHTML = `
       <section class="modal-questionnaire-section" aria-label="Post questionnaire">
         <div class="row questionnaire-editor-header">
-          <div class="questionnaire-editor-copy">
-            <p class="questionnaire-eyebrow">Interactive layer</p>
-            <h3 class="ink-underline">Questionnaire</h3>
-            <p class="muted">Build a multiple-choice questionnaire with one correct answer per question.</p>
-          </div>
+          <p class="muted questionnaire-editor-intro">
+            Build a multiple-choice questionnaire with one correct answer per question.
+          </p>
           <div class="row questionnaire-editor-actions">
             <button
               type="button"
