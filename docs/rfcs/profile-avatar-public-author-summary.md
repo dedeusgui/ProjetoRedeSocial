@@ -109,6 +109,16 @@ The product needed a stronger profile identity without breaking the project rule
 3. Feed, post detail, and comments show only avatar, username, and coarse reputation for other users.
 4. There is no public profile route or clickable author navigation.
 
+## Decision Record
+
+- 2026-03-12:
+  - Changed:
+    - moved the owner avatar controls on `profile.html` from a large standalone upload panel to a compact avatar-attached contextual menu with `Upload photo` and `Remove photo`
+  - Why:
+    - keeps the avatar action contextual and compact without changing the existing avatar API contract or owner-only behavior
+  - Impact:
+    - frontend-only UX refinement; `POST /api/v1/me/avatar` and `DELETE /api/v1/me/avatar` remain unchanged
+
 ## Test Plan
 
 - Unit/service tests:

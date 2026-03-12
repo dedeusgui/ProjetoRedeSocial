@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 :root {
   --bg-0: #070a10;
@@ -553,8 +553,10 @@ select:focus-visible {
 }
 
 .app-header-feed-inner .followed-tags-dropdown {
-  width: 100%;
-  max-width: none;
+  width: fit-content;
+  min-width: 220px;
+  max-width: 100%;
+  justify-self: center;
 }
 
 .app-header-feed-inner .followed-tags-dropdown summary {
@@ -1358,10 +1360,13 @@ select:focus-visible {
 
 .profile-card,
 .profile-identity,
-.profile-heading,
-.profile-avatar-field {
+.profile-heading {
   display: grid;
   gap: var(--space-3);
+}
+
+.profile-heading {
+  justify-items: start;
 }
 
 .profile-hero {
@@ -1376,6 +1381,12 @@ select:focus-visible {
   justify-content: center;
 }
 
+.profile-avatar-stack {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+}
+
 .profile-avatar-image {
   width: 148px;
   height: 148px;
@@ -1383,6 +1394,81 @@ select:focus-visible {
   border-color: var(--line-1);
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.26);
   font-size: 2.6rem;
+}
+
+.profile-avatar-action {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border-color: var(--line-1);
+  background: rgba(17, 23, 34, 0.94);
+  box-shadow: 0 10px 18px rgba(1, 3, 8, 0.34);
+}
+
+.profile-avatar-action[aria-expanded="true"] {
+  border-color: #5f7499;
+  background: rgba(24, 35, 54, 0.96);
+}
+
+.profile-avatar-action-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.profile-avatar-menu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  min-width: 176px;
+  padding: var(--space-1);
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line-0);
+  border-radius: var(--radius-1);
+  background: rgba(13, 19, 28, 0.96);
+  box-shadow: var(--shadow-0);
+  z-index: 3;
+}
+
+.profile-avatar-menu-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: calc(var(--radius-1) - 2px);
+  background: transparent;
+  color: var(--text-0);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  letter-spacing: 0;
+}
+
+.profile-avatar-menu-item:hover {
+  transform: none;
+  border-color: transparent;
+  background: rgba(34, 47, 67, 0.52);
+}
+
+.profile-avatar-menu-item:disabled {
+  color: var(--text-2);
+  background: transparent;
+}
+
+.profile-avatar-menu-item:focus-visible {
+  outline: 2px solid rgba(157, 173, 203, 0.58);
+  outline-offset: -1px;
 }
 
 .profile-handle {
@@ -1397,17 +1483,15 @@ select:focus-visible {
   line-height: 0.96;
 }
 
-.profile-avatar-field input[type="file"] {
-  max-width: 360px;
-}
-
-.profile-avatar-actions {
-  justify-content: space-between;
-  align-items: center;
-}
-
 .metric-box {
   margin: 0;
+  width: 100%;
+  justify-items: center;
+  text-align: center;
+}
+
+.metric-box-value {
+  width: fit-content;
 }
 
 .admin-panel,
@@ -1516,7 +1600,9 @@ select:focus-visible {
   }
 
   .followed-tags-dropdown {
-    width: 100%;
+    width: fit-content;
+    min-width: 220px;
+    max-width: 100%;
   }
 
   .app-header-feed-inner .app-nav,
@@ -1539,6 +1625,11 @@ select:focus-visible {
   .profile-avatar-image {
     width: 120px;
     height: 120px;
+  }
+
+  .profile-avatar-menu {
+    left: 0;
+    right: auto;
   }
 
   .metrics-grid {
@@ -1696,13 +1787,6 @@ select:focus-visible {
   text-transform: uppercase;
 }
 
-.profile-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-  gap: var(--space-4);
-  align-items: stretch;
-}
-
 .profile-main {
   display: grid;
   gap: var(--space-4);
@@ -1728,22 +1812,6 @@ select:focus-visible {
   line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-.profile-avatar-panel {
-  margin: 0;
-  display: grid;
-  height: 100%;
-  grid-template-rows: auto auto auto 1fr auto;
-  gap: var(--space-3);
-}
-
-.profile-avatar-field input[type="file"] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
 }
 
 .profile-content-panel,
@@ -1940,10 +2008,6 @@ select:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .profile-layout {
-    grid-template-columns: 1fr;
-  }
-
   .managed-content-grid,
   .collection-post-list {
     grid-template-columns: 1fr;

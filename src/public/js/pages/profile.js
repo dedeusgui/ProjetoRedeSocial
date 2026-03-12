@@ -44,9 +44,9 @@ const state = {
   currentUserId: null,
   isDeletingUser: false,
   isUpdatingAvatar: false,
+  isAvatarMenuOpen: false,
   profile: null,
   posts: [],
-  avatarFileLabel: "No file selected.",
 };
 
 const navbar = initNavbar({
@@ -81,8 +81,55 @@ function renderProfile() {
 
   renderProfileView(elements.profile, state.profile, {
     isAvatarBusy: state.isUpdatingAvatar,
-    avatarFileLabel: state.avatarFileLabel,
+    isAvatarMenuOpen: state.isAvatarMenuOpen,
   });
+}
+
+function getAvatarMenuRoot() {
+  return elements.profile?.querySelector("[data-avatar-menu-root]") ?? null;
+}
+
+function getAvatarMenuToggle() {
+  return elements.profile?.querySelector("[data-avatar-menu-toggle]") ?? null;
+}
+
+function getAvatarInput() {
+  const input = elements.profile?.querySelector("[data-avatar-input]");
+  return input instanceof HTMLInputElement ? input : null;
+}
+
+function getFirstAvatarAction() {
+  const actions = Array.from(
+    elements.profile?.querySelectorAll("[data-upload-avatar], [data-remove-avatar]") ?? [],
+  );
+
+  return actions.find((action) => action instanceof HTMLButtonElement && !action.disabled) ?? null;
+}
+
+function setAvatarMenuOpen(nextValue, { focusTarget = "none" } = {}) {
+  if (state.isAvatarMenuOpen === nextValue && focusTarget === "none") {
+    return;
+  }
+
+  state.isAvatarMenuOpen = nextValue;
+  renderProfile();
+
+  if (focusTarget === "menu" && nextValue) {
+    getFirstAvatarAction()?.focus();
+    return;
+  }
+
+  if (focusTarget === "toggle") {
+    getAvatarMenuToggle()?.focus();
+  }
+}
+
+function closeAvatarMenu({ focusTarget = "none" } = {}) {
+  if (!state.isAvatarMenuOpen) {
+    return;
+  }
+
+  setAvatarMenuOpen(false, { focusTarget });
 }
 
 function renderOwnedContent() {
@@ -122,6 +169,7 @@ async function loadProfile({ showLoading = true } = {}) {
       api.posts.listMine(),
     ]);
     state.currentUserId = profile.id;
+    state.isAvatarMenuOpen = false;
     state.profile = profile;
     state.posts = Array.isArray(posts) ? posts : [];
     renderProfile();
@@ -193,6 +241,7 @@ async function uploadAvatar(file) {
     return;
   }
 
+  state.isAvatarMenuOpen = false;
   state.isUpdatingAvatar = true;
   renderProfile();
   statusFlash.show("Uploading profile image...", "info");
@@ -207,7 +256,6 @@ async function uploadAvatar(file) {
       };
     }
     statusFlash.show("Profile image updated.", "success");
-    state.avatarFileLabel = "No file selected.";
   } catch (error) {
     if (handleAuthFailure(error)) {
       return;
@@ -225,6 +273,7 @@ async function removeAvatar() {
     return;
   }
 
+  state.isAvatarMenuOpen = false;
   state.isUpdatingAvatar = true;
   renderProfile();
   statusFlash.show("Removing profile image...", "info");
@@ -239,7 +288,6 @@ async function removeAvatar() {
       };
     }
     statusFlash.show("Profile image removed.", "success");
-    state.avatarFileLabel = "No file selected.";
   } catch (error) {
     if (handleAuthFailure(error)) {
       return;
@@ -362,8 +410,7 @@ function bindProfileEvents() {
       }
 
       const [file] = Array.from(input.files ?? []);
-      state.avatarFileLabel = file?.name ? String(file.name) : "No file selected.";
-      renderProfile();
+      closeAvatarMenu();
       input.value = "";
       if (file) {
         uploadAvatar(file);
@@ -371,12 +418,56 @@ function bindProfileEvents() {
     });
 
     elements.profile.addEventListener("click", (event) => {
+      const toggleButton = event.target.closest("[data-avatar-menu-toggle]");
+      if (toggleButton && elements.profile.contains(toggleButton)) {
+        event.stopPropagation();
+        setAvatarMenuOpen(!state.isAvatarMenuOpen, {
+          focusTarget: state.isAvatarMenuOpen ? "toggle" : "menu",
+        });
+        return;
+      }
+
+      const uploadButton = event.target.closest("[data-upload-avatar]");
+      if (uploadButton && elements.profile.contains(uploadButton)) {
+        event.stopPropagation();
+        const input = getAvatarInput();
+        if (!input || input.disabled) {
+          return;
+        }
+
+        input.click();
+        return;
+      }
+
       const removeButton = event.target.closest("[data-remove-avatar]");
       if (removeButton && elements.profile.contains(removeButton)) {
+        event.stopPropagation();
         removeAvatar();
       }
     });
   }
+
+  document.addEventListener("click", (event) => {
+    if (!state.isAvatarMenuOpen) {
+      return;
+    }
+
+    const root = getAvatarMenuRoot();
+    if (root && event.target instanceof Node && root.contains(event.target)) {
+      return;
+    }
+
+    closeAvatarMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !state.isAvatarMenuOpen) {
+      return;
+    }
+
+    event.preventDefault();
+    closeAvatarMenu({ focusTarget: "toggle" });
+  });
 
   if (elements.posts) {
     elements.posts.addEventListener("click", (event) => {

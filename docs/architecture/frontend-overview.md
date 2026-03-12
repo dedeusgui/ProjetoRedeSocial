@@ -34,7 +34,7 @@ Reference guide:
 - `index.html`: authentication entrypoint.
 - `feed.html`: unified chronological browsing page for public posts and public collections, with one unified header/discovery surface for search, same-page `Posts` vs `Collections` switching, an authenticated followed-tags toggle, manual tag follow form, and a followed-tags dropdown; plus tag follow/unfollow actions, post create/edit image upload, and a neutral disclosure-style `Add poll (optional)` section placed below `Post images` inside the shared post modal, questionnaire authoring, questionnaire first-question preview on post cards, visible sequence membership on post cards, and public author chips (avatar, username, reputation tier).
 - `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, sequence context links, full sequence panel, collection membership links, post edit image upload/removal, full questionnaire rendering with logged-in self-check, and public author chips for the post author and comment authors.
-- `profile.html`: authenticated profile with private approval metrics, avatar upload/removal controls, owner post management, and admin tools for admins.
+- `profile.html`: authenticated profile with private approval metrics, an avatar-attached contextual image menu for upload/removal, owner post management, and admin tools for admins.
 - `collections.html`: authenticated owner page for collection creation and collection-item management, with a single in-page `New collection` modal trigger.
 - `collection.html`: public collection page with ordered collection items and sequence context for each item.
 - `admin/reviews.html`: moderation review flow and admin-only moderator management panel.
