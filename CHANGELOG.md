@@ -15,17 +15,22 @@ All notable changes to this project should be documented in this file.
 - Integrated questionnaire authoring into one optional expandable `Add questionnaire / poll` section inside the same modal while preserving the existing post payload shape and backend behavior.
 - Kept questionnaire removal on edit tied to clearing the questionnaire draft and saving, instead of using the expand/collapse control as a destructive toggle.
 - Repositioned the optional poll section below `Post images` and restyled it as a neutral disclosure row so it no longer competes visually with uploads or the `Publish` action.
+- Refined the profile avatar controls into a compact avatar-attached contextual menu with `Upload photo` and `Remove photo`, preserving the existing avatar upload/remove endpoints and owner-only behavior.
 - Realigned collection feed cards, owner collection cards, public collection detail, and questionnaire blocks to the same spacing and chip rhythm used by post/feed cards.
 - Replaced remaining collection-facing `reading path` copy with consistent `collection` terminology and shifted collection/questionnaire accent labels to the existing Patrick typography treatment.
 
 ### Fixed
 
 - Kept the post detail comment composer collapsed on initial load so opening a post no longer auto-expands the comment area before the user explicitly chooses to comment.
+- Fixed the profile avatar upload action so the file picker is no longer interrupted by an immediate menu rerender, and removed the obsolete profile-image helper panel from the profile card.
+- Kept the profile reputation badge and approval line compact so they no longer stretch across empty space after the avatar-card refactor.
+- Kept the private moderation metric card full-width while centering its content so low-content states no longer look visually empty on the profile page.
 
 ### Docs
 
 - Updated frontend docs to describe the feed page as one unified header/discovery surface instead of a separate header plus discovery panel.
 - Updated frontend architecture and frontend guide docs to describe the integrated expandable questionnaire flow.
+- Updated frontend and RFC docs to describe the profile avatar contextual action menu.
 - Updated the questionnaire RFC with the March 12, 2026 UI decision record.
 - Updated the collections/questionnaire frontend docs and RFCs to record the visual unification with the post/feed card system.
 
