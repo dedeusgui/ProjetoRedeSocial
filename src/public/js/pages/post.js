@@ -15,7 +15,7 @@ const state = {
   viewerRole: null,
   viewerId: null,
   postAuthorId: null,
-  commentsOpen: true,
+  commentsOpen: false,
   isReviewSubmitting: false,
   isDeletingPost: false,
   isDeletingComment: false,

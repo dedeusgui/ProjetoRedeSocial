@@ -14,6 +14,10 @@ All notable changes to this project should be documented in this file.
 - Realigned collection feed cards, owner collection cards, public collection detail, and questionnaire blocks to the same spacing and chip rhythm used by post/feed cards.
 - Replaced remaining collection-facing `reading path` copy with consistent `collection` terminology and shifted collection/questionnaire accent labels to the existing Patrick typography treatment.
 
+### Fixed
+
+- Kept the post detail comment composer collapsed on initial load so opening a post no longer auto-expands the comment area before the user explicitly chooses to comment.
+
 ### Docs
 
 - Updated frontend docs to describe the feed page as one unified header/discovery surface instead of a separate header plus discovery panel.
