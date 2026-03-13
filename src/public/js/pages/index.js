@@ -3,6 +3,7 @@ import { createFlash } from "../components/flash.js";
 import { HOME_NOTICE_KEY } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import { resolveApiMessage } from "../core/http-state.js";
+import { clearSession } from "../core/session.js";
 import { hasSession } from "../core/session.js";
 import { saveSessionToken } from "../core/session.js";
 
@@ -33,6 +34,25 @@ function renderAuthExperience() {
   }
 
   return isAuthenticated;
+}
+
+async function checkAuthOnLoad() {
+  if (!hasSession()) {
+    renderAuthExperience();
+    return false;
+  }
+
+  toggleHidden(elements.authAnon, true);
+
+  try {
+    await api.users.meProfile();
+    window.location.href = "./feed.html";
+    return true;
+  } catch {
+    clearSession();
+    renderAuthExperience();
+    return false;
+  }
 }
 
 function consumeHomeNotice() {
@@ -120,11 +140,16 @@ function bindEvents() {
   }
 }
 
-function init() {
+async function init() {
   bindNavigation();
-  renderAuthExperience();
+
+  const redirectedToFeed = await checkAuthOnLoad();
+  if (redirectedToFeed) {
+    return;
+  }
+
   consumeHomeNotice();
   bindEvents();
 }
 
-init();
+void init();

@@ -30,14 +30,28 @@
         <section class="card">
           <h2 class="ink-underline">Sign in</h2>
           <p class="muted">Access your account to continue.</p>
-          <form data-login-form>
-            <label>
+          <form data-login-form id="login-form" autocomplete="on">
+            <label for="login-email">
               Email
-              <input name="email" type="email" placeholder="you@example.com" required />
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
             </label>
-            <label>
+            <label for="login-password">
               Password
-              <input name="password" type="password" placeholder="Your password" required />
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                placeholder="Your password"
+                autocomplete="current-password"
+                required
+              />
             </label>
             <button type="submit">Sign in</button>
           </form>
@@ -47,18 +61,40 @@
         <section class="card">
           <h2 class="ink-underline">Create account</h2>
           <p class="muted">Create an account to publish, respond, and curate your own content.</p>
-          <form data-register-form>
-            <label>
+          <form data-register-form id="register-form" autocomplete="on">
+            <label for="register-username">
               Username
-              <input name="username" placeholder="your_username" required maxlength="40" />
+              <input
+                id="register-username"
+                name="username"
+                placeholder="your_username"
+                autocomplete="username"
+                required
+                maxlength="40"
+              />
             </label>
-            <label>
+            <label for="register-email">
               Email
-              <input name="email" type="email" placeholder="you@example.com" required />
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
             </label>
-            <label>
+            <label for="register-password">
               Password
-              <input name="password" type="password" placeholder="Minimum 6 characters" required minlength="6" />
+              <input
+                id="register-password"
+                name="password"
+                type="password"
+                placeholder="Minimum 6 characters"
+                autocomplete="new-password"
+                required
+                minlength="6"
+              />
             </label>
             <button type="submit">Create account</button>
           </form>

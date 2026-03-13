@@ -2,6 +2,18 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-13
+
+### Fixed
+
+- Updated the `index.html` sign-in and registration forms to use browser-recognizable autocomplete semantics so saved credentials can be suggested again after logout without any JavaScript-managed password handling.
+- Updated the `index.html` boot flow to validate any stored token with `GET /api/v1/me/profile` before redirecting to `feed.html`, so stale or invalid local sessions no longer block the sign-in screen.
+
+### Docs
+
+- Documented the frontend rule that auth forms must rely on standard HTML autocomplete tokens instead of manual password autofill logic.
+- Documented the authenticated home-page boot rule that treats stored tokens as tentative until backend validation succeeds.
+
 ## 2026-03-12
 
 ### Added
