@@ -4,6 +4,17 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-13
 
+### Added
+
+- Added authenticated self-service account deletion with `DELETE /api/v1/me`.
+- Added a profile-page danger zone and confirmation modal that requires the exact word `DELETE` before permanent account deletion.
+- Added RFC `docs/rfcs/profile-account-deletion.md`.
+
+### Changed
+
+- Unified self-delete and admin delete behind shared backend cleanup so both flows now remove avatar files, authored post-media files, authored content, remaining collection references, and then recalculate derived stats.
+- Blocked `admin` accounts from self-delete on the profile page and in `DELETE /api/v1/me`.
+
 ### Fixed
 
 - Updated the `index.html` sign-in and registration forms to use browser-recognizable autocomplete semantics so saved credentials can be suggested again after logout without any JavaScript-managed password handling.
@@ -11,6 +22,7 @@ All notable changes to this project should be documented in this file.
 
 ### Docs
 
+- Documented the new self-delete endpoint, shared backend cleanup path, and profile danger-zone UX.
 - Documented the frontend rule that auth forms must rely on standard HTML autocomplete tokens instead of manual password autofill logic.
 - Documented the authenticated home-page boot rule that treats stored tokens as tentative until backend validation succeeds.
 

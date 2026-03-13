@@ -3,9 +3,9 @@ import UserService from "./services/UserService.js";
 import UserController from "./controllers/UserController.js";
 import createUserRoutes from "./routes/userRoutes.js";
 
-function createUsersModule() {
+function createUsersModule({ accountDeletionService = null } = {}) {
   const userRepository = new UserRepository();
-  const userService = new UserService(userRepository);
+  const userService = new UserService(userRepository, accountDeletionService);
   const userController = new UserController(userService);
   const router = createUserRoutes(userController);
 

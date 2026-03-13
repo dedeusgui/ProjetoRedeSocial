@@ -509,6 +509,7 @@ Example request:
   - deletes user-authored posts, comments, and reviews
   - deletes authored collections
   - removes user-authored posts from all collections
+  - removes avatar and authored post-media files from local storage
   - deletes user-authored comments and reviews on other posts
   - recomputes post trends and private metrics for remaining data
 
@@ -544,6 +545,26 @@ Example request:
   - private metrics:
     - `score` (approval percentage in range `0` to `100` using `approvedCount / totalReviews * 100`)
     - `totalReviews`
+
+### `DELETE /api/v1/me`
+
+- Auth: required (`user` or `moderator`)
+- Success: `200`
+- Returns:
+  - `id`
+  - `username`
+  - `email`
+  - `role`
+  - `deletedAt`
+- Rules:
+  - deletes the authenticated account permanently
+  - `admin` accounts cannot use this endpoint
+- Side effects:
+  - deletes authored collections
+  - deletes authored posts, comments, and reviews
+  - removes authored posts from remaining collections
+  - removes avatar and authored post-media files from local storage
+  - recomputes post trends and private metrics for remaining data
 
 ### `POST /api/v1/me/avatar`
 

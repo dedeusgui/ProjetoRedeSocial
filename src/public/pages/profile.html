@@ -45,6 +45,26 @@
         <p class="muted status-line" data-admin-users-status></p>
         <div class="admin-user-grid" data-admin-users-list></div>
       </section>
+
+      <section class="card danger-zone-card" data-profile-danger-zone hidden>
+        <div class="danger-zone-header">
+          <div class="danger-zone-copy">
+            <h2 class="ink-underline">Delete account permanently</h2>
+            <p class="muted">
+              This permanently deletes your profile, collections, posts, uploaded content, reviews,
+              comments, followed tags, and account data.
+            </p>
+            <p class="muted danger-zone-note" data-delete-account-note hidden></p>
+          </div>
+          <button
+            type="button"
+            class="button-danger-outline"
+            data-open-delete-account-modal
+          >
+            Delete my account
+          </button>
+        </div>
+      </section>
     </main>
 
     <dialog class="modal" data-post-modal>
@@ -117,6 +137,65 @@
           <button type="submit" data-post-modal-submit>Publish</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>
+      </section>
+    </dialog>
+
+    <dialog class="modal" data-delete-account-modal>
+      <section class="card modal-card danger-modal-card">
+        <div class="danger-modal-header">
+          <div class="danger-modal-heading">
+            <span class="danger-modal-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path
+                  d="M12 3.5 21 20.5H3L12 3.5Zm0 5.4v5.5m0 2.85v.25"
+                />
+              </svg>
+            </span>
+            <div class="danger-modal-heading-copy">
+              <h2 class="ink-underline">Delete your account?</h2>
+              <p class="muted">This action is permanent and cannot be undone.</p>
+            </div>
+          </div>
+        </div>
+        <form class="modal-form-layout" data-delete-account-form>
+          <section class="modal-form-section danger-modal-section">
+            <p class="muted">
+              You are about to permanently delete
+              <strong data-delete-account-username>@username</strong>.
+            </p>
+            <ul class="danger-modal-list">
+              <li>Profile details and avatar</li>
+              <li>Collections and collection ownership</li>
+              <li>Posts, images, questionnaires, and comments</li>
+              <li>Reviews and moderation history</li>
+              <li>Stored account data, including followed tags</li>
+            </ul>
+          </section>
+
+          <section class="modal-form-section danger-modal-section">
+            <label>
+              Type <strong>DELETE</strong> to confirm
+              <input
+                name="confirmation"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                data-delete-account-confirmation
+              />
+              <span class="muted">The button stays disabled until the exact word is entered.</span>
+            </label>
+          </section>
+
+          <div class="row modal-submit-row danger-modal-actions">
+            <button type="button" class="button-ghost" data-delete-account-cancel>
+              Cancel
+            </button>
+            <button type="submit" class="button-reject" data-delete-account-submit disabled>
+              Delete everything
+            </button>
+          </div>
+        </form>
+        <p class="muted status-line" data-delete-account-status></p>
       </section>
     </dialog>
     <script type="module" src="../js/pages/profile.js"></script>

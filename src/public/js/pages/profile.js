@@ -10,6 +10,9 @@ import { renderProfileView } from "../features/profile/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 
 const AUTH_REQUIRED_NOTICE = "Authentication required to access your profile.";
+const ACCOUNT_DELETED_NOTICE = "Your account was permanently deleted.";
+const DELETE_ACCOUNT_CONFIRMATION = "DELETE";
+const DELETE_ACCOUNT_BLOCKED_NOTICE = "Admin accounts cannot be deleted from the profile page.";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
@@ -22,6 +25,16 @@ const elements = {
   adminUsersStatus: document.querySelector("[data-admin-users-status]"),
   adminUsersList: document.querySelector("[data-admin-users-list]"),
   adminUsersRefresh: document.querySelector("[data-admin-users-refresh]"),
+  dangerZone: document.querySelector("[data-profile-danger-zone]"),
+  deleteAccountNote: document.querySelector("[data-delete-account-note]"),
+  openDeleteAccountModalButton: document.querySelector("[data-open-delete-account-modal]"),
+  deleteAccountModal: document.querySelector("[data-delete-account-modal]"),
+  deleteAccountForm: document.querySelector("[data-delete-account-form]"),
+  deleteAccountUsername: document.querySelector("[data-delete-account-username]"),
+  deleteAccountConfirmationInput: document.querySelector("[data-delete-account-confirmation]"),
+  deleteAccountCancelButton: document.querySelector("[data-delete-account-cancel]"),
+  deleteAccountSubmitButton: document.querySelector("[data-delete-account-submit]"),
+  deleteAccountStatus: document.querySelector("[data-delete-account-status]"),
   openPostModalButton: document.querySelector("[data-open-post-modal]"),
   postModal: document.querySelector("[data-post-modal]"),
   postModalTitle: document.querySelector("[data-post-modal-title]"),
@@ -39,10 +52,12 @@ const elements = {
 const statusFlash = createFlash(elements.status);
 const postsFlash = createFlash(elements.postsStatus);
 const adminUsersFlash = createFlash(elements.adminUsersStatus);
+const deleteAccountFlash = createFlash(elements.deleteAccountStatus);
 
 const state = {
   currentUserId: null,
   isDeletingUser: false,
+  isDeletingAccount: false,
   isUpdatingAvatar: false,
   isAvatarMenuOpen: false,
   profile: null,
@@ -64,6 +79,14 @@ function resolveMessage(error) {
   );
 }
 
+function resolveDeleteAccountMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Authentication required to delete your account.",
+    "Could not delete your account.",
+  );
+}
+
 function redirectToHome(noticeMessage = AUTH_REQUIRED_NOTICE) {
   try {
     window.sessionStorage.setItem(HOME_NOTICE_KEY, noticeMessage);
@@ -76,6 +99,9 @@ function redirectToHome(noticeMessage = AUTH_REQUIRED_NOTICE) {
 
 function renderProfile() {
   if (!state.profile) {
+    if (elements.dangerZone) {
+      elements.dangerZone.hidden = true;
+    }
     return;
   }
 
@@ -83,6 +109,7 @@ function renderProfile() {
     isAvatarBusy: state.isUpdatingAvatar,
     isAvatarMenuOpen: state.isAvatarMenuOpen,
   });
+  syncDeleteAccountAvailability();
 }
 
 function getAvatarMenuRoot() {
@@ -134,6 +161,92 @@ function closeAvatarMenu({ focusTarget = "none" } = {}) {
 
 function renderOwnedContent() {
   renderProfilePostList(elements.posts, state.posts);
+}
+
+function canDeleteOwnAccount() {
+  return Boolean(state.profile) && state.profile.role !== "admin";
+}
+
+function syncDeleteAccountAvailability() {
+  if (!elements.dangerZone || !state.profile) {
+    return;
+  }
+
+  elements.dangerZone.hidden = false;
+
+  if (elements.deleteAccountUsername) {
+    elements.deleteAccountUsername.textContent = `@${state.profile.username ?? "user"}`;
+  }
+
+  if (elements.deleteAccountNote) {
+    const blockedMessage = canDeleteOwnAccount() ? "" : DELETE_ACCOUNT_BLOCKED_NOTICE;
+    elements.deleteAccountNote.textContent = blockedMessage;
+    elements.deleteAccountNote.hidden = !blockedMessage;
+    if (blockedMessage) {
+      elements.deleteAccountNote.dataset.state = "error";
+    } else {
+      delete elements.deleteAccountNote.dataset.state;
+    }
+  }
+
+  if (elements.openDeleteAccountModalButton) {
+    elements.openDeleteAccountModalButton.disabled = !canDeleteOwnAccount() || state.isDeletingAccount;
+  }
+
+  updateDeleteAccountModalUi();
+
+  if (!canDeleteOwnAccount() && elements.deleteAccountModal?.open && !state.isDeletingAccount) {
+    elements.deleteAccountModal.close();
+  }
+}
+
+function updateDeleteAccountModalUi() {
+  const confirmationValue = elements.deleteAccountConfirmationInput?.value ?? "";
+  const canConfirmDeletion =
+    canDeleteOwnAccount() &&
+    confirmationValue === DELETE_ACCOUNT_CONFIRMATION &&
+    !state.isDeletingAccount;
+
+  if (elements.deleteAccountConfirmationInput) {
+    elements.deleteAccountConfirmationInput.disabled = state.isDeletingAccount || !canDeleteOwnAccount();
+  }
+
+  if (elements.deleteAccountCancelButton) {
+    elements.deleteAccountCancelButton.disabled = state.isDeletingAccount;
+  }
+
+  if (elements.deleteAccountSubmitButton) {
+    elements.deleteAccountSubmitButton.disabled = !canConfirmDeletion;
+  }
+}
+
+function resetDeleteAccountModalState() {
+  elements.deleteAccountForm?.reset();
+  deleteAccountFlash.clear();
+  updateDeleteAccountModalUi();
+}
+
+function closeDeleteAccountModal() {
+  if (state.isDeletingAccount || !elements.deleteAccountModal?.open) {
+    return;
+  }
+
+  elements.deleteAccountModal.close();
+}
+
+function openDeleteAccountModal() {
+  if (!state.profile) {
+    return;
+  }
+
+  if (!canDeleteOwnAccount()) {
+    statusFlash.show(DELETE_ACCOUNT_BLOCKED_NOTICE, "error");
+    return;
+  }
+
+  resetDeleteAccountModalState();
+  elements.deleteAccountModal?.showModal();
+  elements.deleteAccountConfirmationInput?.focus();
 }
 
 function handleAuthFailure(error) {
@@ -233,6 +346,38 @@ async function deleteUserForTesting(userId) {
     adminUsersFlash.show(resolveAdminUsersMessage(error), "error");
   } finally {
     state.isDeletingUser = false;
+  }
+}
+
+async function deleteOwnAccount(event) {
+  event.preventDefault();
+
+  if (state.isDeletingAccount || !canDeleteOwnAccount()) {
+    return;
+  }
+
+  if ((elements.deleteAccountConfirmationInput?.value ?? "") !== DELETE_ACCOUNT_CONFIRMATION) {
+    updateDeleteAccountModalUi();
+    return;
+  }
+
+  state.isDeletingAccount = true;
+  syncDeleteAccountAvailability();
+  deleteAccountFlash.show("Deleting account...", "info");
+
+  try {
+    await api.users.deleteMe();
+    clearSession();
+    redirectToHome(ACCOUNT_DELETED_NOTICE);
+  } catch (error) {
+    if (handleAuthFailure(error)) {
+      return;
+    }
+
+    deleteAccountFlash.show(resolveDeleteAccountMessage(error), "error");
+  } finally {
+    state.isDeletingAccount = false;
+    syncDeleteAccountAvailability();
   }
 }
 
@@ -401,6 +546,36 @@ function bindAdminEvents() {
   }
 }
 
+function bindDeleteAccountEvents() {
+  elements.openDeleteAccountModalButton?.addEventListener("click", openDeleteAccountModal);
+
+  elements.deleteAccountCancelButton?.addEventListener("click", closeDeleteAccountModal);
+
+  elements.deleteAccountConfirmationInput?.addEventListener("input", () => {
+    updateDeleteAccountModalUi();
+  });
+
+  elements.deleteAccountForm?.addEventListener("submit", deleteOwnAccount);
+
+  if (elements.deleteAccountModal) {
+    elements.deleteAccountModal.addEventListener("click", (event) => {
+      if (event.target === elements.deleteAccountModal && !state.isDeletingAccount) {
+        closeDeleteAccountModal();
+      }
+    });
+
+    elements.deleteAccountModal.addEventListener("cancel", (event) => {
+      if (state.isDeletingAccount) {
+        event.preventDefault();
+      }
+    });
+
+    elements.deleteAccountModal.addEventListener("close", () => {
+      resetDeleteAccountModalState();
+    });
+  }
+}
+
 function bindProfileEvents() {
   if (elements.profile) {
     elements.profile.addEventListener("change", (event) => {
@@ -496,6 +671,7 @@ async function init() {
   bindNavigation();
   navbar.refresh();
   bindAdminEvents();
+  bindDeleteAccountEvents();
   bindProfileEvents();
   await loadProfile();
 }

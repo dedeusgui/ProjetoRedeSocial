@@ -357,6 +357,23 @@ button:disabled {
   background: linear-gradient(180deg, #4a2a2a 0%, #3b2222 100%);
 }
 
+.button-danger-outline {
+  border-color: rgba(186, 144, 144, 0.6);
+  background: transparent;
+  color: #d7b0b0;
+}
+
+.button-danger-outline:hover {
+  border-color: rgba(215, 176, 176, 0.82);
+  background: rgba(74, 42, 42, 0.16);
+}
+
+.button-danger-outline:disabled {
+  border-color: var(--line-0);
+  background: transparent;
+  color: var(--text-2);
+}
+
 input,
 textarea,
 select {
@@ -1999,6 +2016,74 @@ select:focus-visible {
   border-color: rgba(104, 131, 168, 0.24);
 }
 
+.danger-zone-header,
+.danger-zone-copy,
+.danger-modal-heading,
+.danger-modal-heading-copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.danger-zone-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.danger-zone-note {
+  max-width: 52ch;
+}
+
+.danger-modal-card {
+  gap: var(--space-4);
+}
+
+.danger-modal-heading {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.danger-modal-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(186, 144, 144, 0.42);
+  border-radius: 999px;
+  background: rgba(74, 42, 42, 0.22);
+  color: #d7b0b0;
+}
+
+.danger-modal-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.danger-modal-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: var(--space-2);
+  color: var(--text-1);
+}
+
+.danger-modal-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.danger-modal-actions {
+  justify-content: flex-end;
+}
+
 .content-panel-header {
   justify-content: space-between;
   align-items: start;
@@ -2092,5 +2177,14 @@ select:focus-visible {
 
   .collection-card-order {
     align-items: flex-start;
+  }
+
+  .danger-zone-header {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .danger-zone-header .button-danger-outline {
+    width: 100%;
   }
 }

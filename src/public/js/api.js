@@ -127,6 +127,9 @@ export const api = {
     meProfile() {
       return request("GET", "/me/profile");
     },
+    deleteMe() {
+      return request("DELETE", "/me");
+    },
     uploadAvatar(file) {
       const formData = new FormData();
       formData.append("avatar", file);

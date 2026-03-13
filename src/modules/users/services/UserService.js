@@ -10,8 +10,9 @@ import {
 import { normalizeFollowedTag, normalizeFollowedTags } from "../../../common/tags/followedTags.js";
 
 class UserService {
-  constructor(userRepository) {
+  constructor(userRepository, accountDeletionService = null) {
     this.userRepository = userRepository;
+    this.accountDeletionService = accountDeletionService;
   }
 
   async getMeProfile(userId) {
@@ -35,6 +36,16 @@ class UserService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  async deleteMe(requester) {
+    if (!this.accountDeletionService) {
+      throw new Error("Account deletion service is unavailable.");
+    }
+
+    return this.accountDeletionService.deleteOwnAccount({
+      userId: requester?.id,
+    });
   }
 
   async safeDeleteFiles(filePaths) {

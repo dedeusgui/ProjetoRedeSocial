@@ -8,6 +8,8 @@ import env from "./config/env.js";
 import errorHandler from "./common/http/errorHandler.js";
 import { sendSuccess } from "./common/http/responses.js";
 import AppError from "./common/errors/AppError.js";
+import AccountDeletionRepository from "./common/users/AccountDeletionRepository.js";
+import AccountDeletionService from "./common/users/AccountDeletionService.js";
 import createAuthModule from "./modules/auth/index.js";
 import createUsersModule from "./modules/users/index.js";
 import createCommentsModule from "./modules/comments/index.js";
@@ -29,7 +31,14 @@ function createApp() {
   app.use("/uploads", express.static(env.uploadRoot));
   app.use(express.static(path.join(__dirname, "public")));
 
-  const usersModule = createUsersModule();
+  const accountDeletionRepository = new AccountDeletionRepository();
+  const accountDeletionService = new AccountDeletionService(
+    accountDeletionRepository,
+    env.adminEmails,
+  );
+  const usersModule = createUsersModule({
+    accountDeletionService,
+  });
   const commentsModule = createCommentsModule();
   const collectionsModule = createCollectionsModule();
   const postsModule = createPostsModule({
@@ -43,6 +52,7 @@ function createApp() {
   });
   const adminModule = createAdminModule({
     adminEmails: env.adminEmails,
+    accountDeletionService,
   });
   const moderationModule = createModerationModule({
     postService: postsModule.service,

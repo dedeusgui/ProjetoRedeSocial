@@ -4,6 +4,7 @@ class UserController {
   constructor(userService) {
     this.userService = userService;
     this.getMeProfile = this.getMeProfile.bind(this);
+    this.deleteMe = this.deleteMe.bind(this);
     this.getFollowedTags = this.getFollowedTags.bind(this);
     this.followTag = this.followTag.bind(this);
     this.unfollowTag = this.unfollowTag.bind(this);
@@ -14,6 +15,11 @@ class UserController {
   async getMeProfile(req, res) {
     const profile = await this.userService.getMeProfile(req.user.id);
     return sendSuccess(res, profile);
+  }
+
+  async deleteMe(req, res) {
+    const result = await this.userService.deleteMe(req.user);
+    return sendSuccess(res, result);
   }
 
   async getFollowedTags(req, res) {

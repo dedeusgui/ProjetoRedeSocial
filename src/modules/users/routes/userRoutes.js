@@ -8,6 +8,7 @@ function createUserRoutes(controller) {
   const router = Router();
 
   router.get("/me/profile", auth, asyncHandler(controller.getMeProfile));
+  router.delete("/me", auth, asyncHandler(controller.deleteMe));
   router.post(
     "/me/avatar",
     auth,
