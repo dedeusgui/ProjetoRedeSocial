@@ -2,6 +2,22 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-16
+
+### Changed
+
+- Replaced the feed-page followed-tags dropdown with a dedicated management modal that keeps the manual follow form at the top, shows a followed-tag counter, and renders followed tags as scrollable chips with clear unfollow actions.
+- Standardized followed-tag normalization across frontend and backend to trim input, collapse repeated whitespace before validation, lowercase stored values, and restrict canonical followed tags to 32 characters using only letters, numbers, hyphen, and underscore.
+
+### Fixed
+
+- Removed the followed-tags management XSS vector by replacing the unsafe `innerHTML` rendering path with DOM-based chip rendering via `createElement` and `textContent`.
+- Prevented oversized or invalid followed tags from breaking the feed management layout by truncating chip labels visually, preserving the full tag in `title`, and keeping the list inside a bounded scroll area.
+
+### Docs
+
+- Updated architecture, frontend, API, and RFC docs to reflect the followed-tags management modal and the stricter canonical followed-tag validation rules.
+
 ## 2026-03-13
 
 ### Added

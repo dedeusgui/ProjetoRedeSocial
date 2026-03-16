@@ -2,6 +2,10 @@
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import {
+  normalizeFollowTagValue,
+  normalizeFollowedTags,
+} from "../core/followed-tags.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
@@ -109,18 +113,8 @@ function resolveFollowTagMessage(error) {
   );
 }
 
-function normalizeFollowTagValue(value) {
-  return String(value ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
 function setFollowedTags(tags) {
-  state.followedTags = [...new Set((Array.isArray(tags) ? tags : [])
-    .map((tag) => normalizeFollowTagValue(tag))
-    .filter((tag) => tag.length > 0))]
-    .sort((left, right) => left.localeCompare(right));
+  state.followedTags = normalizeFollowedTags(tags);
 }
 
 function resetCommentEditState() {

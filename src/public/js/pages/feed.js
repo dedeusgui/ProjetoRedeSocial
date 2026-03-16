@@ -2,10 +2,18 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import {
+  FOLLOWED_TAG_ALLOWED_DESCRIPTION,
+  FOLLOWED_TAG_MAX_LENGTH,
+  normalizeFollowTagValue,
+  normalizeFollowedTags,
+  validateFollowTagValue,
+} from "../core/followed-tags.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
 import { renderCollectionFeedList } from "../features/collections/feed-renderers.js";
 import { renderFeedList } from "../features/feed/renderers.js";
+import { renderFollowedTagsList } from "../features/followed-tags/renderers.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 
@@ -38,10 +46,13 @@ const elements = {
   searchResetButton: document.querySelector("[data-feed-search-reset]"),
   followTagsGuest: document.querySelector("[data-follow-tags-guest]"),
   followTagsAuth: document.querySelector("[data-follow-tags-auth]"),
+  followedTagsToolbarCount: document.querySelector("[data-followed-tags-toolbar-count]"),
+  openFollowedTagsModalButton: document.querySelector("[data-open-followed-tags-modal]"),
   followTagForm: document.querySelector("[data-follow-tag-form]"),
   followTagInput: document.querySelector("[data-follow-tag-input]"),
   followTagSubmit: document.querySelector("[data-follow-tag-submit]"),
-  followedTagsDropdown: document.querySelector("[data-followed-tags-dropdown]"),
+  followedTagsModal: document.querySelector("[data-followed-tags-modal]"),
+  followedTagsModalCloseButton: document.querySelector("[data-followed-tags-modal-close]"),
   followedTagsSummary: document.querySelector("[data-followed-tags-summary]"),
   followedTagsList: document.querySelector("[data-followed-tags-list]"),
   followTagStatus: document.querySelector("[data-follow-tag-status]"),
@@ -101,18 +112,8 @@ function resolveFeedLoadMessage(error) {
   );
 }
 
-function normalizeFollowTagValue(value) {
-  return String(value ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
 function setFollowedTags(tags) {
-  state.followedTags = [...new Set((Array.isArray(tags) ? tags : [])
-    .map((tag) => normalizeFollowTagValue(tag))
-    .filter((tag) => tag.length > 0))]
-    .sort((left, right) => left.localeCompare(right));
+  state.followedTags = normalizeFollowedTags(tags);
 }
 
 function isCollectionsFeed() {
@@ -191,6 +192,30 @@ function resolveLoadedFeedMessage() {
   return "";
 }
 
+function resolveFollowedTagsCountLabel(count) {
+  if (count <= 0) {
+    return "No followed tags yet.";
+  }
+
+  return count === 1 ? "1 followed tag" : `${count} followed tags`;
+}
+
+function resolveFollowTagValidationMessage(result) {
+  if (!result || !result.errorCode) {
+    return "";
+  }
+
+  if (result.errorCode === "too_long") {
+    return `Use at most ${FOLLOWED_TAG_MAX_LENGTH} characters.`;
+  }
+
+  if (result.errorCode === "invalid_chars") {
+    return `Use only ${FOLLOWED_TAG_ALLOWED_DESCRIPTION}.`;
+  }
+
+  return "Type a tag before submitting.";
+}
+
 function syncSearchControls() {
   if (elements.searchLabel) {
     elements.searchLabel.textContent = resolveSearchLabel();
@@ -212,6 +237,25 @@ function syncSearchControls() {
   }
 }
 
+function closeFollowedTagsModal() {
+  if (elements.followedTagsModal?.open) {
+    elements.followedTagsModal.close();
+  }
+}
+
+function openFollowedTagsModal() {
+  if (!hasSession()) {
+    statusFlash.show("Sign in to follow tags.", "error");
+    return;
+  }
+
+  if (!elements.followedTagsModal?.open) {
+    elements.followedTagsModal?.showModal();
+  }
+
+  elements.followTagInput?.focus();
+}
+
 function renderFollowedTagsPanel() {
   const authenticated = hasSession();
 
@@ -221,6 +265,11 @@ function renderFollowedTagsPanel() {
 
   if (elements.followTagsAuth) {
     elements.followTagsAuth.hidden = !authenticated;
+  }
+
+  if (elements.openFollowedTagsModalButton) {
+    elements.openFollowedTagsModalButton.hidden = !authenticated;
+    elements.openFollowedTagsModalButton.disabled = state.isLoading || state.isManagingTags;
   }
 
   if (elements.followToggleShell) {
@@ -237,10 +286,14 @@ function renderFollowedTagsPanel() {
   });
 
   if (!authenticated) {
-    if (elements.followedTagsDropdown) {
-      elements.followedTagsDropdown.hidden = true;
-      elements.followedTagsDropdown.open = false;
+    closeFollowedTagsModal();
+    if (elements.followedTagsToolbarCount) {
+      elements.followedTagsToolbarCount.textContent = resolveFollowedTagsCountLabel(0);
     }
+    if (elements.followedTagsSummary) {
+      elements.followedTagsSummary.textContent = resolveFollowedTagsCountLabel(0);
+    }
+    renderFollowedTagsList(elements.followedTagsList, []);
     return;
   }
 
@@ -259,48 +312,17 @@ function renderFollowedTagsPanel() {
     elements.followTagSubmit.disabled = state.isManagingTags;
   }
 
-  if (!elements.followedTagsList) {
-    return;
-  }
-
-  if (elements.followedTagsDropdown) {
-    elements.followedTagsDropdown.hidden = false;
+  if (elements.followedTagsToolbarCount) {
+    elements.followedTagsToolbarCount.textContent = resolveFollowedTagsCountLabel(state.followedTags.length);
   }
 
   if (elements.followedTagsSummary) {
-    elements.followedTagsSummary.textContent = hasFollowedTags()
-      ? `Followed tags (${state.followedTags.length})`
-      : "Followed tags";
+    elements.followedTagsSummary.textContent = resolveFollowedTagsCountLabel(state.followedTags.length);
   }
 
-  if (!hasFollowedTags()) {
-    elements.followedTagsList.innerHTML = "<p class='muted'>No followed tags yet.</p>";
-    return;
-  }
-
-  elements.followedTagsList.innerHTML = `
-    <ul class="tag-list" aria-label="Followed tags">
-      ${state.followedTags
-        .map(
-          (tag) => `
-            <li class="tag-item tag-item-actionable">
-              <span class="tag-label">#${tag}</span>
-              <button
-                type="button"
-                class="tag-follow-button button-ghost"
-                data-follow-tag="${tag}"
-                data-following="true"
-                aria-pressed="true"
-                ${state.isManagingTags ? "disabled" : ""}
-              >
-                Following
-              </button>
-            </li>
-          `,
-        )
-        .join("")}
-    </ul>
-  `;
+  renderFollowedTagsList(elements.followedTagsList, state.followedTags, {
+    disabled: state.isManagingTags,
+  });
 }
 
 function renderFeed() {
@@ -569,10 +591,12 @@ async function handleManualFollowTag(event) {
 
   const formData = new FormData(elements.followTagForm);
   const rawValue = String(formData.get("tag") ?? "");
-  const normalizedTag = normalizeFollowTagValue(rawValue);
+  const validation = validateFollowTagValue(rawValue);
+  const normalizedTag = validation.normalizedValue;
 
-  if (!normalizedTag) {
-    followTagFlash.show("Type a tag before submitting.", "error");
+  if (validation.errorCode) {
+    followTagFlash.show(resolveFollowTagValidationMessage(validation), "error");
+    elements.followTagInput?.focus();
     return;
   }
 
@@ -702,6 +726,8 @@ function bindEvents() {
     elements.searchInput?.focus();
   });
 
+  elements.openFollowedTagsModalButton?.addEventListener("click", openFollowedTagsModal);
+  elements.followedTagsModalCloseButton?.addEventListener("click", closeFollowedTagsModal);
   elements.followTagForm?.addEventListener("submit", handleManualFollowTag);
 
   elements.feedTypeButtons.forEach((button) => {
@@ -731,15 +757,24 @@ function bindEvents() {
     loadFeed();
   });
 
-  elements.followTagsAuth?.addEventListener("click", (event) => {
+  elements.followedTagsModal?.addEventListener("click", (event) => {
+    if (event.target === elements.followedTagsModal) {
+      closeFollowedTagsModal();
+      return;
+    }
+
     const followButton = event.target.closest("[data-follow-tag]");
-    if (followButton && elements.followTagsAuth.contains(followButton)) {
+    if (followButton && elements.followedTagsModal.contains(followButton)) {
       const tag = String(followButton.dataset.followTag ?? "").trim();
       const currentlyFollowing = followButton.dataset.following === "true";
       if (tag) {
         toggleFollowTag(tag, currentlyFollowing);
       }
     }
+  });
+
+  elements.followedTagsModal?.addEventListener("close", () => {
+    followTagFlash.clear();
   });
 
   elements.loadMore?.addEventListener("click", () => {

@@ -2,7 +2,7 @@ import AppError from "../../../common/errors/AppError.js";
 import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
 import { formatQuestionnaire } from "../../../common/posts/questionnaire.js";
 import { buildSequenceSummary } from "../../../common/posts/sequence.js";
-import { normalizeFollowedTags } from "../../../common/tags/followedTags.js";
+import { normalizeLooseTagValues } from "../../../common/tags/followedTags.js";
 import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
@@ -23,7 +23,7 @@ class CollectionService {
   }
 
   normalizeTags(tags) {
-    const normalized = normalizeFollowedTags(tags);
+    const normalized = normalizeLooseTagValues(tags);
     if (normalized.length > COLLECTION_MAX_TAGS) {
       throw new AppError(
         `A collection can include at most ${COLLECTION_MAX_TAGS} tags.`,

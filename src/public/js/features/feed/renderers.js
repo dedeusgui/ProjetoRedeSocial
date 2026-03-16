@@ -3,6 +3,10 @@ import {
   formatDateTime,
   formatPercent,
 } from "../../core/formatters.js";
+import {
+  formatFollowTagLabel,
+  normalizeFollowTagValue,
+} from "../../core/followed-tags.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
 import { renderPostContextLinks } from "../posts/context-renderers.js";
 import { renderQuestionnairePreview } from "../questionnaire/renderers.js";
@@ -16,18 +20,6 @@ export function ensureChronologicalOrder(items) {
 
     return String(b.id).localeCompare(String(a.id));
   });
-}
-
-function normalizeTagForFollow(tag) {
-  return String(tag ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
-function formatTagLabel(tag) {
-  const normalized = String(tag ?? "").trim().replace(/^#+/, "");
-  return normalized || String(tag ?? "").trim();
 }
 
 function renderFeedMedia(media, fallbackText) {
@@ -63,8 +55,8 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
     <ul class="tag-list" aria-label="Post tags">
       ${tags
         .map((tag) => {
-          const followTag = normalizeTagForFollow(tag);
-          const label = formatTagLabel(tag);
+          const followTag = normalizeFollowTagValue(tag);
+          const label = formatFollowTagLabel(tag);
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `

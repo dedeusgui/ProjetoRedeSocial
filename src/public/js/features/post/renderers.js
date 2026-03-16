@@ -1,19 +1,11 @@
 import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
+import {
+  formatFollowTagLabel,
+  normalizeFollowTagValue,
+} from "../../core/followed-tags.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
 import { renderCollectionPillList, renderPostContextLinks } from "../posts/context-renderers.js";
 import { renderQuestionnaireDetail } from "../questionnaire/renderers.js";
-
-function normalizeTagForFollow(tag) {
-  return String(tag ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
-function formatTagLabel(tag) {
-  const normalized = String(tag ?? "").trim().replace(/^#+/, "");
-  return normalized || String(tag ?? "").trim();
-}
 
 function renderPostMedia(media, fallbackText) {
   const items = Array.isArray(media) ? media.filter((item) => item?.url) : [];
@@ -50,8 +42,8 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
     <ul class="tag-list" aria-label="Post tags">
       ${tags
         .map((tag) => {
-          const followTag = normalizeTagForFollow(tag);
-          const label = formatTagLabel(tag);
+          const followTag = normalizeFollowTagValue(tag);
+          const label = formatFollowTagLabel(tag);
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `

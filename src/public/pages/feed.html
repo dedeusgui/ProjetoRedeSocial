@@ -60,27 +60,12 @@
 
             <div class="follow-tags-auth" data-follow-tags-auth hidden>
               <div class="follow-tags-toolbar">
-                <form class="follow-tag-form" data-follow-tag-form>
-                  <label>
-                    Follow a tag manually
-                    <input
-                      type="text"
-                      name="tag"
-                      placeholder="Example: nodejs"
-                      maxlength="40"
-                      data-follow-tag-input
-                    />
-                  </label>
-                  <button type="submit" data-follow-tag-submit>Follow tag</button>
-                </form>
-
-                <details class="followed-tags-dropdown" data-followed-tags-dropdown>
-                  <summary data-followed-tags-summary>Followed tags</summary>
-                  <div class="followed-tags-list" data-followed-tags-list></div>
-                </details>
+                <div class="follow-tags-toolbar-copy">
+                  <p class="questionnaire-eyebrow">Personalized feed</p>
+                  <p class="muted" data-followed-tags-toolbar-count>No followed tags yet.</p>
+                </div>
+                <button type="button" class="button-ghost" data-open-followed-tags-modal>Manage tags</button>
               </div>
-
-              <p class="muted status-line" data-follow-tag-status></p>
             </div>
           </div>
         </div>
@@ -175,6 +160,53 @@
           <button type="submit" data-post-modal-submit>Publish</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>
+      </section>
+    </dialog>
+
+    <dialog class="modal followed-tags-modal" data-followed-tags-modal>
+      <section class="card modal-card followed-tags-modal-card">
+        <div class="row modal-header">
+          <div class="followed-tags-modal-heading">
+            <p class="questionnaire-eyebrow">Personalized feed</p>
+            <h2 class="ink-underline">Manage followed tags</h2>
+            <p class="muted">Follow tags manually and remove topics from your personalized feed.</p>
+          </div>
+          <button type="button" class="button-ghost" data-followed-tags-modal-close>Close</button>
+        </div>
+
+        <div class="followed-tags-modal-content">
+          <form class="follow-tag-form followed-tags-modal-form" data-follow-tag-form>
+            <label>
+              Follow a tag manually
+              <input
+                type="text"
+                name="tag"
+                placeholder="Example: nodejs"
+                maxlength="32"
+                autocomplete="off"
+                spellcheck="false"
+                data-follow-tag-input
+              />
+              <span class="muted">Use letters, numbers, hyphen, or underscore. Up to 32 characters.</span>
+            </label>
+            <button type="submit" data-follow-tag-submit>Follow tag</button>
+          </form>
+
+          <section class="followed-tags-modal-section" aria-labelledby="followed-tags-list-title">
+            <div class="row followed-tags-modal-summary">
+              <div class="followed-tags-modal-summary-copy">
+                <h3 class="ink-underline" id="followed-tags-list-title">Followed tags</h3>
+                <p class="muted" data-followed-tags-summary>No followed tags yet.</p>
+              </div>
+            </div>
+
+            <div class="followed-tags-list-shell">
+              <div class="followed-tags-list" data-followed-tags-list></div>
+            </div>
+          </section>
+
+          <p class="muted status-line" data-follow-tag-status></p>
+        </div>
       </section>
     </dialog>
     <script type="module" src="../js/pages/feed.js"></script>

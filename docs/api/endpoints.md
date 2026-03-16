@@ -600,6 +600,11 @@ Example request:
 - Success: `200`
 - Returns:
   - `followedTags[]` stored as canonical lowercase values without leading `#`
+- Behavior:
+  - trims the value
+  - collapses repeated whitespace before validation
+  - rejects invalid or oversized stored values and returns only canonical tags
+  - canonical tags are limited to 32 characters and may contain only letters, numbers, hyphen, or underscore
 
 ### `POST /api/v1/me/followed-tags`
 
@@ -609,8 +614,11 @@ Example request:
 - Success: `201`
 - Behavior:
   - trims the value
+  - collapses repeated whitespace before validation
   - removes leading `#`
   - lowercases the stored tag
+  - limits the stored tag to 32 characters
+  - allows only letters, numbers, hyphen, or underscore
   - deduplicates the followed-tag list
 - Returns:
   - `tag` (canonical stored tag)
@@ -622,6 +630,8 @@ Example request:
 - Path params:
   - `tag` is the canonical or URL-encoded tag value to remove
 - Success: `200`
+- Behavior:
+  - applies the same canonicalization and validation rules used on follow
 - Returns:
   - `removedTag`
   - `followedTags[]`

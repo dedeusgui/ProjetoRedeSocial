@@ -77,4 +77,4 @@ Shared account deletion is also composed in `src/server.js` and injected into th
 - `users`: self-delete and admin delete both remove authored collections, posts, comments, reviews, avatar files, post-media files, remaining collection references, and then recalculate derived stats.
 - `users`: avatar uploads are owner-managed, stored on local disk, and exposed publicly only as an image URL on post/comment author summaries.
 - `users`: public reputation is derived server-side from `privateMetrics.score` bands (`0-39 low`, `40-69 medium`, `70-100 high`) and does not expose the exact percentage publicly.
-- `users`: followed tags are stored as canonical lowercase values without leading `#`.
+- `users`: followed tags are stored as canonical lowercase values without leading `#`, limited to 32 characters, and restricted to letters, numbers, hyphen, and underscore.

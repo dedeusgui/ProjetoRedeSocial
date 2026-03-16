@@ -7,12 +7,77 @@ import {
   resolveProfileImageUrl,
   resolvePublicReputation,
 } from "../../../common/users/publicAuthor.js";
-import { normalizeFollowedTag, normalizeFollowedTags } from "../../../common/tags/followedTags.js";
+import {
+  FOLLOWED_TAG_ALLOWED_DESCRIPTION,
+  FOLLOWED_TAG_MAX_LENGTH,
+  normalizeFollowedTags,
+  validateFollowedTagValue,
+} from "../../../common/tags/followedTags.js";
 
 class UserService {
   constructor(userRepository, accountDeletionService = null) {
     this.userRepository = userRepository;
     this.accountDeletionService = accountDeletionService;
+  }
+
+  areStringListsEqual(left, right) {
+    const leftList = Array.isArray(left) ? left.map((value) => String(value ?? "")) : [];
+    const rightList = Array.isArray(right) ? right.map((value) => String(value ?? "")) : [];
+
+    if (leftList.length !== rightList.length) {
+      return false;
+    }
+
+    return leftList.every((value, index) => value === rightList[index]);
+  }
+
+  assertValidFollowedTag(value, { message } = {}) {
+    const result = validateFollowedTagValue(value);
+    if (!result.errorCode) {
+      return result.normalizedValue;
+    }
+
+    if (result.errorCode === "too_long") {
+      throw new AppError(
+        `The tag must be at most ${FOLLOWED_TAG_MAX_LENGTH} characters.`,
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tag",
+          maxLength: FOLLOWED_TAG_MAX_LENGTH,
+        },
+      );
+    }
+
+    if (result.errorCode === "invalid_chars") {
+      throw new AppError(
+        `Use only ${FOLLOWED_TAG_ALLOWED_DESCRIPTION} in followed tags.`,
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tag",
+          allowedDescription: FOLLOWED_TAG_ALLOWED_DESCRIPTION,
+        },
+      );
+    }
+
+    throw new AppError(message ?? "Provide a valid tag.", "VALIDATION_ERROR", 400, {
+      field: "tag",
+    });
+  }
+
+  async syncCanonicalFollowedTags(userId, values) {
+    const canonicalFollowedTags = normalizeFollowedTags(values);
+    if (this.areStringListsEqual(values, canonicalFollowedTags)) {
+      return canonicalFollowedTags;
+    }
+
+    const updated = await this.userRepository.replaceFollowedTags(userId, canonicalFollowedTags);
+    if (!updated) {
+      throw new AppError("User not found.", "NOT_FOUND", 404);
+    }
+
+    return normalizeFollowedTags(updated.followedTags);
   }
 
   async getMeProfile(userId) {
@@ -112,24 +177,20 @@ class UserService {
       throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
-    return normalizeFollowedTags(user.followedTags);
+    return this.syncCanonicalFollowedTags(userId, user.followedTags);
   }
 
   async followTag(userId, payload) {
-    const tag = normalizeFollowedTag(payload?.tag);
-    if (!tag) {
-      throw new AppError("Provide a valid tag to follow.", "VALIDATION_ERROR", 400, {
-        field: "tag",
-      });
-    }
+    const tag = this.assertValidFollowedTag(payload?.tag, {
+      message: "Provide a valid tag to follow.",
+    });
 
     const updated = await this.userRepository.addFollowedTag(userId, tag);
     if (!updated) {
       throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
-    const followedTags = normalizeFollowedTags(updated.followedTags);
-    await this.userRepository.replaceFollowedTags(userId, followedTags);
+    const followedTags = await this.syncCanonicalFollowedTags(userId, updated.followedTags);
 
     return {
       tag,
@@ -138,12 +199,9 @@ class UserService {
   }
 
   async unfollowTag(userId, tagValue) {
-    const tag = normalizeFollowedTag(tagValue);
-    if (!tag) {
-      throw new AppError("Provide a valid tag to remove.", "VALIDATION_ERROR", 400, {
-        field: "tag",
-      });
-    }
+    const tag = this.assertValidFollowedTag(tagValue, {
+      message: "Provide a valid tag to remove.",
+    });
 
     const updated = await this.userRepository.removeFollowedTag(userId, tag);
     if (!updated) {
@@ -152,7 +210,7 @@ class UserService {
 
     return {
       removedTag: tag,
-      followedTags: normalizeFollowedTags(updated.followedTags),
+      followedTags: await this.syncCanonicalFollowedTags(userId, updated.followedTags),
     };
   }
 

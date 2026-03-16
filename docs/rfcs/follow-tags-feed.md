@@ -32,8 +32,8 @@ Extend the `users` module with protected followed-tag endpoints and store canoni
 On the frontend, enhance `src/public/pages/feed.html` and `src/public/js/pages/feed.js` with:
 
 - an `All posts` / `Followed tags` mode toggle for authenticated users
-- a manual follow-tag form
-- a visible list of followed tags
+- a dedicated management modal with the manual follow-tag form at the top
+- a visible followed-tag counter plus scrollable chip list inside that modal
 - quick follow/unfollow controls on tag chips in feed cards
 
 Also expose the same tag-chip follow/unfollow action on `post.html` so users can subscribe while reading a post.
@@ -85,8 +85,8 @@ Also expose the same tag-chip follow/unfollow action on `post.html` so users can
 - Why this option: it keeps follow actions convenient in context while letting users pre-subscribe to topics
 - Chosen option: search stays available inside the followed-tag feed
 - Why this option: it keeps search behavior consistent across feed modes
-- Chosen option: canonical `trim + lowercase` storage for followed tags
-- Why this option: it prevents duplicates and makes manual entry predictable
+- Chosen option: canonical `trim + lowercase` storage for followed tags, plus conservative validation (`[a-z0-9_-]`, max 32)
+- Why this option: it prevents duplicates, blocks unsafe payloads, and makes manual entry predictable
 
 ## API and Interface Impact
 
@@ -106,6 +106,7 @@ Also expose the same tag-chip follow/unfollow action on `post.html` so users can
 
 - User model stores `followedTags: string[]`
 - Stored values are canonical lowercase tags without leading `#`
+- Stored values are limited to 32 characters and use only letters, numbers, hyphen, and underscore
 - No migration or backfill is required for v1
 
 ## Alternatives Considered
@@ -123,6 +124,8 @@ Also expose the same tag-chip follow/unfollow action on `post.html` so users can
 - Mitigation: normalize followed tags to lowercase and match stored post tags case-insensitively with optional leading `#`
 - Risk: users may enter manual tags that currently have no matching posts
 - Mitigation: allow the follow, but show a clear empty-state message in the followed-tag feed
+- Risk: legacy invalid tags may already be stored on user documents
+- Mitigation: canonicalize and drop invalid followed tags on read/write before rendering them
 
 ## Rollout Plan
 
@@ -152,7 +155,9 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
 - Frontend/manual checks:
   - follow and unfollow from feed tag chips
   - follow and unfollow from post-detail tag chips
-  - add a manual tag in the feed panel
+  - open the followed-tags management modal and add a manual tag
+  - verify long followed tags truncate visually while preserving the full value in the tooltip
+  - verify invalid manual tags are rejected before the request is sent
   - switch between public feed and followed-tag feed
   - search while in followed-tag mode
 

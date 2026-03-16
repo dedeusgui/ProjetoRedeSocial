@@ -1,17 +1,9 @@
 import { escapeHtml, formatDateTime } from "../../core/formatters.js";
+import {
+  formatFollowTagLabel,
+  normalizeFollowTagValue,
+} from "../../core/followed-tags.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
-
-function normalizeTagForFollow(tag) {
-  return String(tag ?? "")
-    .trim()
-    .replace(/^#+/, "")
-    .toLowerCase();
-}
-
-function formatTagLabel(tag) {
-  const normalized = String(tag ?? "").trim().replace(/^#+/, "");
-  return normalized || String(tag ?? "").trim();
-}
 
 function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
   if (!Array.isArray(tags) || tags.length === 0) {
@@ -22,8 +14,8 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
     <ul class="tag-list" aria-label="Collection tags">
       ${tags
         .map((tag) => {
-          const followTag = normalizeTagForFollow(tag);
-          const label = formatTagLabel(tag);
+          const followTag = normalizeFollowTagValue(tag);
+          const label = formatFollowTagLabel(tag);
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `
