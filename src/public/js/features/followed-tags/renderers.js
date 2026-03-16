@@ -4,7 +4,8 @@ function createEmptyState() {
   const emptyState = document.createElement("section");
   emptyState.className = "empty-card followed-tags-empty";
 
-  const title = document.createElement("h3");
+  const title = document.createElement("p");
+  title.className = "followed-tags-empty-title";
   title.textContent = "No followed tags yet";
 
   const copy = document.createElement("p");
@@ -20,11 +21,14 @@ function createFollowedTagChip(tag, { disabled = false } = {}) {
   const labelText = `#${formatFollowTagLabel(rawTag)}`;
 
   const item = document.createElement("li");
-  item.className = "followed-tag-chip";
+  item.className = "tag-item tag-item-actionable followed-tag-chip";
   item.title = labelText;
 
-  const label = document.createElement("span");
-  label.className = "followed-tag-chip-label";
+  const label = document.createElement("button");
+  label.type = "button";
+  label.className = "tag-label followed-tag-chip-label-button";
+  label.dataset.followedTagPreview = rawTag;
+  label.setAttribute("aria-label", `Show full tag ${labelText}`);
   label.textContent = labelText;
   label.title = labelText;
 
@@ -56,7 +60,7 @@ export function renderFollowedTagsList(target, tags, { disabled = false } = {}) 
   }
 
   const list = document.createElement("ul");
-  list.className = "followed-tags-chip-list";
+  list.className = "tag-list followed-tags-chip-list";
   list.setAttribute("aria-label", "Followed tags");
 
   items.forEach((tag) => {

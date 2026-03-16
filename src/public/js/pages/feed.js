@@ -46,13 +46,10 @@ const elements = {
   searchResetButton: document.querySelector("[data-feed-search-reset]"),
   followTagsGuest: document.querySelector("[data-follow-tags-guest]"),
   followTagsAuth: document.querySelector("[data-follow-tags-auth]"),
-  followedTagsToolbarCount: document.querySelector("[data-followed-tags-toolbar-count]"),
-  openFollowedTagsModalButton: document.querySelector("[data-open-followed-tags-modal]"),
   followTagForm: document.querySelector("[data-follow-tag-form]"),
   followTagInput: document.querySelector("[data-follow-tag-input]"),
   followTagSubmit: document.querySelector("[data-follow-tag-submit]"),
-  followedTagsModal: document.querySelector("[data-followed-tags-modal]"),
-  followedTagsModalCloseButton: document.querySelector("[data-followed-tags-modal-close]"),
+  followedTagsDropdown: document.querySelector("[data-followed-tags-dropdown]"),
   followedTagsSummary: document.querySelector("[data-followed-tags-summary]"),
   followedTagsList: document.querySelector("[data-followed-tags-list]"),
   followTagStatus: document.querySelector("[data-follow-tag-status]"),
@@ -79,6 +76,24 @@ const elements = {
 
 const statusFlash = createFlash(elements.status);
 const followTagFlash = createFlash(elements.followTagStatus);
+
+function showFollowTagStatus(message, type = "info", kind = "feedback") {
+  followTagFlash.show(message, type);
+  if (elements.followTagStatus) {
+    elements.followTagStatus.dataset.messageKind = kind;
+  }
+}
+
+function clearFollowTagStatus(kind = null) {
+  if (kind && elements.followTagStatus?.dataset.messageKind !== kind) {
+    return;
+  }
+
+  followTagFlash.clear();
+  if (elements.followTagStatus) {
+    delete elements.followTagStatus.dataset.messageKind;
+  }
+}
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
@@ -194,10 +209,10 @@ function resolveLoadedFeedMessage() {
 
 function resolveFollowedTagsCountLabel(count) {
   if (count <= 0) {
-    return "No followed tags yet.";
+    return "Followed tags";
   }
 
-  return count === 1 ? "1 followed tag" : `${count} followed tags`;
+  return count === 1 ? "Followed tags (1)" : `Followed tags (${count})`;
 }
 
 function resolveFollowTagValidationMessage(result) {
@@ -237,23 +252,13 @@ function syncSearchControls() {
   }
 }
 
-function closeFollowedTagsModal() {
-  if (elements.followedTagsModal?.open) {
-    elements.followedTagsModal.close();
-  }
-}
-
-function openFollowedTagsModal() {
-  if (!hasSession()) {
-    statusFlash.show("Sign in to follow tags.", "error");
+function previewFollowedTagLabel(labelButton) {
+  const label = labelButton?.textContent?.trim();
+  if (!label) {
     return;
   }
 
-  if (!elements.followedTagsModal?.open) {
-    elements.followedTagsModal?.showModal();
-  }
-
-  elements.followTagInput?.focus();
+  showFollowTagStatus(`Full tag: ${label}`, "info", "preview");
 }
 
 function renderFollowedTagsPanel() {
@@ -265,11 +270,6 @@ function renderFollowedTagsPanel() {
 
   if (elements.followTagsAuth) {
     elements.followTagsAuth.hidden = !authenticated;
-  }
-
-  if (elements.openFollowedTagsModalButton) {
-    elements.openFollowedTagsModalButton.hidden = !authenticated;
-    elements.openFollowedTagsModalButton.disabled = state.isLoading || state.isManagingTags;
   }
 
   if (elements.followToggleShell) {
@@ -286,12 +286,11 @@ function renderFollowedTagsPanel() {
   });
 
   if (!authenticated) {
-    closeFollowedTagsModal();
-    if (elements.followedTagsToolbarCount) {
-      elements.followedTagsToolbarCount.textContent = resolveFollowedTagsCountLabel(0);
-    }
     if (elements.followedTagsSummary) {
       elements.followedTagsSummary.textContent = resolveFollowedTagsCountLabel(0);
+    }
+    if (elements.followedTagsDropdown) {
+      elements.followedTagsDropdown.open = false;
     }
     renderFollowedTagsList(elements.followedTagsList, []);
     return;
@@ -310,10 +309,6 @@ function renderFollowedTagsPanel() {
 
   if (elements.followTagSubmit) {
     elements.followTagSubmit.disabled = state.isManagingTags;
-  }
-
-  if (elements.followedTagsToolbarCount) {
-    elements.followedTagsToolbarCount.textContent = resolveFollowedTagsCountLabel(state.followedTags.length);
   }
 
   if (elements.followedTagsSummary) {
@@ -550,7 +545,7 @@ async function toggleFollowTag(tag, currentlyFollowing) {
 
   state.isManagingTags = true;
   renderFollowedTagsPanel();
-  followTagFlash.show(
+  showFollowTagStatus(
     currentlyFollowing ? `Unfollowing #${normalizedTag}...` : `Following #${normalizedTag}...`,
     "info",
   );
@@ -573,12 +568,12 @@ async function toggleFollowTag(tag, currentlyFollowing) {
       ? `You no longer follow #${normalizedTag}.`
       : `You now follow #${normalizedTag}.`;
     statusFlash.show(successMessage, "success");
-    followTagFlash.show(successMessage, "success");
+    showFollowTagStatus(successMessage, "success");
     return true;
   } catch (error) {
     const message = resolveFollowTagMessage(error);
     statusFlash.show(message, "error");
-    followTagFlash.show(message, "error");
+    showFollowTagStatus(message, "error");
     return false;
   } finally {
     state.isManagingTags = false;
@@ -595,13 +590,13 @@ async function handleManualFollowTag(event) {
   const normalizedTag = validation.normalizedValue;
 
   if (validation.errorCode) {
-    followTagFlash.show(resolveFollowTagValidationMessage(validation), "error");
+    showFollowTagStatus(resolveFollowTagValidationMessage(validation), "error");
     elements.followTagInput?.focus();
     return;
   }
 
   if (state.followedTags.includes(normalizedTag)) {
-    followTagFlash.show(`You already follow #${normalizedTag}.`, "info");
+    showFollowTagStatus(`You already follow #${normalizedTag}.`, "info");
     elements.followTagInput?.focus();
     elements.followTagInput?.select();
     return;
@@ -726,8 +721,6 @@ function bindEvents() {
     elements.searchInput?.focus();
   });
 
-  elements.openFollowedTagsModalButton?.addEventListener("click", openFollowedTagsModal);
-  elements.followedTagsModalCloseButton?.addEventListener("click", closeFollowedTagsModal);
   elements.followTagForm?.addEventListener("submit", handleManualFollowTag);
 
   elements.feedTypeButtons.forEach((button) => {
@@ -757,14 +750,15 @@ function bindEvents() {
     loadFeed();
   });
 
-  elements.followedTagsModal?.addEventListener("click", (event) => {
-    if (event.target === elements.followedTagsModal) {
-      closeFollowedTagsModal();
+  elements.followedTagsDropdown?.addEventListener("click", (event) => {
+    const labelButton = event.target.closest("[data-followed-tag-preview]");
+    if (labelButton && elements.followedTagsDropdown.contains(labelButton)) {
+      previewFollowedTagLabel(labelButton);
       return;
     }
 
     const followButton = event.target.closest("[data-follow-tag]");
-    if (followButton && elements.followedTagsModal.contains(followButton)) {
+    if (followButton && elements.followedTagsDropdown.contains(followButton)) {
       const tag = String(followButton.dataset.followTag ?? "").trim();
       const currentlyFollowing = followButton.dataset.following === "true";
       if (tag) {
@@ -773,8 +767,10 @@ function bindEvents() {
     }
   });
 
-  elements.followedTagsModal?.addEventListener("close", () => {
-    followTagFlash.clear();
+  elements.followedTagsDropdown?.addEventListener("toggle", () => {
+    if (!elements.followedTagsDropdown.open) {
+      clearFollowTagStatus("preview");
+    }
   });
 
   elements.loadMore?.addEventListener("click", () => {

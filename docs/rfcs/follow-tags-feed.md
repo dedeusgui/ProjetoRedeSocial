@@ -32,8 +32,9 @@ Extend the `users` module with protected followed-tag endpoints and store canoni
 On the frontend, enhance `src/public/pages/feed.html` and `src/public/js/pages/feed.js` with:
 
 - an `All posts` / `Followed tags` mode toggle for authenticated users
-- a dedicated management modal with the manual follow-tag form at the top
-- a visible followed-tag counter plus scrollable chip list inside that modal
+- a manual follow-tag form outside the followed-tags dropdown
+- the existing compact followed-tags dropdown upgraded with a visible counter plus scrollable chip list
+- tap-to-preview followed-tag labels inside the dropdown so touch users can reveal the full value without resizing the chip
 - quick follow/unfollow controls on tag chips in feed cards
 
 Also expose the same tag-chip follow/unfollow action on `post.html` so users can subscribe while reading a post.
@@ -155,8 +156,8 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
 - Frontend/manual checks:
   - follow and unfollow from feed tag chips
   - follow and unfollow from post-detail tag chips
-  - open the followed-tags management modal and add a manual tag
-  - verify long followed tags truncate visually while preserving the full value in the tooltip
+  - add a manual tag from the form outside the followed-tags dropdown
+  - verify long followed tags truncate visually and can preview the full value without changing chip size
   - verify invalid manual tags are rejected before the request is sent
   - switch between public feed and followed-tag feed
   - search while in followed-tag mode
