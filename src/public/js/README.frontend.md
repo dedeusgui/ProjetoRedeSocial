@@ -8,7 +8,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `core/`: shared helpers (session, formatters, API error mapping, shared UI copy)
 - `components/`: reusable UI behaviors used across pages
 - `features/<domain>/renderers.js`: domain-specific rendering
-- `features/followed-tags/renderers.js`: safe DOM rendering for the followed-tags dropdown chip list
+- `features/followed-tags/renderers.js`: safe DOM rendering for the followed-tags dropdown chip list and active-filter banner
 - `pages/`: page bootstrap + event binding + orchestration
 - `features/admin/renderers.js`: admin-oriented renderers
 - `features/posts/post-modal.js`: shared create/edit modal orchestration, including sequence selection for owned posts
@@ -44,7 +44,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `bindNavigation()` when the page contains `data-nav-href` controls.
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
-- For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including debounced real-time search, the grouped `Posts` vs `Collections` segmented control with immediate switching, the authenticated followed-tags toggle, the manual follow form, and the compact followed-tags dropdown; renderer code should stay limited to card, tag, sequence, collection context, and safe followed-tags dropdown markup.
+- For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including debounced real-time search, the grouped `Posts` vs `Collections` segmented control with immediate switching, the authenticated followed-tags toggle, the lightweight active-filter banner below that row, the manual follow form, and the compact followed-tags dropdown; renderer code should stay limited to card, tag, sequence, collection context, and safe followed-tags dropdown markup.
 - Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; avoid duplicating collection-create CTAs across those pages.
 - Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
 - Keep profile avatar management attached to the avatar itself on `profile.html`; `pages/profile.js` should orchestrate the contextual upload/remove menu and outside-click closing while reusing the existing avatar API methods.

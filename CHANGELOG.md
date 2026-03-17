@@ -8,6 +8,7 @@ All notable changes to this project should be documented in this file.
 
 - Removed the `Search` submit button from `feed.html` and changed feed search to debounced real-time loading with `Enter` still available as an immediate keyboard submit.
 - Restyled `Posts` / `Collections` on `feed.html` as a single segmented control so content-type switching reads as one mutually exclusive filter group instead of competing with the search field.
+- Added a lightweight followed-tags state banner below the feed filter row that appears only while the followed-tags filter is active and previews a few followed tags plus a `+N` overflow count.
 
 ### Fixed
 
@@ -15,7 +16,8 @@ All notable changes to this project should be documented in this file.
 
 ### Docs
 
-- Updated frontend architecture, frontend guide, and the feed-search RFC to describe the debounced real-time search behavior.
+- Updated frontend architecture and the frontend guide to describe the current feed discovery surface, including the debounced search flow, segmented content-type control, and followed-tags state banner.
+- Updated the feed-search RFC and followed-tags RFC to reflect the current feed discovery behavior.
 
 ## 2026-03-16
 

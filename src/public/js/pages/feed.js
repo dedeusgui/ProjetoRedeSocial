@@ -13,13 +13,17 @@ import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http
 import { hasSession, requireSession } from "../core/session.js";
 import { renderCollectionFeedList } from "../features/collections/feed-renderers.js";
 import { renderFeedList } from "../features/feed/renderers.js";
-import { renderFollowedTagsList } from "../features/followed-tags/renderers.js";
+import {
+  renderFollowedTagsBanner,
+  renderFollowedTagsList,
+} from "../features/followed-tags/renderers.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 
 const FEED_LIMIT = 20;
 const FEED_NOTICE_KEY = "thesocial_feed_notice";
 const SEARCH_DEBOUNCE_MS = 400;
+const FOLLOWED_TAG_BANNER_PREVIEW_LIMIT = 3;
 
 let searchDebounceTimer = null;
 let feedRequestSequence = 0;
@@ -62,6 +66,7 @@ const elements = {
   feedTypeButtons: Array.from(document.querySelectorAll("[data-feed-type-button]")),
   followToggleShell: document.querySelector("[data-feed-follow-toggle-shell]"),
   followToggleButton: document.querySelector("[data-feed-following-toggle]"),
+  followBanner: document.querySelector("[data-feed-follow-banner]"),
   loginLink: document.querySelector("[data-login-link]"),
   profileLink: document.querySelector("[data-profile-link]"),
   collectionsLink: document.querySelector("[data-collections-link]"),
@@ -286,6 +291,11 @@ function previewFollowedTagLabel(labelButton) {
 
 function renderFollowedTagsPanel() {
   const authenticated = hasSession();
+
+  renderFollowedTagsBanner(elements.followBanner, state.followedTags, {
+    active: authenticated && state.followedOnly && hasFollowedTags(),
+    previewLimit: FOLLOWED_TAG_BANNER_PREVIEW_LIMIT,
+  });
 
   if (elements.followTagsGuest) {
     elements.followTagsGuest.hidden = authenticated;

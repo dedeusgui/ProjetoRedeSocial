@@ -32,6 +32,7 @@ Extend the `users` module with protected followed-tag endpoints and store canoni
 On the frontend, enhance `src/public/pages/feed.html` and `src/public/js/pages/feed.js` with:
 
 - an `All posts` / `Followed tags` mode toggle for authenticated users
+- a lightweight state banner below the filter row when `Followed tags` is active, previewing a few followed tags plus an overflow count
 - a manual follow-tag form outside the followed-tags dropdown
 - the existing compact followed-tags dropdown upgraded with a visible counter plus scrollable chip list
 - tap-to-preview followed-tag labels inside the dropdown so touch users can reveal the full value without resizing the chip
@@ -146,6 +147,7 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
 3. Cursor pagination works the same way in the followed-tag feed as it does in the public feed.
 4. Search inside the followed-tag feed narrows only the followed-tag result set.
 5. Users who do not follow any tags see an explicit empty state in `Followed tags`.
+6. While the followed-tags filter is active and tags exist, `feed.html` shows a lightweight explanatory banner below the filter row with a compact followed-tag preview and `+N` overflow indicator.
 
 ## Test Plan
 
@@ -157,6 +159,7 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
   - follow and unfollow from feed tag chips
   - follow and unfollow from post-detail tag chips
   - add a manual tag from the form outside the followed-tags dropdown
+  - verify the active-filter banner appears only while `Followed tags` is on and previews up to four tags plus `+N`
   - verify long followed tags truncate visually and can preview the full value without changing chip size
   - verify invalid manual tags are rejected before the request is sent
   - switch between public feed and followed-tag feed
@@ -168,4 +171,9 @@ Rollback is low risk: remove the followed-tag field/endpoints and the followed f
 - [x] `docs/api/*`
 - [x] `CHANGELOG.md`
 - [x] RFC entry under `docs/rfcs/`
+
+## Decision Record
+
+- 2026-03-17: `feed.html` now shows a lightweight state banner below the filter row while the followed-tags filter is active, previewing up to four followed tags plus a `+N` overflow badge.
+- Why: the toggle indicates filter state, but the extra banner makes the active feed context explicit without turning the tag preview into a primary control.
 
