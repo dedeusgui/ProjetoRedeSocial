@@ -14,6 +14,10 @@ const elements = {
   registerForm: document.querySelector("[data-register-form]"),
   loginForm: document.querySelector("[data-login-form]"),
   authStatus: document.querySelector("[data-auth-status]"),
+  registerPasswordInput: document.querySelector("[data-register-password-input]"),
+  registerPasswordConfirmationInput: document.querySelector(
+    "[data-register-password-confirmation-input]",
+  ),
 };
 
 const authFlash = createFlash(elements.authStatus);
@@ -79,6 +83,24 @@ function redirectToFeed(noticeMessage) {
   window.location.href = "./feed.html";
 }
 
+function syncRegisterPasswordConfirmationValidity() {
+  const password = String(elements.registerPasswordInput?.value ?? "");
+  const confirmationInput = elements.registerPasswordConfirmationInput;
+  const confirmation = String(confirmationInput?.value ?? "");
+
+  if (!confirmationInput) {
+    return true;
+  }
+
+  if (!confirmation || confirmation === password) {
+    confirmationInput.setCustomValidity("");
+    return true;
+  }
+
+  confirmationInput.setCustomValidity("Passwords must match.");
+  return false;
+}
+
 async function handleRegister(event) {
   event.preventDefault();
   if (!elements.registerForm) {
@@ -86,6 +108,14 @@ async function handleRegister(event) {
   }
 
   const formData = new FormData(elements.registerForm);
+  const passwordsMatch = syncRegisterPasswordConfirmationValidity();
+
+  if (!passwordsMatch) {
+    authFlash.show("Passwords must match.", "error");
+    elements.registerPasswordConfirmationInput?.reportValidity();
+    elements.registerPasswordConfirmationInput?.focus();
+    return;
+  }
 
   try {
     const data = await api.auth.register({
@@ -96,6 +126,7 @@ async function handleRegister(event) {
 
     saveSessionToken(data.token);
     elements.registerForm.reset();
+    syncRegisterPasswordConfirmationValidity();
     redirectToFeed("Account created. Welcome to the feed.");
   } catch (error) {
     authFlash.show(
@@ -134,6 +165,12 @@ function bindEvents() {
   if (elements.registerForm) {
     elements.registerForm.addEventListener("submit", handleRegister);
   }
+
+  elements.registerPasswordInput?.addEventListener("input", syncRegisterPasswordConfirmationValidity);
+  elements.registerPasswordConfirmationInput?.addEventListener(
+    "input",
+    syncRegisterPasswordConfirmationValidity,
+  );
 
   if (elements.loginForm) {
     elements.loginForm.addEventListener("submit", handleLogin);
