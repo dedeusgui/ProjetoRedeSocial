@@ -43,9 +43,16 @@
               </form>
 
               <div class="feed-discovery-controls">
-                <div class="feed-mode-toggle" role="tablist" aria-label="Feed type">
-                  <button type="button" data-feed-type-button="posts" aria-pressed="true">Posts</button>
-                  <button type="button" class="button-ghost" data-feed-type-button="collections" aria-pressed="false">Collections</button>
+                <div class="feed-mode-toggle" role="group" aria-label="Content type">
+                  <button type="button" data-feed-type-button="posts" data-active="true" aria-pressed="true">Posts</button>
+                  <button
+                    type="button"
+                    data-feed-type-button="collections"
+                    data-active="false"
+                    aria-pressed="false"
+                  >
+                    Collections
+                  </button>
                 </div>
 
                 <div class="feed-follow-toggle" data-feed-follow-toggle-shell hidden>

@@ -1,0 +1,153 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 20px 0; font-family: var(--font-sans); display: flex; flex-direction: column; gap: 24px; }
+
+.shell { background: #0d1117; border-radius: 14px; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; }
+
+/* labels */
+.zone-label { font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.18); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,.08); align-self: flex-start; }
+
+/* search */
+.search-input { width: 100%; padding: 10px 16px; font-size: 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; color: #f0ede8; outline: none; }
+.search-input::placeholder { color: rgba(255,255,255,.25); }
+
+/* filter row */
+.filter-row { display: flex; align-items: center; gap: 10px; }
+.seg { display: inline-flex; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 3px; position: relative; }
+.seg-thumb { position: absolute; top: 3px; left: 3px; height: calc(100% - 6px); background: rgba(255,255,255,.15); border-radius: 7px; border: .5px solid rgba(255,255,255,.22); transition: left .2s cubic-bezier(.4,0,.2,1), width .2s cubic-bezier(.4,0,.2,1); pointer-events: none; }
+.seg-opt { position: relative; z-index: 1; padding: 7px 18px; border-radius: 7px; font-size: 14px; font-weight: 500; cursor: pointer; color: rgba(255,255,255,.4); background: none; border: none; transition: color .15s; white-space: nowrap; user-select: none; }
+.seg-opt.active { color: #f0ede8; }
+.spacer { flex: 1; }
+.toggle-btn { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); cursor: pointer; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.4); transition: all .2s; user-select: none; white-space: nowrap; }
+.toggle-btn.on { background: rgba(29,158,117,.12); border-color: rgba(29,158,117,.45); color: #4ecba0; }
+.sw-mini { width: 32px; height: 18px; border-radius: 9px; background: rgba(255,255,255,.12); position: relative; border: 1px solid rgba(255,255,255,.15); transition: background .2s; flex-shrink: 0; }
+.sw-mini-k { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: left .2s cubic-bezier(.4,0,.2,1); }
+.toggle-btn.on .sw-mini { background: #1D9E75; border-color: #1D9E75; }
+.toggle-btn.on .sw-mini-k { left: 16px; }
+
+/* banner condicional */
+.banner-wrap { overflow: hidden; max-height: 0; opacity: 0; transition: max-height .3s cubic-bezier(.4,0,.2,1), opacity .25s; }
+.banner-wrap.visible { max-height: 60px; opacity: 1; }
+.banner { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 9px; background: rgba(29,158,117,.1); border: 1px solid rgba(29,158,117,.35); }
+.banner-text { font-size: 12.5px; color: rgba(78,203,160,.75); white-space: nowrap; }
+.banner-tags { display: flex; gap: 5px; flex-wrap: nowrap; overflow: hidden; }
+.btag { font-size: 11px; padding: 2px 8px; border-radius: 5px; background: rgba(29,158,117,.15); border: 1px solid rgba(29,158,117,.3); color: rgba(78,203,160,.8); white-space: nowrap; }
+.bmore { font-size: 11px; color: rgba(78,203,160,.45); white-space: nowrap; }
+
+/* follow input */
+.follow-row { display: flex; gap: 8px; align-items: center; }
+.follow-input { flex: 1; padding: 8px 13px; font-size: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.11); border-radius: 8px; color: #f0ede8; outline: none; }
+.follow-input::placeholder { color: rgba(255,255,255,.2); }
+.follow-btn { padding: 8px 14px; font-size: 13px; font-weight: 500; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); color: #c8c4be; cursor: pointer; white-space: nowrap; transition: all .15s; }
+.follow-btn:hover { background: rgba(255,255,255,.12); color: #f0ede8; }
+
+/* manage dropdown */
+.manage-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,.16); background: transparent; color: rgba(255,255,255,.4); cursor: pointer; transition: all .15s; align-self: flex-start; }
+.manage-btn:hover { color: #f0ede8; border-color: rgba(255,255,255,.28); }
+.dp { border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: #111827; padding: 13px 15px; display: flex; flex-direction: column; gap: 10px; }
+.dp-label { font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,.25); letter-spacing: .06em; text-transform: uppercase; }
+.dp-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.dp-tag { display: flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 4px 9px; border-radius: 7px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.5); }
+.dp-tag-x { color: rgba(255,255,255,.2); cursor: pointer; font-size: 11px; transition: color .15s; }
+.dp-tag-x:hover { color: #D85A30; }
+
+/* annotation */
+.ann { display: flex; gap: 9px; padding: 9px 13px; border-radius: 8px; background: var(--color-background-secondary); border: .5px solid var(--color-border-tertiary); }
+.ann-text { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.ann-text b { color: var(--color-text-primary); font-weight: 500; }
+</style>
+
+<div class="wrap">
+
+  <div class="shell">
+
+    <!-- zona 1: busca -->
+    <span class="zone-label">① entrada</span>
+    <input class="search-input" placeholder="Search by title, content, or tag…" />
+
+    <!-- zona 2: filtros -->
+    <span class="zone-label">② filtros</span>
+    <div class="filter-row">
+      <div class="seg" id="seg"><div class="seg-thumb" id="seg-th"></div>
+        <button class="seg-opt active" onclick="ss(this)">Posts</button>
+        <button class="seg-opt" onclick="ss(this)">Collections</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="toggle-btn" id="toggle" onclick="toggleFilter()">
+        <div class="sw-mini" id="sw"><div class="sw-mini-k" id="swk"></div></div>
+        <span id="toggle-lbl">My tags</span>
+      </div>
+    </div>
+
+    <!-- banner condicional -->
+    <div class="banner-wrap" id="bannerWrap">
+      <div class="banner">
+        <span class="banner-text">Showing from:</span>
+        <div class="banner-tags">
+          <span class="btag">backend</span>
+          <span class="btag">typescript</span>
+          <span class="btag">devops</span>
+          <span class="bmore">+4 more</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- zona 3: follow input -->
+    <span class="zone-label">③ seguir tag</span>
+    <div class="follow-row">
+      <input class="follow-input" placeholder="Follow a tag: e.g. backend" />
+      <button class="follow-btn">+ Follow</button>
+    </div>
+
+    <!-- zona 4: gerenciamento -->
+    <span class="zone-label">④ gerenciamento</span>
+    <button class="manage-btn" onclick="toggleManage()">Manage followed tags <span id="mchev">∨</span></button>
+    <div id="dp" style="display:none">
+      <div class="dp">
+        <span class="dp-label">Your tags (7)</span>
+        <div class="dp-tags">
+          <div class="dp-tag">backend <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+          <div class="dp-tag">typescript <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+          <div class="dp-tag">devops <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+          <div class="dp-tag">react <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+          <div class="dp-tag">python <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+          <div class="dp-tag">system-design <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+          <div class="dp-tag">rust <span class="dp-tag-x" onclick="this.closest('.dp-tag').remove()">✕</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ann">
+    <span class="ann-text">
+      Ligue o toggle <b>My tags</b> para ver o banner aparecer. As 4 zonas nunca se misturam — cada uma tem uma responsabilidade única. O banner é <b>condicional e suave</b>: aparece com transição, não com um salto de layout.
+    </span>
+  </div>
+
+</div>
+
+<script>
+function ss(btn) {
+  const seg = document.getElementById('seg'), th = document.getElementById('seg-th');
+  seg.querySelectorAll('.seg-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  th.style.left = btn.offsetLeft + 'px'; th.style.width = btn.offsetWidth + 'px';
+}
+function toggleFilter() {
+  const t = document.getElementById('toggle'), bw = document.getElementById('bannerWrap');
+  const on = t.classList.toggle('on');
+  document.getElementById('toggle-lbl').textContent = on ? 'My tags: on' : 'My tags';
+  bw.classList.toggle('visible', on);
+}
+function toggleManage() {
+  const d = document.getElementById('dp'), open = d.style.display === 'none';
+  d.style.display = open ? 'block' : 'none';
+  document.getElementById('mchev').textContent = open ? '∧' : '∨';
+}
+window.addEventListener('load', () => {
+  const th = document.getElementById('seg-th'), a = document.getElementById('seg').querySelector('.active');
+  if (a) { th.style.transition = 'none'; th.style.left = a.offsetLeft + 'px'; th.style.width = a.offsetWidth + 'px'; setTimeout(() => th.style.transition = '', 50); }
+});
+</script>

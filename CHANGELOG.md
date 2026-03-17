@@ -7,6 +7,7 @@ All notable changes to this project should be documented in this file.
 ### Changed
 
 - Removed the `Search` submit button from `feed.html` and changed feed search to debounced real-time loading with `Enter` still available as an immediate keyboard submit.
+- Restyled `Posts` / `Collections` on `feed.html` as a single segmented control so content-type switching reads as one mutually exclusive filter group instead of competing with the search field.
 
 ### Fixed
 
