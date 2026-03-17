@@ -19,10 +19,17 @@ import { createPostModalController } from "../features/posts/post-modal.js";
 
 const FEED_LIMIT = 20;
 const FEED_NOTICE_KEY = "thesocial_feed_notice";
+const SEARCH_DEBOUNCE_MS = 400;
+
+let searchDebounceTimer = null;
+let feedRequestSequence = 0;
+let latestFeedRequestId = 0;
+let latestLoadingFeedRequestId = 0;
 
 const state = {
   items: [],
   nextCursor: null,
+  searchInputValue: "",
   searchTerm: "",
   feedType: "posts",
   followedOnly: false,
@@ -42,7 +49,6 @@ const elements = {
   searchForm: document.querySelector("[data-feed-search-form]"),
   searchLabel: document.querySelector("[data-feed-search-label]"),
   searchInput: document.querySelector("[data-feed-search-input]"),
-  searchSubmitButton: document.querySelector("[data-feed-search-submit]"),
   searchResetButton: document.querySelector("[data-feed-search-reset]"),
   followTagsGuest: document.querySelector("[data-follow-tags-guest]"),
   followTagsAuth: document.querySelector("[data-follow-tags-auth]"),
@@ -231,24 +237,41 @@ function resolveFollowTagValidationMessage(result) {
   return "Type a tag before submitting.";
 }
 
+function clearSearchDebounce() {
+  if (searchDebounceTimer) {
+    window.clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = null;
+  }
+}
+
+function scheduleSearchReload() {
+  clearSearchDebounce();
+
+  const nextSearchTerm = state.searchInputValue.trim();
+  if (nextSearchTerm === state.searchTerm) {
+    return;
+  }
+
+  searchDebounceTimer = window.setTimeout(() => {
+    searchDebounceTimer = null;
+    loadFeed();
+  }, SEARCH_DEBOUNCE_MS);
+}
+
 function syncSearchControls() {
   if (elements.searchLabel) {
     elements.searchLabel.textContent = resolveSearchLabel();
   }
 
   if (elements.searchInput) {
-    elements.searchInput.value = state.searchTerm;
+    if (elements.searchInput.value !== state.searchInputValue) {
+      elements.searchInput.value = state.searchInputValue;
+    }
     elements.searchInput.placeholder = resolveSearchPlaceholder();
-    elements.searchInput.disabled = state.isLoading;
-  }
-
-  if (elements.searchSubmitButton) {
-    elements.searchSubmitButton.disabled = state.isLoading;
   }
 
   if (elements.searchResetButton) {
-    elements.searchResetButton.hidden = !hasActiveSearch();
-    elements.searchResetButton.disabled = state.isLoading;
+    elements.searchResetButton.hidden = state.searchInputValue.length === 0 && !hasActiveSearch();
   }
 }
 
@@ -363,11 +386,25 @@ function getFeedRequest() {
 }
 
 async function loadFeed({ append = false } = {}) {
-  if (state.isLoading || (append && !state.nextCursor)) {
+  if (append && (state.isLoading || !state.nextCursor)) {
     return;
   }
 
+  const requestId = ++feedRequestSequence;
+  latestFeedRequestId = requestId;
+
+  if (!append) {
+    clearSearchDebounce();
+    state.searchInputValue = state.searchInputValue.trim();
+    state.searchTerm = state.searchInputValue;
+    state.nextCursor = null;
+  }
+
   if (state.followedOnly && !hasFollowedTags()) {
+    latestLoadingFeedRequestId = 0;
+    state.isLoading = false;
+    syncSearchControls();
+    renderFollowedTagsPanel();
     state.items = [];
     state.nextCursor = null;
     renderFeed();
@@ -375,6 +412,7 @@ async function loadFeed({ append = false } = {}) {
     return;
   }
 
+  latestLoadingFeedRequestId = requestId;
   state.isLoading = true;
   syncSearchControls();
   renderFollowedTagsPanel();
@@ -390,6 +428,11 @@ async function loadFeed({ append = false } = {}) {
       search: state.searchTerm || undefined,
     });
 
+    // Ignore stale responses when a newer realtime search has already started.
+    if (requestId !== latestFeedRequestId) {
+      return;
+    }
+
     const incoming = Array.isArray(data.items) ? data.items : [];
     state.items = append ? [...state.items, ...incoming] : incoming;
     state.nextCursor = data.pageInfo?.nextCursor ?? null;
@@ -403,6 +446,10 @@ async function loadFeed({ append = false } = {}) {
       statusFlash.clear();
     }
   } catch (error) {
+    if (requestId !== latestFeedRequestId) {
+      return;
+    }
+
     statusFlash.show(resolveFeedLoadMessage(error), "error");
     if (!append) {
       state.items = [];
@@ -410,12 +457,15 @@ async function loadFeed({ append = false } = {}) {
       renderFeed();
     }
   } finally {
-    state.isLoading = false;
-    if (elements.loadMore) {
-      elements.loadMore.disabled = false;
+    if (requestId === latestLoadingFeedRequestId) {
+      latestLoadingFeedRequestId = 0;
+      state.isLoading = false;
+      if (elements.loadMore) {
+        elements.loadMore.disabled = false;
+      }
+      syncSearchControls();
+      renderFollowedTagsPanel();
     }
-    syncSearchControls();
-    renderFollowedTagsPanel();
   }
 }
 
@@ -706,16 +756,20 @@ function editFeedPost(postId) {
 function bindEvents() {
   elements.searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-
-    const formData = new FormData(elements.searchForm);
-    state.searchTerm = String(formData.get("search") ?? "").trim();
-    state.nextCursor = null;
+    state.searchInputValue = String(elements.searchInput?.value ?? "");
+    clearSearchDebounce();
     loadFeed();
   });
 
+  elements.searchInput?.addEventListener("input", (event) => {
+    state.searchInputValue = String(elements.searchInput?.value ?? event.target?.value ?? "");
+    syncSearchControls();
+    scheduleSearchReload();
+  });
+
   elements.searchResetButton?.addEventListener("click", () => {
-    state.searchTerm = "";
-    state.nextCursor = null;
+    clearSearchDebounce();
+    state.searchInputValue = "";
     syncSearchControls();
     loadFeed();
     elements.searchInput?.focus();
@@ -825,6 +879,7 @@ async function init() {
     return;
   }
 
+  state.searchInputValue = String(elements.searchInput?.value ?? "");
   bindNavigation();
   navbar.refresh();
   syncSearchControls();

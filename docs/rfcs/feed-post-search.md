@@ -27,13 +27,13 @@ The public feed already lists all published posts, but users have no way to narr
 
 Extend `GET /api/v1/feed` with an optional `search` query parameter. When present and non-blank, the feed module filters published posts by a case-insensitive partial match on `title`, `content`, or `tags`, while keeping the response envelope and result ordering unchanged.
 
-On the frontend, add a search form to `src/public/pages/feed.html` and reuse the existing `loadFeed()` path in `src/public/js/pages/feed.js` so search, pagination, create/edit/delete refreshes, and normal feed loading all go through the same orchestration flow.
+On the frontend, add a search form to `src/public/pages/feed.html` and reuse the existing `loadFeed()` path in `src/public/js/pages/feed.js` so debounced real-time search, keyboard submit, pagination, create/edit/delete refreshes, and normal feed loading all go through the same orchestration flow.
 
 ## Scope
 
 - In scope:
   - backend filtering in the `feed` module
-  - feed-page search input, submit, and reset controls
+  - feed-page debounced real-time search input plus reset control
   - docs and release notes updates
 - Out of scope:
   - relevance scoring
@@ -117,7 +117,7 @@ Rollback is low risk: remove the optional query handling and feed-page controls 
   - verify `GET /api/v1/feed?search=...` returns only matching published posts in chronological order
   - verify `limit` and `cursor` still paginate correctly inside filtered results
 - Frontend/manual checks:
-  - submit search, clear search, and load more on filtered results
+  - type-to-search with debounce, keyboard submit, clear search, and load more on filtered results
   - verify filtered feed refresh after post edit/create/delete
 
 ## Documentation Updates Required
@@ -127,3 +127,8 @@ Rollback is low risk: remove the optional query handling and feed-page controls 
 - [x] `docs/api/*`
 - [ ] `docs/workflows/*` if process changed
 - [x] release notes
+
+## Decision Record
+
+- 2026-03-17: The feed search UI moved from an explicit submit button to debounced real-time search with keyboard submit fallback.
+- Why: it removes a redundant click target on the shared discovery surface while preserving the same endpoint, pagination flow, and accessibility for users who press `Enter`.

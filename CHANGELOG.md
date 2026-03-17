@@ -2,6 +2,20 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-17
+
+### Changed
+
+- Removed the `Search` submit button from `feed.html` and changed feed search to debounced real-time loading with `Enter` still available as an immediate keyboard submit.
+
+### Fixed
+
+- Prevented stale feed-search responses from overwriting newer results by ignoring out-of-order realtime search requests in `src/public/js/pages/feed.js`.
+
+### Docs
+
+- Updated frontend architecture, frontend guide, and the feed-search RFC to describe the debounced real-time search behavior.
+
 ## 2026-03-16
 
 ### Changed
