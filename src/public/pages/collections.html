@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Collections | The Social Network</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="card app-header">
+        <div class="header-copy">
+          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+          <h1 class="ink-underline">My collections</h1>
+          <p class="muted">Create and manage your public collections without crowding the main feed.</p>
+        </div>
+        <nav class="row app-nav">
+          <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+          <button type="button" data-logout hidden>Sign out</button>
+        </nav>
+      </header>
+
+      <section class="card profile-content-panel">
+        <div class="row content-panel-header">
+          <div>
+            <h2 class="ink-underline">Collection studio</h2>
+            <p class="muted">Edit collection details, add your posts, and keep the manual order aligned with the feed style.</p>
+          </div>
+          <button type="button" data-open-collection-modal-panel>New collection</button>
+        </div>
+        <p class="muted status-line" data-collections-status></p>
+        <div class="profile-content-list" data-collections-list></div>
+      </section>
+    </main>
+
+    <dialog class="modal" data-collection-modal>
+      <section class="card modal-card">
+        <div class="row modal-header">
+          <h2 class="ink-underline" data-collection-modal-title>New collection</h2>
+          <button type="button" class="button-ghost" data-collection-modal-cancel>Close</button>
+        </div>
+        <form class="modal-form-layout" data-collection-modal-form>
+          <section class="modal-form-section">
+            <label>
+              Title
+              <input name="title" placeholder="Example: Full Node.js learning path" required maxlength="120" />
+            </label>
+            <label>
+              Description
+              <textarea name="description" rows="4" maxlength="500" placeholder="Explain the focus of this collection."></textarea>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="node, backend, study" />
+              <span class="muted">Separate tags with commas.</span>
+            </label>
+          </section>
+          <button type="submit" data-collection-modal-submit>Save collection</button>
+        </form>
+        <p class="muted status-line" data-collection-modal-status></p>
+      </section>
+    </dialog>
+    <script type="module" src="../js/pages/collections.js"></script>
+  </body>
+</html>

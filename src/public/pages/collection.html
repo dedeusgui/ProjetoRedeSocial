@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collection | The Social Network</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="card app-header">
+        <div class="header-copy">
+          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+          <h1 class="ink-underline">Collection</h1>
+          <p class="muted">Public collections curated by their authors.</p>
+        </div>
+        <nav class="row app-nav">
+          <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+          <button type="button" data-logout hidden>Sign out</button>
+        </nav>
+      </header>
+
+      <p class="muted status-line" data-collection-status></p>
+      <div data-collection-view></div>
+    </main>
+    <script type="module" src="../js/pages/collection.js"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-const API_BASE = "/api/v1";
+﻿const API_BASE = "/api/v1";
 const TOKEN_KEY = "thesocial_token";
 
 export class ApiError extends Error {
@@ -29,8 +29,9 @@ async function request(method, path, { body, token, query } = {}) {
   const headers = {
     Accept: "application/json",
   };
+  const isFormData = body instanceof FormData;
 
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -42,7 +43,12 @@ async function request(method, path, { body, token, query } = {}) {
   const response = await fetch(buildUrl(path, query), {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined
+        ? undefined
+        : isFormData
+          ? body
+          : JSON.stringify(body),
   });
 
   let payload = null;
@@ -52,7 +58,7 @@ async function request(method, path, { body, token, query } = {}) {
       payload = JSON.parse(text);
     } catch {
       throw new ApiError({
-        message: "Resposta invalida do servidor.",
+        message: "Invalid server response.",
         code: "INVALID_JSON",
         status: response.status,
       });
@@ -61,7 +67,7 @@ async function request(method, path, { body, token, query } = {}) {
 
   if (!payload || typeof payload !== "object") {
     throw new ApiError({
-      message: "Resposta vazia do servidor.",
+      message: "Empty server response.",
       code: "EMPTY_RESPONSE",
       status: response.status,
     });
@@ -69,7 +75,7 @@ async function request(method, path, { body, token, query } = {}) {
 
   if (!response.ok || payload.ok !== true) {
     throw new ApiError({
-      message: payload?.error?.message ?? "Falha na requisicao.",
+      message: payload?.error?.message ?? "Request failed.",
       code: payload?.error?.code ?? "REQUEST_FAILED",
       status: response.status,
       details: payload?.error?.details ?? null,
@@ -121,18 +127,57 @@ export const api = {
     meProfile() {
       return request("GET", "/me/profile");
     },
+    deleteMe() {
+      return request("DELETE", "/me");
+    },
+    uploadAvatar(file) {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      return request("POST", "/me/avatar", { body: formData });
+    },
+    deleteAvatar() {
+      return request("DELETE", "/me/avatar");
+    },
+    listFollowedTags() {
+      return request("GET", "/me/followed-tags");
+    },
+    followTag(tag) {
+      return request("POST", "/me/followed-tags", { body: { tag } });
+    },
+    unfollowTag(tag) {
+      return request("DELETE", `/me/followed-tags/${encodeURIComponent(String(tag ?? ""))}`);
+    },
   },
   feed: {
     list({ cursor, limit, search } = {}) {
       return request("GET", "/feed", { query: { cursor, limit, search } });
+    },
+    listFollowing({ cursor, limit, search } = {}) {
+      return request("GET", "/feed/following", { query: { cursor, limit, search } });
     },
   },
   posts: {
     create(payload) {
       return request("POST", "/posts", { body: payload });
     },
+    listMine() {
+      return request("GET", "/me/posts");
+    },
+    uploadMedia(postId, files) {
+      const formData = new FormData();
+      (Array.isArray(files) ? files : []).forEach((file) => {
+        formData.append("media", file);
+      });
+      return request("POST", `/posts/${postId}/media`, { body: formData });
+    },
+    deleteMedia(postId, mediaId) {
+      return request("DELETE", `/posts/${postId}/media/${mediaId}`);
+    },
     getById(postId) {
       return request("GET", `/posts/${postId}`);
+    },
+    getSequence(postId) {
+      return request("GET", `/posts/${postId}/sequence`);
     },
     createComment(postId, content) {
       return request("POST", `/posts/${postId}/comments`, {
@@ -152,6 +197,42 @@ export const api = {
     },
     delete(postId) {
       return request("DELETE", `/posts/${postId}`);
+    },
+  },
+  collections: {
+    listFeed({ cursor, limit, search } = {}) {
+      return request("GET", "/collections/feed", { query: { cursor, limit, search } });
+    },
+    listFeedFollowing({ cursor, limit, search } = {}) {
+      return request("GET", "/collections/feed/following", { query: { cursor, limit, search } });
+    },
+    listMine() {
+      return request("GET", "/me/collections");
+    },
+    getById(collectionId) {
+      return request("GET", `/collections/${collectionId}`);
+    },
+    create(payload) {
+      return request("POST", "/collections", { body: payload });
+    },
+    update(collectionId, payload) {
+      return request("PATCH", `/collections/${collectionId}`, { body: payload });
+    },
+    delete(collectionId) {
+      return request("DELETE", `/collections/${collectionId}`);
+    },
+    addItems(collectionId, postIds) {
+      return request("POST", `/collections/${collectionId}/items`, {
+        body: { postIds },
+      });
+    },
+    removeItem(collectionId, postId) {
+      return request("DELETE", `/collections/${collectionId}/items/${postId}`);
+    },
+    reorderItems(collectionId, postIds) {
+      return request("PATCH", `/collections/${collectionId}/items/reorder`, {
+        body: { postIds },
+      });
     },
   },
   comments: {

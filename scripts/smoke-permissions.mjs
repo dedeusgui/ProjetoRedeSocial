@@ -115,6 +115,28 @@ async function run() {
   });
   assert.equal(reviewByB.status, 201, "Usuario autenticado deveria conseguir avaliar post");
 
+  const followTag = await request("/me/followed-tags", {
+    method: "POST",
+    token: userB.token,
+    body: { tag: "Smoke" },
+  });
+  assert.equal(followTag.status, 201, "Usuario autenticado deveria conseguir seguir tags");
+  assert.deepEqual(
+    followTag.payload.data.followedTags,
+    ["smoke"],
+    "Tags seguidas deveriam ser normalizadas e deduplicadas",
+  );
+
+  const followingFeed = await request("/feed/following", {
+    token: userB.token,
+  });
+  assert.equal(followingFeed.status, 200, "Feed de tags seguidas deveria ser acessivel");
+  assert.equal(
+    followingFeed.payload.data.items.some((item) => item.id === postId),
+    true,
+    "Post com tag seguida deveria aparecer no feed personalizado",
+  );
+
   const commentByB = await request(`/posts/${postId}/comments`, {
     method: "POST",
     token: userB.token,

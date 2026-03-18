@@ -1,4 +1,5 @@
 import AppError from "../../../common/errors/AppError.js";
+import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
 class CommentService {
@@ -11,7 +12,16 @@ class CommentService {
     requireFields({ content }, ["content"]);
     const normalizedContent = String(content).trim();
     if (normalizedContent.length > 2000) {
-      throw new AppError("Field content exceeds 2000 characters", "VALIDATION_ERROR", 400);
+      throw new AppError(
+        "The comment must be at most 2000 characters.",
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "content",
+          maxLength: 2000,
+          actualLength: normalizedContent.length,
+        },
+      );
     }
 
     const comment = await this.commentRepository.create({
@@ -39,10 +49,7 @@ class CommentService {
     return comments.map((comment) => ({
       id: comment.id,
       postId: comment.postId,
-      author: {
-        id: comment.authorId?.id,
-        username: comment.authorId?.username,
-      },
+      author: buildPublicAuthorSummary(comment.authorId),
       content: comment.content,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
@@ -54,22 +61,31 @@ class CommentService {
     requireFields(payload, ["content"]);
     const content = String(payload.content).trim();
     if (content.length > 2000) {
-      throw new AppError("Field content exceeds 2000 characters", "VALIDATION_ERROR", 400);
+      throw new AppError(
+        "The comment must be at most 2000 characters.",
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "content",
+          maxLength: 2000,
+          actualLength: content.length,
+        },
+      );
     }
 
     const comment = await this.commentRepository.findByIdOrNull(commentId);
     if (!comment) {
-      throw new AppError("Comment not found", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     const isOwner = String(comment.authorId) === String(requester?.id ?? "");
     if (!isOwner) {
-      throw new AppError("You do not have permission to edit this comment", "FORBIDDEN", 403);
+      throw new AppError("You do not have permission to edit this comment.", "FORBIDDEN", 403);
     }
 
     const updated = await this.commentRepository.updateById(commentId, { content });
     if (!updated) {
-      throw new AppError("Comment not found", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     return {
@@ -85,18 +101,18 @@ class CommentService {
 
     const comment = await this.commentRepository.findByIdOrNull(commentId);
     if (!comment) {
-      throw new AppError("Comment not found", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     const isOwner = String(comment.authorId) === String(requester?.id ?? "");
     const isPrivileged = ["moderator", "admin"].includes(requester?.role ?? "");
     if (!isOwner && !isPrivileged) {
-      throw new AppError("You do not have permission to delete this comment", "FORBIDDEN", 403);
+      throw new AppError("You do not have permission to delete this comment.", "FORBIDDEN", 403);
     }
 
     const deleted = await this.commentRepository.deleteById(commentId);
     if (!deleted) {
-      throw new AppError("Comment not found", "NOT_FOUND", 404);
+      throw new AppError("Comment not found.", "NOT_FOUND", 404);
     }
 
     return {

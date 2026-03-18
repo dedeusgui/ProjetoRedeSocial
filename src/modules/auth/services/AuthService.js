@@ -27,11 +27,15 @@ class AuthService {
     ]);
 
     if (existingByEmail) {
-      throw new AppError("Email already in use", "CONFLICT", 409);
+      throw new AppError("This email is already in use.", "CONFLICT", 409, {
+        field: "email",
+      });
     }
 
     if (existingByUsername) {
-      throw new AppError("Username already in use", "CONFLICT", 409);
+      throw new AppError("This username is already in use.", "CONFLICT", 409, {
+        field: "username",
+      });
     }
 
     const user = await this.authRepository.createUser({
@@ -68,7 +72,7 @@ class AuthService {
     let user = await this.authRepository.findByEmail(email);
 
     if (!user || !verifyPassword(payload.password, user.passwordHash)) {
-      throw new AppError("Invalid email or password", "INVALID_CREDENTIALS", 401);
+      throw new AppError("Invalid email or password.", "INVALID_CREDENTIALS", 401);
     }
 
     if (user.role !== "admin" && this.shouldPromoteToAdmin(email)) {
@@ -97,3 +101,5 @@ class AuthService {
 }
 
 export default AuthService;
+
+

@@ -5,9 +5,11 @@
 The system is a social network API and static frontend focused on knowledge sharing:
 
 - chronological feed (no recommendation algorithm)
+- authenticated users can follow tags and open a separate chronological followed-tags feed
 - binary moderation decisions on posts (`approved`, `not_relevant`)
 - post-level approval percentage is public in feed and post detail
-- user aggregate metrics remain private to authenticated profile/admin endpoints
+- full user aggregate metrics remain private to authenticated profile/admin endpoints
+- public author surfaces are limited to avatar, username, and a derived reputation tier on posts/comments; there is no public profile page
 
 ## Runtime Architecture
 
@@ -35,6 +37,7 @@ Active modules:
 - `posts`
 - `comments`
 - `feed`
+- `collections`
 - `admin`
 - `moderation`
 
@@ -52,6 +55,8 @@ Active modules:
 
 - `posts` depends on `comments` service for post detail responses with visible comments.
 - `posts` depends on `users` service to refresh author private metrics after post deletion.
+- `posts` depends on `collections` service to decorate summaries and remove deleted-post references.
+- `feed` depends on `collections` service to decorate post summaries and resolve collection-tag search matches.
 - `moderation` depends on `posts` service to:
   - update post trend and post moderation metrics
   - recalculate author private metrics

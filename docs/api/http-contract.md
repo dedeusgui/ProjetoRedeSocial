@@ -3,7 +3,7 @@
 ## Base Information
 
 - API prefix: `/api/v1`
-- Content type: `application/json`
+- Content type: `application/json` by default; `multipart/form-data` is used for `POST /api/v1/posts/:id/media` and `POST /api/v1/me/avatar`
 - Auth scheme for protected routes: `Authorization: Bearer <token>`
 
 ## Success Envelope
@@ -35,10 +35,11 @@ All errors follow:
 Notes:
 
 - `details` is optional and used in validation scenarios.
+- Validation/upload errors should prefer actionable `message` text and may include limits or allowed values in `details`.
 - `AppError` is mapped directly by `src/common/http/errorHandler.js`.
 - unknown runtime failures return:
   - `code: "INTERNAL_ERROR"`
-  - `message: "Unexpected server error"`
+  - `message: "An unexpected internal error occurred."`
 
 ## Common Error Codes
 
@@ -78,3 +79,4 @@ If one of these changes, update docs in the same pull request:
 - response envelope shape
 - auth or role requirements
 - error code semantics
+

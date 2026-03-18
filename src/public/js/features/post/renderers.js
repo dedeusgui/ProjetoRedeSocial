@@ -1,13 +1,73 @@
 import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
+import {
+  formatFollowTagLabel,
+  normalizeFollowTagValue,
+} from "../../core/followed-tags.js";
+import { renderAuthorSummary } from "../authors/renderers.js";
+import { renderCollectionPillList, renderPostContextLinks } from "../posts/context-renderers.js";
+import { renderQuestionnaireDetail } from "../questionnaire/renderers.js";
 
-function renderTags(tags) {
-  if (!Array.isArray(tags) || tags.length === 0) {
-    return "<p class='muted post-tags'>Sem tags.</p>";
+function renderPostMedia(media, fallbackText) {
+  const items = Array.isArray(media) ? media.filter((item) => item?.url) : [];
+  if (items.length === 0) {
+    return "";
   }
 
   return `
-    <ul class="tag-list" aria-label="Tags do post">
-      ${tags.map((tag) => `<li class="tag-item">#${escapeHtml(tag)}</li>`).join("")}
+    <section class="post-media-gallery" aria-label="Post images">
+      ${items
+        .map(
+          (item) => `
+            <figure class="post-media-frame">
+              <img
+                class="post-media-image"
+                src="${escapeHtml(item.url)}"
+                alt="${escapeHtml(item.originalName ?? fallbackText ?? "Post image")}"
+                loading="lazy"
+              />
+            </figure>
+          `,
+        )
+        .join("")}
+    </section>
+  `;
+}
+
+function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
+  if (!Array.isArray(tags) || tags.length === 0) {
+    return "<p class='muted post-tags'>No tags yet.</p>";
+  }
+
+  return `
+    <ul class="tag-list" aria-label="Post tags">
+      ${tags
+        .map((tag) => {
+          const followTag = normalizeFollowTagValue(tag);
+          const label = formatFollowTagLabel(tag);
+          const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
+
+          return `
+            <li class="tag-item tag-item-actionable">
+              <span class="tag-label">#${escapeHtml(label)}</span>
+              ${
+                canManageTagFollows && followTag
+                  ? `
+                    <button
+                      type="button"
+                      class="tag-follow-button ${isFollowing ? "button-ghost" : ""}"
+                      data-follow-tag="${escapeHtml(followTag)}"
+                      data-following="${isFollowing ? "true" : "false"}"
+                      aria-pressed="${isFollowing ? "true" : "false"}"
+                    >
+                      ${isFollowing ? "Following" : "Follow"}
+                    </button>
+                  `
+                  : ""
+              }
+            </li>
+          `;
+        })
+        .join("")}
     </ul>
   `;
 }
@@ -22,14 +82,15 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
 
   return `
     <article class="comment-item">
-      <p>
-        <strong>@${escapeHtml(comment.author?.username ?? "desconhecido")}</strong>
-        <span class="muted">${escapeHtml(formatDateTime(comment.createdAt))}</span>
-      </p>
+      ${renderAuthorSummary(comment.author, {
+        metaText: formatDateTime(comment.createdAt),
+        avatarClassName: "author-avatar-xs",
+        className: "author-summary-comment",
+      })}
       ${
         isEditing
           ? `
-            <label class="comment-edit-form" aria-label="Editar comentario">
+            <label class="comment-edit-form" aria-label="Edit comment">
               <textarea
                 class="comment-edit-input"
                 rows="4"
@@ -43,7 +104,7 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
                 data-save-comment-edit-id="${escapeHtml(comment.id)}"
                 ${isSaving ? "disabled" : ""}
               >
-                Salvar
+                Save
               </button>
               <button
                 type="button"
@@ -51,7 +112,7 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
                 data-cancel-comment-edit-id="${escapeHtml(comment.id)}"
                 ${isSaving ? "disabled" : ""}
               >
-                Cancelar
+                Cancel
               </button>
             </div>
           `
@@ -60,16 +121,54 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
       <div class="review-actions review-actions-inline">
         ${
           !isEditing && canEditComment
-            ? `<button type="button" class="button-ghost button-link-inline" data-edit-comment-id="${escapeHtml(comment.id)}">Editar</button>`
+            ? `<button type="button" class="button-ghost button-link-inline" data-edit-comment-id="${escapeHtml(comment.id)}">Edit</button>`
             : ""
         }
         ${
           canDeleteComment
-            ? `<button type="button" class="button-reject button-link-inline" data-delete-comment-id="${escapeHtml(comment.id)}">Excluir</button>`
+            ? `<button type="button" class="button-reject button-link-inline" data-delete-comment-id="${escapeHtml(comment.id)}">Delete</button>`
             : ""
         }
       </div>
     </article>
+  `;
+}
+
+function renderSequencePanel(sequenceItems = [], currentPostId = null) {
+  if (!Array.isArray(sequenceItems) || sequenceItems.length <= 1) {
+    return "";
+  }
+
+  return `
+    <section class="card sequence-panel">
+      <div class="row comments-panel-header">
+        <h3 class="ink-underline">Full sequence</h3>
+        <p class="muted">${escapeHtml(String(sequenceItems.length))} post(s)</p>
+      </div>
+      <div class="sequence-list">
+        ${sequenceItems
+          .map(
+            (item, index) => `
+              <article class="sequence-item ${String(item.id) === String(currentPostId) ? "sequence-item-current" : ""}">
+                <div class="row collection-post-header">
+                  <span class="questionnaire-question-number">${escapeHtml(String(index + 1))}</span>
+                  <button
+                    type="button"
+                    class="button-ghost button-link-inline"
+                    data-nav-href="./post.html?id=${encodeURIComponent(String(item.id ?? ""))}"
+                  >
+                    ${String(item.id) === String(currentPostId) ? "Current post" : "Open"}
+                  </button>
+                </div>
+                <h4>${escapeHtml(item.title ?? "Untitled")}</h4>
+                <p class="muted">${escapeHtml(formatDateTime(item.createdAt))}</p>
+                <p class="post-content">${escapeHtml(item.content ?? "")}</p>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
   `;
 }
 
@@ -84,6 +183,9 @@ export function renderPostView(
     viewerId = null,
     commentsOpen = true,
     commentEdit = null,
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
+    questionnaireSession = null,
   } = {},
 ) {
   if (!target) {
@@ -97,27 +199,51 @@ export function renderPostView(
   target.innerHTML = `
     <article class="card post-card">
       <header class="post-header">
-        <p class="muted post-meta">@${escapeHtml(post.author?.username ?? "desconhecido")} - ${escapeHtml(formatDateTime(post.createdAt))}</p>
-        <p class="trend-chip status-neutral">Aprovacao: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+        ${renderAuthorSummary(post.author, {
+          metaText: formatDateTime(post.createdAt),
+          avatarClassName: "author-avatar-sm",
+          className: "post-author-summary",
+        })}
+        <p class="trend-chip status-neutral">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
-      ${renderTags(tags)}
+      ${renderPostMedia(post.media, post.title)}
+      ${renderQuestionnaireDetail(post.questionnaire, {
+        canAnswer: canReviewPosts,
+        answers: questionnaireSession?.answers ?? {},
+        result: questionnaireSession?.submittedResult ?? null,
+      })}
+      ${renderPostContextLinks({
+        postId: post.id,
+        sequence: post.sequence,
+        collections: post.collections,
+      })}
+      ${renderTags(tags, { canManageTagFollows, followedTagSet })}
       <div class="review-actions">
-        ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${escapeHtml(post.id ?? "")}">Aprovar</button>` : ""}
-        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${escapeHtml(post.id ?? "")}">Nao relevante</button>` : ""}
-        ${canEditPost ? `<button type="button" class="button-ghost" data-edit-post-id="${escapeHtml(post.id ?? "")}">Editar post</button>` : ""}
-        ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${escapeHtml(post.id ?? "")}">Excluir post</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-approve" data-review-action="approved" data-post-id="${escapeHtml(post.id ?? "")}">Approve</button>` : ""}
+        ${canReviewPosts ? `<button type="button" class="button-reject" data-review-action="not_relevant" data-post-id="${escapeHtml(post.id ?? "")}">Not relevant</button>` : ""}
+        ${canEditPost ? `<button type="button" class="button-ghost" data-edit-post-id="${escapeHtml(post.id ?? "")}">Edit post</button>` : ""}
+        ${canDeletePost ? `<button type="button" class="button-reject" data-delete-post-id="${escapeHtml(post.id ?? "")}">Delete post</button>` : ""}
       </div>
       <p class="muted status-line" data-review-status></p>
     </article>
+    ${renderSequencePanel(post.sequenceItems, post.id)}
+    <section class="card collection-panel">
+      <div class="row comments-panel-header">
+        <h3 class="ink-underline">Collections with this post</h3>
+      </div>
+      ${renderCollectionPillList(post.collections, {
+        emptyLabel: "This post is not part of any collection yet.",
+      })}
+    </section>
     <section class="card comments-panel" data-comments-panel>
       <div class="row comments-panel-header">
-        <h3 class="ink-underline">Comentarios</h3>
+        <h3 class="ink-underline">Comments</h3>
         ${
           commentsOpen
-            ? '<button type="button" class="button-ghost" data-close-comments>Fechar</button>'
-            : '<button type="button" class="button-ghost" data-open-comments>Abrir comentarios</button>'
+            ? '<button type="button" class="button-ghost" data-close-comments>Hide</button>'
+            : '<button type="button" class="button-ghost" data-open-comments>Open comments</button>'
         }
       </div>
       <div class="comments-list" data-comments-list ${commentsOpen ? "" : "hidden"}></div>
@@ -138,7 +264,7 @@ export function renderPostView(
   }
 
   if (comments.length === 0) {
-    commentsList.innerHTML = "<p class='muted'>Nenhum comentario ainda.</p>";
+    commentsList.innerHTML = "<p class='muted'>No comments yet.</p>";
     return;
   }
 

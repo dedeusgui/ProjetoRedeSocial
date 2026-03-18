@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,76 +8,189 @@
   </head>
   <body>
     <main class="page">
-      <header class="card app-header">
-        <div class="header-copy">
-          <img src="../images/logo-transparent.png" alt="TSN" height="48" />
-          <h1 class="ink-underline">Feed</h1>
-          <p class="muted">Publica&ccedil;&otilde;es recentes da comunidade.</p>
-        </div>
-        <nav class="row app-nav">
-          <button type="button" class="nav-link" data-nav-href="./feed.html" aria-current="page">Feed</button>
-          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>Meu perfil</button>
-          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
-          <button type="button" data-open-post-modal>Novo post</button>
-          <button type="button" data-logout hidden>Sair</button>
-        </nav>
-      </header>
-
-      <section class="card">
-        <form class="feed-search" data-feed-search-form>
-          <label class="feed-search-field">
-            Buscar posts
-            <input
-              type="search"
-              name="search"
-              placeholder="Busque por t&iacute;tulo, conte&uacute;do ou tag"
-              maxlength="120"
-              data-feed-search-input
-            />
-          </label>
-          <div class="feed-search-actions">
-            <button type="submit" data-feed-search-submit>Buscar</button>
-            <button type="button" class="button-ghost" data-feed-search-reset hidden>Limpar</button>
+      <header class="card app-header app-header-feed">
+        <div class="app-header-feed-inner">
+          <div class="app-header-feed-top">
+            <div class="header-copy">
+              <img src="../images/logo-transparent.png" alt="TSN" height="48" />
+              <h1 class="ink-underline">Feed</h1>
+            </div>
+            <nav class="row app-nav">
+              <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
+              <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+              <button type="button" class="nav-link" data-nav-href="./collections.html" data-collections-link>My collections</button>
+              <button type="button" data-open-post-modal>New post</button>
+              <button type="button" data-logout hidden>Sign out</button>
+            </nav>
           </div>
-        </form>
-      </section>
+
+          <div class="feed-discovery-panel">
+            <div class="feed-discovery-top">
+              <form class="feed-search" data-feed-search-form>
+                <label class="feed-search-field">
+                  <span class="sr-only" data-feed-search-label>Search posts</span>
+                  <input
+                    type="search"
+                    name="search"
+                    placeholder="Search by title, content, or tag"
+                    maxlength="120"
+                    data-feed-search-input
+                  />
+                </label>
+                <div class="feed-search-actions">
+                  <button type="button" class="button-ghost" data-feed-search-reset hidden>Clear</button>
+                </div>
+              </form>
+
+              <div class="feed-discovery-controls">
+                <div class="feed-mode-toggle" role="group" aria-label="Content type">
+                  <button type="button" data-feed-type-button="posts" data-active="true" aria-pressed="true">Posts</button>
+                  <button
+                    type="button"
+                    data-feed-type-button="collections"
+                    data-active="false"
+                    aria-pressed="false"
+                  >
+                    Collections
+                  </button>
+                </div>
+
+                <div class="feed-follow-toggle" data-feed-follow-toggle-shell hidden>
+                  <span class="muted">Followed tags</span>
+                  <button type="button" class="button-ghost" data-feed-following-toggle aria-pressed="false">Off</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="feed-follow-banner-shell" data-feed-follow-banner data-visible="false" aria-hidden="true"></div>
+
+            <p class="muted follow-tags-guest" data-follow-tags-guest>Sign in to follow tags.</p>
+
+            <div class="follow-tags-auth" data-follow-tags-auth hidden>
+              <div class="follow-tags-toolbar">
+                <form class="follow-tag-form" data-follow-tag-form>
+                  <label>
+                    Follow a tag manually
+                    <input
+                      type="text"
+                      name="tag"
+                      placeholder="Example: nodejs"
+                      maxlength="32"
+                      autocomplete="off"
+                      spellcheck="false"
+                      data-follow-tag-input
+                    />
+                    <span class="muted">Use letters, numbers, hyphen, or underscore. Up to 32 characters.</span>
+                  </label>
+                  <button type="submit" data-follow-tag-submit>Follow tag</button>
+                </form>
+
+                <details class="followed-tags-dropdown" data-followed-tags-dropdown>
+                  <summary data-followed-tags-summary>Followed tags</summary>
+                  <div class="followed-tags-list-shell">
+                    <div class="followed-tags-list" data-followed-tags-list></div>
+                  </div>
+                </details>
+              </div>
+
+              <p class="muted status-line" data-follow-tag-status></p>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <p class="muted status-line" data-feed-status></p>
       <div class="feed-list" data-feed-list></div>
       <div class="feed-actions">
-        <button type="button" class="button-ghost" data-feed-more hidden>Carregar mais</button>
+        <button type="button" class="button-ghost" data-feed-more hidden>Load more</button>
       </div>
     </main>
 
     <dialog class="modal" data-post-modal>
       <section class="card modal-card">
         <div class="row modal-header">
-          <h2 class="ink-underline" data-post-modal-title>Publicar post</h2>
-          <button type="button" class="button-ghost" data-post-modal-cancel>Fechar</button>
+          <h2 class="ink-underline" data-post-modal-title>Publish post</h2>
+          <button type="button" class="button-ghost" data-post-modal-cancel>Close</button>
         </div>
-        <form data-post-modal-form>
-          <label>
-            T&iacute;tulo
-            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="120" />
-          </label>
-          <label>
-            Conte&uacute;do
-            <textarea
-              name="content"
-              rows="6"
-              placeholder="Explique a ideia de forma objetiva."
-              required
-            ></textarea>
-          </label>
-          <label>
-            Tags
-            <input name="tags" placeholder="node, backend, estudo" />
-          </label>
-          <button type="submit" data-post-modal-submit>Publicar</button>
+        <form class="modal-form-layout" data-post-modal-form>
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Core content</h3>
+              <p class="muted">Start with the main post content, then add optional extras below.</p>
+            </div>
+            <label>
+              Title
+              <input name="title" placeholder="Example: How to structure Node.js study sessions" required maxlength="100" />
+            </label>
+            <label>
+              Content
+              <textarea
+                name="content"
+                rows="6"
+                placeholder="Explain the idea clearly and directly."
+                required
+                maxlength="3000"
+              ></textarea>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="node, backend, study" />
+              <span class="muted">Separate tags with commas.</span>
+            </label>
+            <label>
+              Continue one of your posts?
+              <select name="previousPostId" data-post-previous-select>
+                <option value="">Standalone post</option>
+              </select>
+              <span class="muted">Use this only to continue a sequence you own.</span>
+            </label>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Post images</h3>
+              <p class="muted">Up to 4 JPG, PNG, or WebP images, with a maximum of 5 MB each.</p>
+            </div>
+            <label class="file-picker" aria-label="Select post images">
+              <input
+                type="file"
+                name="media"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                data-post-media-input
+              />
+              <span class="file-picker-ui">
+                <span class="file-picker-trigger">Choose images</span>
+                <span class="file-picker-summary" data-post-media-summary>No images selected.</span>
+              </span>
+            </label>
+            <section class="modal-media-section" data-existing-post-media hidden></section>
+            <section class="modal-media-section" data-selected-post-media></section>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-disclosure" data-post-questionnaire-shell data-open="false">
+              <button type="button" class="modal-disclosure-trigger" data-post-questionnaire-toggle aria-expanded="false">
+                <span class="modal-disclosure-copy">
+                  <span class="modal-disclosure-title">Add poll (optional)</span>
+                </span>
+                <span class="modal-disclosure-caret" aria-hidden="true"></span>
+              </button>
+              <div class="modal-disclosure-panel" data-post-questionnaire-panel hidden>
+                <p class="muted" data-post-questionnaire-helper>
+                  Build an optional multiple-choice questionnaire below, or leave it empty to publish a regular post.
+                </p>
+                <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
+              </div>
+            </div>
+          </section>
+
+          <button type="submit" data-post-modal-submit>Publish</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>
       </section>
     </dialog>
+
     <script type="module" src="../js/pages/feed.js"></script>
   </body>
 </html>

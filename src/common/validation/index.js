@@ -1,6 +1,29 @@
 import mongoose from "mongoose";
 import AppError from "../errors/AppError.js";
 
+const FIELD_LABELS = Object.freeze({
+  action: "action",
+  collectionId: "collection",
+  commentId: "comment",
+  content: "content",
+  decision: "decision",
+  email: "e-mail",
+  id: "identifier",
+  password: "password",
+  postId: "post",
+  previousPostId: "previous post",
+  requesterId: "requester",
+  reviewerId: "reviewer",
+  tag: "tag",
+  title: "title",
+  userId: "user",
+  username: "username",
+});
+
+function resolveFieldLabel(field) {
+  return FIELD_LABELS[field] ?? field;
+}
+
 function requireFields(payload, fields) {
   const source = payload ?? {};
   const missing = fields.filter((field) => {
@@ -17,18 +40,24 @@ function requireFields(payload, fields) {
   });
 
   if (missing.length > 0) {
+    const missingLabels = missing.map((field) => resolveFieldLabel(field));
     throw new AppError(
-      `Missing required fields: ${missing.join(", ")}`,
+      `Fill in the required fields: ${missingLabels.join(", ")}.`,
       "VALIDATION_ERROR",
       400,
-      { missing },
+      { missing, missingLabels },
     );
   }
 }
 
 function ensureObjectId(id, fieldName = "id") {
   if (!mongoose.isValidObjectId(id)) {
-    throw new AppError(`Invalid ${fieldName}`, "VALIDATION_ERROR", 400);
+    throw new AppError(
+      `The identifier provided for ${resolveFieldLabel(fieldName)} is invalid.`,
+      "VALIDATION_ERROR",
+      400,
+      { field: fieldName },
+    );
   }
 }
 

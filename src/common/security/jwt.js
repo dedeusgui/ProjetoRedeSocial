@@ -47,12 +47,12 @@ function signJWT(payload, secret, expiresInSeconds = 60 * 60 * 12) {
 
 function verifyJWT(token, secret) {
   if (!token || typeof token !== "string") {
-    throw new AppError("Missing authentication token", "UNAUTHENTICATED", 401);
+    throw new AppError("Authentication token is missing.", "UNAUTHENTICATED", 401);
   }
 
   const tokenParts = token.split(".");
   if (tokenParts.length !== 3) {
-    throw new AppError("Invalid token format", "INVALID_TOKEN", 401);
+    throw new AppError("Token format is invalid.", "INVALID_TOKEN", 401);
   }
 
   const [encodedHeader, encodedPayload, signature] = tokenParts;
@@ -60,19 +60,19 @@ function verifyJWT(token, secret) {
   const expectedSignature = signInput(signingInput, secret);
 
   if (signature !== expectedSignature) {
-    throw new AppError("Invalid token signature", "INVALID_TOKEN", 401);
+    throw new AppError("Token signature is invalid.", "INVALID_TOKEN", 401);
   }
 
   let payload;
   try {
     payload = JSON.parse(fromBase64Url(encodedPayload));
   } catch {
-    throw new AppError("Invalid token payload", "INVALID_TOKEN", 401);
+    throw new AppError("Token payload is invalid.", "INVALID_TOKEN", 401);
   }
 
   const now = Math.floor(Date.now() / 1000);
   if (!payload.exp || payload.exp < now) {
-    throw new AppError("Token expired", "TOKEN_EXPIRED", 401);
+    throw new AppError("Your session has expired. Sign in again.", "TOKEN_EXPIRED", 401);
   }
 
   return payload;

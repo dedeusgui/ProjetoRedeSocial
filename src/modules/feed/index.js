@@ -1,11 +1,11 @@
-import FeedRepository from "./repositories/FeedRepository.js";
+﻿import FeedRepository from "./repositories/FeedRepository.js";
 import FeedService from "./services/FeedService.js";
 import FeedController from "./controllers/FeedController.js";
 import createFeedRoutes from "./routes/feedRoutes.js";
 
-function createFeedModule() {
+function createFeedModule({ userService, collectionService }) {
   const feedRepository = new FeedRepository();
-  const feedService = new FeedService(feedRepository);
+  const feedService = new FeedService(feedRepository, userService, collectionService);
   const feedController = new FeedController(feedService);
   const router = createFeedRoutes(feedController);
 

@@ -1,0 +1,45 @@
+export const UI_TEXT = {
+  genericApiError: "Unexpected error while communicating with the API.",
+  auth: {
+    loginToContinue: "Authentication required. Sign in to continue.",
+    loginToFollowTags: "Authentication required. Sign in to follow tags.",
+    loginToCreatePost: "Sign in to publish to the feed.",
+    loginToEditPost: "Sign in to edit posts.",
+    loginToDeletePosts: "Sign in to delete posts.",
+    loginToComment: "Sign in to comment on this post.",
+    loginToReviewPost: "Sign in to review this post.",
+    loginToAnswerQuestionnaire: "Sign in to answer this questionnaire.",
+  },
+  followTags: {
+    updateError: "Could not update followed tags.",
+    empty: "You are not following any tags yet.",
+    alreadyFollowing: (tag) => `You already follow #${tag}.`,
+    nowFollowing: (tag) => `You now follow #${tag}.`,
+    stoppedFollowing: (tag) => `You no longer follow #${tag}.`,
+    loadingFollow: (tag) => `Following #${tag}...`,
+    loadingUnfollow: (tag) => `Unfollowing #${tag}...`,
+  },
+  posts: {
+    unavailableTitle: "Post unavailable",
+    deleted: "Post deleted.",
+    updateSuccess: "Post updated.",
+    createSuccess: "Post published.",
+    updateMediaError: (errorMessage) =>
+      `Post updated, but the images could not be uploaded: ${errorMessage ?? "check the selected files."}`,
+    createMediaError: (errorMessage) =>
+      `Post published, but the images could not be uploaded: ${errorMessage ?? "check the selected files."}`,
+  },
+  comments: {
+    beforeSend: "Write a comment before submitting.",
+    sent: "Comment posted.",
+    onlyAuthorCanEdit: "Only the author can edit this comment.",
+    cannotBeEmpty: "The comment cannot be empty.",
+    savingEdit: "Saving comment changes...",
+    updated: "Comment updated.",
+    deleting: "Deleting comment...",
+    deleted: "Comment deleted.",
+    noPermissionDelete: "You do not have permission to delete this comment.",
+    hidden: "Comments are hidden. Click Open comments to view them again.",
+  },
+  sessionClosed: "Signed out.",
+};

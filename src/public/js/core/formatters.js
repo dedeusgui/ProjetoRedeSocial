@@ -1,6 +1,6 @@
 /**
- * Escapa caracteres HTML especiais para evitar XSS ao interpolar
- * valores de usuário em innerHTML.
+ * Escapes special HTML characters to avoid XSS when interpolating
+ * user-provided values in innerHTML.
  * @param {unknown} value
  * @returns {string}
  */
@@ -51,9 +51,9 @@ export function formatPercent(value) {
 }
 
 export function trendLabel(trend) {
-  if (trend === "positive") return "positiva";
-  if (trend === "negative") return "negativa";
-  return "neutra";
+  if (trend === "positive") return "positive";
+  if (trend === "negative") return "negative";
+  return "neutral";
 }
 
 export function trendClass(trend) {
@@ -61,3 +61,5 @@ export function trendClass(trend) {
   if (trend === "negative") return "status-negative";
   return "status-neutral";
 }
+
+

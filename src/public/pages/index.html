@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Social Network | Comunidade de Posts</title>
+    <title>The Social Network | Knowledge Feed</title>
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
@@ -12,8 +12,8 @@
         <div class="header-copy">
           <img src="../images/logo-transparent.png" alt="TSN" height="48" />
           <h1 class="ink-underline">The Social Network</h1>
-          <p class="muted">Compartilhe posts e discuss&otilde;es com foco no conte&uacute;do.</p>
-          <p class="tone-note">Feed em ordem cronol&oacute;gica.</p>
+          <p class="muted">Share posts, discussions, sequences, and learning content in one clean flow.</p>
+          <p class="tone-note">Chronological feed. No ranking layer.</p>
         </div>
         <nav class="row app-nav">
           <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
@@ -21,48 +21,97 @@
       </header>
 
       <section class="card hero-panel">
-        <h2 class="ink-underline">Uma comunidade para compartilhar ideias</h2>
-        <p>
-          Publique, comente e acompanhe discuss&otilde;es em um fluxo simples e direto.
-        </p>
-        <p class="muted">As publica&ccedil;&otilde;es aparecem por data, sem ranking por relev&acirc;ncia.</p>
+        <h2 class="ink-underline">A community built for focused knowledge sharing</h2>
+        <p>Publish ideas, continue post sequences, organize collections, and keep the conversation grounded in content.</p>
+        <p class="muted">Everything appears by time, not by recommendation ranking.</p>
       </section>
+
+      <p class="muted status-line" data-auth-status></p>
 
       <div class="auth-grid" data-auth-anon>
         <section class="card">
-          <h2 class="ink-underline">Entrar</h2>
-          <p class="muted">Acesse sua conta para continuar.</p>
-          <form data-login-form>
-            <label>
+          <h2 class="ink-underline">Sign in</h2>
+          <p class="muted">Access your account to continue.</p>
+          <form data-login-form id="login-form" autocomplete="on">
+            <label for="login-email">
               Email
-              <input name="email" type="email" placeholder="voce@email.com" required />
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
             </label>
-            <label>
-              Senha
-              <input name="password" type="password" placeholder="Sua senha" required />
+            <label for="login-password">
+              Password
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                placeholder="Your password"
+                autocomplete="current-password"
+                required
+              />
             </label>
-            <button type="submit">Entrar</button>
+            <button type="submit">Sign in</button>
           </form>
-          <p class="muted status-line" data-auth-status></p>
         </section>
 
         <section class="card">
-          <h2 class="ink-underline">Criar conta</h2>
-          <p class="muted">Crie sua conta para publicar e participar das discuss&otilde;es.</p>
-          <form data-register-form>
-            <label>
-              Usu&aacute;rio
-              <input name="username" placeholder="seu_usuario" required maxlength="40" />
+          <h2 class="ink-underline">Create account</h2>
+          <p class="muted">Create an account to publish, respond, and curate your own content.</p>
+          <form data-register-form id="register-form" autocomplete="on">
+            <label for="register-username">
+              Username
+              <input
+                id="register-username"
+                name="username"
+                placeholder="your_username"
+                autocomplete="username"
+                required
+                maxlength="40"
+              />
             </label>
-            <label>
+            <label for="register-email">
               Email
-              <input name="email" type="email" placeholder="voce@email.com" required />
+              <input
+                id="register-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
             </label>
-            <label>
-              Senha
-              <input name="password" type="password" placeholder="M&iacute;nimo 6 caracteres" required minlength="6" />
+            <label for="register-password">
+              Password
+              <input
+                id="register-password"
+                name="password"
+                type="password"
+                placeholder="Minimum 6 characters"
+                autocomplete="new-password"
+                data-register-password-input
+                required
+                minlength="6"
+              />
             </label>
-            <button type="submit">Criar conta</button>
+            <label for="register-password-confirmation">
+              Confirm password
+              <input
+                id="register-password-confirmation"
+                name="passwordConfirmation"
+                type="password"
+                placeholder="Repeat your password"
+                autocomplete="new-password"
+                data-register-password-confirmation-input
+                required
+                minlength="6"
+              />
+            </label>
+            <button type="submit">Create account</button>
           </form>
         </section>
       </div>

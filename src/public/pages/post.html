@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,28 +12,28 @@
         <div class="header-copy">
           <img src="../images/logo-transparent.png" alt="TSN" height="48" />
           <h1 class="ink-underline">Post</h1>
-          <p class="muted">Detalhes do post e discuss&atilde;o.</p>
-          <p class="tone-note">Coment&aacute;rios em ordem cronol&oacute;gica.</p>
+          <p class="muted">Post details, questionnaire flow, and discussion.</p>
+          <p class="tone-note">Comments stay chronological.</p>
         </div>
         <nav class="row app-nav">
           <button type="button" class="nav-link" data-nav-href="./feed.html">Feed</button>
-          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>Meu perfil</button>
-          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Entrar</button>
-          <button type="button" data-logout hidden>Sair</button>
+          <button type="button" class="nav-link" data-nav-href="./profile.html" data-profile-link hidden>My profile</button>
+          <button type="button" class="nav-link" data-nav-href="./index.html" data-login-link>Sign in</button>
+          <button type="button" data-logout hidden>Sign out</button>
         </nav>
       </header>
 
       <p class="muted status-line" data-post-status></p>
       <div data-post-view></div>
 
-      <section class="card" data-comment-compose>
-        <h2 class="ink-underline">Adicionar coment&aacute;rio</h2>
+      <section class="card" data-comment-compose hidden>
+        <h2 class="ink-underline">Add comment</h2>
         <form data-comment-form>
           <label>
-            Coment&aacute;rio
-            <textarea name="content" rows="4" placeholder="Seu coment&aacute;rio" required></textarea>
+            Comment
+            <textarea name="content" rows="4" placeholder="Write your comment" required></textarea>
           </label>
-          <button type="submit">Enviar coment&aacute;rio</button>
+          <button type="submit">Post comment</button>
         </form>
         <p class="muted status-line" data-comment-help></p>
       </section>
@@ -41,28 +41,83 @@
     <dialog class="modal" data-post-modal>
       <section class="card modal-card">
         <div class="row modal-header">
-          <h2 class="ink-underline" data-post-modal-title>Publicar post</h2>
-          <button type="button" class="button-ghost" data-post-modal-cancel>Fechar</button>
+          <h2 class="ink-underline" data-post-modal-title>Publish post</h2>
+          <button type="button" class="button-ghost" data-post-modal-cancel>Close</button>
         </div>
-        <form data-post-modal-form>
-          <label>
-            T&iacute;tulo
-            <input name="title" placeholder="Ex: Como organizar estudos de Node.js" required maxlength="120" />
-          </label>
-          <label>
-            Conte&uacute;do
-            <textarea
-              name="content"
-              rows="6"
-              placeholder="Explique a ideia de forma objetiva."
-              required
-            ></textarea>
-          </label>
-          <label>
-            Tags
-            <input name="tags" placeholder="node, backend, estudo" />
-          </label>
-          <button type="submit" data-post-modal-submit>Publicar</button>
+        <form class="modal-form-layout" data-post-modal-form>
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Core content</h3>
+              <p class="muted">Start with the main post content, then add optional extras below.</p>
+            </div>
+            <label>
+              Title
+              <input name="title" placeholder="Example: How to structure Node.js study sessions" required maxlength="100" />
+            </label>
+            <label>
+              Content
+              <textarea
+                name="content"
+                rows="6"
+                placeholder="Explain the idea clearly and directly."
+                required
+                maxlength="3000"
+              ></textarea>
+            </label>
+            <label>
+              Tags
+              <input name="tags" placeholder="node, backend, study" />
+              <span class="muted">Separate tags with commas.</span>
+            </label>
+            <label>
+              Continue one of your posts?
+              <select name="previousPostId" data-post-previous-select>
+                <option value="">Standalone post</option>
+              </select>
+              <span class="muted">Use this only to continue a sequence you own.</span>
+            </label>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-form-section-copy">
+              <h3 class="ink-underline">Post images</h3>
+              <p class="muted">Up to 4 JPG, PNG, or WebP images, with a maximum of 5 MB each.</p>
+            </div>
+            <label class="file-picker" aria-label="Select post images">
+              <input
+                type="file"
+                name="media"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                data-post-media-input
+              />
+              <span class="file-picker-ui">
+                <span class="file-picker-trigger">Choose images</span>
+                <span class="file-picker-summary" data-post-media-summary>No images selected.</span>
+              </span>
+            </label>
+            <section class="modal-media-section" data-existing-post-media hidden></section>
+            <section class="modal-media-section" data-selected-post-media></section>
+          </section>
+
+          <section class="modal-form-section">
+            <div class="modal-disclosure" data-post-questionnaire-shell data-open="false">
+              <button type="button" class="modal-disclosure-trigger" data-post-questionnaire-toggle aria-expanded="false">
+                <span class="modal-disclosure-copy">
+                  <span class="modal-disclosure-title">Add poll (optional)</span>
+                </span>
+                <span class="modal-disclosure-caret" aria-hidden="true"></span>
+              </button>
+              <div class="modal-disclosure-panel" data-post-questionnaire-panel hidden>
+                <p class="muted" data-post-questionnaire-helper>
+                  Build an optional multiple-choice questionnaire below, or leave it empty to publish a regular post.
+                </p>
+                <section class="modal-questionnaire-shell" data-post-questionnaire-editor></section>
+              </div>
+            </div>
+          </section>
+
+          <button type="submit" data-post-modal-submit>Publish</button>
         </form>
         <p class="muted status-line" data-post-modal-status></p>
       </section>

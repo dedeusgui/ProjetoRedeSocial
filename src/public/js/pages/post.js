@@ -1,7 +1,11 @@
-import { api } from "../api.js";
+﻿import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import {
+  normalizeFollowTagValue,
+  normalizeFollowedTags,
+} from "../core/followed-tags.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
@@ -11,13 +15,20 @@ import { renderPostView } from "../features/post/renderers.js";
 const state = {
   postId: null,
   postData: null,
+  followedTags: [],
   viewerRole: null,
   viewerId: null,
   postAuthorId: null,
-  commentsOpen: true,
+  commentsOpen: false,
   isReviewSubmitting: false,
   isDeletingPost: false,
   isDeletingComment: false,
+  isManagingTags: false,
+  questionnaireSignature: null,
+  questionnaireSession: {
+    answers: {},
+    submittedResult: null,
+  },
   commentEdit: {
     editingCommentId: null,
     draft: "",
@@ -40,6 +51,11 @@ const elements = {
   modalSubmitButton: document.querySelector("[data-post-modal-submit]"),
   postModalForm: document.querySelector("[data-post-modal-form]"),
   postModalStatus: document.querySelector("[data-post-modal-status]"),
+  postMediaInput: document.querySelector("[data-post-media-input]"),
+  postPreviousSelect: document.querySelector("[data-post-previous-select]"),
+  selectedPostMedia: document.querySelector("[data-selected-post-media]"),
+  existingPostMedia: document.querySelector("[data-existing-post-media]"),
+  questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -76,23 +92,54 @@ function setReviewStatus(message, stateName = "info") {
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para comentar.",
-    "Erro inesperado ao comunicar com a API.",
+    "Authentication required. Sign in to continue.",
+    "Unexpected error while communicating with the API.",
   );
 }
 
 function resolveDeleteMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria para excluir conteudo.",
-    "Falha ao excluir conteudo.",
+    "Authentication required to delete content.",
+    "Could not delete the content.",
   );
+}
+
+function resolveFollowTagMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Authentication required. Sign in to follow tags.",
+    "Could not update followed tags.",
+  );
+}
+
+function setFollowedTags(tags) {
+  state.followedTags = normalizeFollowedTags(tags);
 }
 
 function resetCommentEditState() {
   state.commentEdit.editingCommentId = null;
   state.commentEdit.draft = "";
   state.commentEdit.isSaving = false;
+}
+
+function buildQuestionnaireSignature(questionnaire) {
+  if (!questionnaire) {
+    return null;
+  }
+
+  try {
+    return JSON.stringify(questionnaire);
+  } catch {
+    return null;
+  }
+}
+
+function resetQuestionnaireSession() {
+  state.questionnaireSession = {
+    answers: {},
+    submittedResult: null,
+  };
 }
 
 function renderSessionState() {
@@ -118,9 +165,9 @@ function renderSessionState() {
 
   commentHelpFlash.show(
     !commentsVisible
-      ? "Comentarios ocultos. Clique em Abrir comentarios para voltar."
+      ? "Comments are hidden. Click Open comments to view them again."
       : !isAuthenticated
-        ? "Faca login para comentar neste post."
+        ? "Sign in to comment on this post."
         : "",
     "info",
   );
@@ -142,10 +189,10 @@ function renderMissingPostState(message) {
 
   elements.view.innerHTML = `
     <section class="card empty-card">
-      <h2 class="ink-underline">Post indisponivel</h2>
+      <h2 class="ink-underline">Post unavailable</h2>
       <p class="muted">${message}</p>
-      <p class="muted">Volte ao feed para continuar.</p>
-      <button type="button" class="button-link button-link-inline" data-nav-href="./feed.html">Voltar ao feed</button>
+      <p class="muted">Return to the feed to continue.</p>
+      <button type="button" class="button-link button-link-inline" data-nav-href="./feed.html">Back to feed</button>
     </section>
   `;
 }
@@ -168,6 +215,9 @@ function renderCurrentPost() {
     viewerId: state.viewerId,
     commentsOpen: state.commentsOpen,
     commentEdit: state.commentEdit,
+    canManageTagFollows: hasSession(),
+    followedTagSet: new Set(state.followedTags),
+    questionnaireSession: state.questionnaireSession,
   });
 
   refreshReviewActions();
@@ -204,11 +254,6 @@ function refreshReviewActions({ preserveStatus = false } = {}) {
     return;
   }
 
-  if (!isAuthenticated) {
-    setReviewStatus("", "info");
-    return;
-  }
-
   setReviewStatus("", "info");
 }
 
@@ -219,16 +264,34 @@ async function loadPost() {
   if (!postId) {
     state.postData = null;
     state.postAuthorId = null;
+    state.questionnaireSignature = null;
+    resetQuestionnaireSession();
     resetCommentEditState();
-    renderMissingPostState("ID do post ausente na URL.");
-    statusFlash.show("Nao foi possivel abrir o post.", "error");
+    renderMissingPostState("Post ID is missing from the URL.");
+    statusFlash.show("Could not open the post.", "error");
     return;
   }
 
-  statusFlash.show("Carregando post...", "info");
+  statusFlash.show("Loading post...", "info");
 
   try {
     const post = await api.posts.getById(postId);
+    if (post.sequence?.isPartOfSequence) {
+      try {
+        const sequenceData = await api.posts.getSequence(postId);
+        post.sequenceItems = Array.isArray(sequenceData.items) ? sequenceData.items : [];
+      } catch {
+        post.sequenceItems = [];
+      }
+    } else {
+      post.sequenceItems = [];
+    }
+
+    const nextQuestionnaireSignature = buildQuestionnaireSignature(post.questionnaire);
+    if (state.questionnaireSignature !== nextQuestionnaireSignature) {
+      state.questionnaireSignature = nextQuestionnaireSignature;
+      resetQuestionnaireSession();
+    }
     state.postData = post;
     state.postAuthorId = post.author?.id ?? null;
     resetCommentEditState();
@@ -238,26 +301,83 @@ async function loadPost() {
   } catch (error) {
     state.postData = null;
     state.postAuthorId = null;
+    state.questionnaireSignature = null;
+    resetQuestionnaireSession();
     resetCommentEditState();
-    renderMissingPostState("Este post nao pode ser exibido no momento.");
+    renderMissingPostState("This post cannot be displayed right now.");
     statusFlash.show(resolveMessage(error), "error");
   }
 }
 
-async function syncViewerRole() {
+async function syncViewerContext() {
   if (!hasSession()) {
     state.viewerRole = null;
     state.viewerId = null;
+    setFollowedTags([]);
     return;
   }
 
-  try {
-    const profile = await api.users.meProfile();
+  const [profileResult, followedTagsResult] = await Promise.allSettled([
+    api.users.meProfile(),
+    api.users.listFollowedTags(),
+  ]);
+
+  if (profileResult.status === "fulfilled") {
+    const profile = profileResult.value;
     state.viewerRole = profile.role ?? null;
     state.viewerId = profile.id ?? null;
-  } catch {
+  } else {
     state.viewerRole = null;
     state.viewerId = null;
+  }
+
+  if (followedTagsResult.status === "fulfilled") {
+    setFollowedTags(followedTagsResult.value.followedTags);
+  } else {
+    setFollowedTags([]);
+  }
+}
+
+async function toggleFollowTag(tag, currentlyFollowing) {
+  if (state.isManagingTags) {
+    return false;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Sign in to follow tags.", "error");
+    return false;
+  }
+
+  const normalizedTag = normalizeFollowTagValue(tag);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  state.isManagingTags = true;
+  statusFlash.show(
+    currentlyFollowing ? `Unfollowing #${normalizedTag}...` : `Following #${normalizedTag}...`,
+    "info",
+  );
+
+  try {
+    const result = currentlyFollowing
+      ? await api.users.unfollowTag(normalizedTag)
+      : await api.users.followTag(normalizedTag);
+
+    setFollowedTags(result.followedTags);
+    renderCurrentPost();
+    statusFlash.show(
+      currentlyFollowing
+        ? `You no longer follow #${normalizedTag}.`
+        : `You now follow #${normalizedTag}.`,
+      "success",
+    );
+    return true;
+  } catch (error) {
+    statusFlash.show(resolveFollowTagMessage(error), "error");
+    return false;
+  } finally {
+    state.isManagingTags = false;
   }
 }
 
@@ -269,19 +389,19 @@ async function handleCommentSubmit(event) {
 
   const postId = state.postId;
   if (!postId) {
-    statusFlash.show("ID do post ausente na URL.", "error");
+    statusFlash.show("Post ID is missing from the URL.", "error");
     return;
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para comentar neste post.", "error");
+    statusFlash.show("Sign in to comment on this post.", "error");
     return;
   }
 
   const formData = new FormData(elements.commentForm);
   const content = String(formData.get("content") ?? "").trim();
   if (!content) {
-    statusFlash.show("Escreva um comentario antes de enviar.", "error");
+    statusFlash.show("Write a comment before submitting.", "error");
     return;
   }
 
@@ -289,7 +409,7 @@ async function handleCommentSubmit(event) {
     await api.posts.createComment(postId, content);
     elements.commentForm.reset();
     await loadPost();
-    statusFlash.show("Comentario enviado.", "success");
+    statusFlash.show("Comment posted.", "success");
   } catch (error) {
     statusFlash.show(resolveMessage(error), "error");
   }
@@ -297,25 +417,25 @@ async function handleCommentSubmit(event) {
 
 async function handleReview(decision) {
   if (!state.postId) {
-    setReviewStatus("Post invalido para avaliacao.", "error");
+    setReviewStatus("Invalid post for review.", "error");
     return;
   }
 
   if (!hasSession()) {
-    setReviewStatus("Faca login para avaliar este post.", "error");
+    setReviewStatus("Sign in to review this post.", "error");
     return;
   }
 
   state.isReviewSubmitting = true;
   refreshReviewActions({ preserveStatus: true });
-  setReviewStatus("Salvando avaliacao...", "info");
+  setReviewStatus("Saving review...", "info");
 
   try {
     const result = await api.posts.review(state.postId, decision, null);
     setReviewStatus(reviewSavedMessage(result), "success");
     await loadPost();
   } catch (error) {
-    setReviewStatus(resolveModerationApiMessage(error, "Falha ao salvar avaliacao."), "error");
+    setReviewStatus(resolveModerationApiMessage(error, "Could not save the review."), "error");
   } finally {
     state.isReviewSubmitting = false;
     refreshReviewActions({ preserveStatus: true });
@@ -329,12 +449,12 @@ async function handleDeletePost() {
 
   const isOwner = String(state.viewerId ?? "") === String(state.postAuthorId ?? "");
   if (!hasSession() || (!["moderator", "admin"].includes(state.viewerRole ?? "") && !isOwner)) {
-    statusFlash.show("Apenas autor, moderador ou admin podem excluir posts.", "error");
+    statusFlash.show("Only the author, a moderator, or an admin can delete posts.", "error");
     return;
   }
 
   state.isDeletingPost = true;
-  statusFlash.show("Excluindo post...", "info");
+  statusFlash.show("Deleting post...", "info");
   try {
     await api.posts.delete(state.postId);
     window.location.href = "./feed.html";
@@ -346,19 +466,7 @@ async function handleDeletePost() {
 }
 
 async function submitPostUpdate(postId, payload) {
-  const updated = await api.posts.update(postId, payload);
-  if (state.postData && String(state.postData.id) === String(postId)) {
-    state.postData = {
-      ...state.postData,
-      title: updated.title ?? state.postData.title,
-      content: updated.content ?? state.postData.content,
-      tags: Array.isArray(updated.tags) ? updated.tags : state.postData.tags,
-      updatedAt: updated.updatedAt ?? state.postData.updatedAt,
-    };
-    renderCurrentPost();
-  }
-
-  return updated;
+  return api.posts.update(postId, payload);
 }
 
 const postModalController = createPostModalController({
@@ -368,22 +476,47 @@ const postModalController = createPostModalController({
   submitButton: elements.modalSubmitButton,
   cancelButton: elements.modalCancelButton,
   statusTarget: elements.postModalStatus,
+  mediaInput: elements.postMediaInput,
+  previousPostSelect: elements.postPreviousSelect,
+  selectedMediaTarget: elements.selectedPostMedia,
+  existingMediaTarget: elements.existingPostMedia,
+  questionnaireTarget: elements.questionnaireEditor,
   resolveErrorMessage: resolveMessage,
   onBeforeOpenEdit() {
     const isOwner = String(state.viewerId ?? "") === String(state.postAuthorId ?? "");
     if (!hasSession() || !isOwner) {
-      statusFlash.show("Apenas o autor pode editar este post.", "error");
+      statusFlash.show("Only the author can edit this post.", "error");
       return false;
     }
     return true;
   },
   async submitPostCreate() {
-    throw new Error("Criacao de post nao disponivel nesta tela.");
+    throw new Error("Post creation is not available on this screen.");
   },
   submitPostUpdate,
-  async onAfterSuccess({ mode }) {
+  loadOwnedPosts() {
+    return api.posts.listMine();
+  },
+  uploadPostMedia(postId, files) {
+    return api.posts.uploadMedia(postId, files);
+  },
+  deletePostMedia(postId, mediaId) {
+    return api.posts.deleteMedia(postId, mediaId);
+  },
+  async onMediaChanged({ action }) {
+    if (action === "delete") {
+      await loadPost();
+    }
+  },
+  async onAfterSuccess({ mode, mediaError, mediaErrorMessage }) {
+    await loadPost();
     if (mode === "edit") {
-      statusFlash.show("Post atualizado.", "success");
+      statusFlash.show(
+        mediaError
+          ? `Post updated, but the images could not be uploaded: ${mediaErrorMessage ?? "check the selected files."}`
+          : "Post updated.",
+        mediaError ? "error" : "success",
+      );
     }
   },
 });
@@ -396,13 +529,72 @@ function handleEditPost() {
   postModalController.openPostModalEdit(state.postData);
 }
 
+function setQuestionnaireAnswer(questionIndex, optionIndex) {
+  state.questionnaireSession.answers = {
+    ...state.questionnaireSession.answers,
+    [questionIndex]: optionIndex,
+  };
+}
+
+function resetQuestionnaireAnswers() {
+  resetQuestionnaireSession();
+  renderCurrentPost();
+}
+
+function submitQuestionnaireAnswers() {
+  const questions = Array.isArray(state.postData?.questionnaire?.questions)
+    ? state.postData.questionnaire.questions
+    : [];
+  if (questions.length === 0) {
+    return;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Sign in to answer the questionnaire.", "error");
+    return;
+  }
+
+  const missingQuestionIndex = questions.findIndex(
+    (_, questionIndex) => state.questionnaireSession.answers[questionIndex] === undefined,
+  );
+  if (missingQuestionIndex !== -1) {
+    statusFlash.show(
+      `Answer question ${missingQuestionIndex + 1} before checking the result.`,
+      "error",
+    );
+    return;
+  }
+
+  const perQuestion = questions.map((question, questionIndex) => {
+    const selectedOptionIndex = Number.parseInt(
+      state.questionnaireSession.answers[questionIndex],
+      10,
+    );
+    const correctOptionIndex = Number.parseInt(question.correctOptionIndex, 10);
+
+    return {
+      selectedOptionIndex,
+      correctOptionIndex,
+      isCorrect: selectedOptionIndex === correctOptionIndex,
+    };
+  });
+
+  state.questionnaireSession.submittedResult = {
+    correctCount: perQuestion.filter((entry) => entry.isCorrect).length,
+    totalQuestions: questions.length,
+    perQuestion,
+  };
+  renderCurrentPost();
+  statusFlash.show("Answers checked.", "success");
+}
+
 function startCommentEdit(commentId) {
   const comment = (state.postData?.comments ?? []).find(
     (item) => String(item.id) === String(commentId),
   );
   const isOwner = String(comment?.author?.id ?? "") === String(state.viewerId ?? "");
   if (!hasSession() || !isOwner || !comment) {
-    statusFlash.show("Apenas o autor pode editar o comentario.", "error");
+    statusFlash.show("Only the author can edit the comment.", "error");
     return;
   }
 
@@ -433,14 +625,14 @@ async function saveCommentEdit(commentId) {
 
   const nextContent = String(state.commentEdit.draft ?? "").trim();
   if (!nextContent) {
-    statusFlash.show("O comentario nao pode ficar vazio.", "error");
+    statusFlash.show("The comment cannot be empty.", "error");
     focusCommentEditInput(commentId);
     return;
   }
 
   state.commentEdit.isSaving = true;
   renderCurrentPost();
-  statusFlash.show("Salvando edicao do comentario...", "info");
+  statusFlash.show("Saving comment changes...", "info");
 
   try {
     const updated = await api.comments.update(commentId, { content: nextContent });
@@ -458,7 +650,7 @@ async function saveCommentEdit(commentId) {
     };
     resetCommentEditState();
     renderCurrentPost();
-    statusFlash.show("Comentario atualizado.", "success");
+    statusFlash.show("Comment updated.", "success");
   } catch (error) {
     state.commentEdit.isSaving = false;
     renderCurrentPost();
@@ -479,12 +671,12 @@ async function handleDeleteComment(commentId) {
   const isPrivileged = ["moderator", "admin"].includes(state.viewerRole ?? "");
 
   if (!hasSession() || (!isOwner && !isPrivileged)) {
-    statusFlash.show("Sem permissao para excluir este comentario.", "error");
+    statusFlash.show("You do not have permission to delete this comment.", "error");
     return;
   }
 
   state.isDeletingComment = true;
-  statusFlash.show("Excluindo comentario...", "info");
+  statusFlash.show("Deleting comment...", "info");
   try {
     await api.comments.delete(commentId);
     state.postData = {
@@ -497,7 +689,7 @@ async function handleDeleteComment(commentId) {
       resetCommentEditState();
     }
     renderCurrentPost();
-    statusFlash.show("Comentario excluido.", "success");
+    statusFlash.show("Comment deleted.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {
@@ -518,6 +710,22 @@ function bindEvents() {
 
   if (elements.view) {
     elements.view.addEventListener("click", (event) => {
+      const followButton = event.target.closest("[data-follow-tag]");
+      if (followButton && elements.view.contains(followButton)) {
+        const tag = String(followButton.dataset.followTag ?? "").trim();
+        const currentlyFollowing = followButton.dataset.following === "true";
+        if (tag) {
+          toggleFollowTag(tag, currentlyFollowing);
+        }
+        return;
+      }
+
+      const resetQuestionnaireButton = event.target.closest("[data-reset-questionnaire]");
+      if (resetQuestionnaireButton && elements.view.contains(resetQuestionnaireButton)) {
+        resetQuestionnaireAnswers();
+        return;
+      }
+
       const reviewButton = event.target.closest("[data-review-action]");
       if (reviewButton && elements.view.contains(reviewButton)) {
         const decision = String(reviewButton.dataset.reviewAction ?? "").trim();
@@ -587,6 +795,35 @@ function bindEvents() {
       }
     });
 
+    elements.view.addEventListener("change", (event) => {
+      const answerInput = event.target.closest("[data-questionnaire-answer]");
+      if (!answerInput || !elements.view.contains(answerInput)) {
+        return;
+      }
+
+      const questionIndex = String(answerInput.dataset.questionnaireAnswer ?? "").trim();
+      const optionIndex = String(answerInput.value ?? "").trim();
+      if (questionIndex === "" || optionIndex === "") {
+        return;
+      }
+
+      setQuestionnaireAnswer(questionIndex, optionIndex);
+      if (state.questionnaireSession.submittedResult) {
+        state.questionnaireSession.submittedResult = null;
+        renderCurrentPost();
+      }
+    });
+
+    elements.view.addEventListener("submit", (event) => {
+      const questionnaireForm = event.target.closest("[data-questionnaire-form]");
+      if (!questionnaireForm || !elements.view.contains(questionnaireForm)) {
+        return;
+      }
+
+      event.preventDefault();
+      submitQuestionnaireAnswers();
+    });
+
     elements.view.addEventListener("input", (event) => {
       const input = event.target.closest("[data-comment-edit-input-id]");
       if (!input || !elements.view.contains(input)) {
@@ -630,7 +867,7 @@ async function init() {
   bindNavigation();
   renderSessionState();
   bindEvents();
-  await syncViewerRole();
+  await syncViewerContext();
   await loadPost();
 }
 

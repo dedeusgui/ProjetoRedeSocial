@@ -2,24 +2,48 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import {
+  FOLLOWED_TAG_ALLOWED_DESCRIPTION,
+  FOLLOWED_TAG_MAX_LENGTH,
+  normalizeFollowTagValue,
+  normalizeFollowedTags,
+  validateFollowTagValue,
+} from "../core/followed-tags.js";
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession, requireSession } from "../core/session.js";
+import { renderCollectionFeedList } from "../features/collections/feed-renderers.js";
 import { renderFeedList } from "../features/feed/renderers.js";
+import {
+  renderFollowedTagsBanner,
+  renderFollowedTagsList,
+} from "../features/followed-tags/renderers.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 
 const FEED_LIMIT = 20;
 const FEED_NOTICE_KEY = "thesocial_feed_notice";
+const SEARCH_DEBOUNCE_MS = 400;
+const FOLLOWED_TAG_BANNER_PREVIEW_LIMIT = 3;
+
+let searchDebounceTimer = null;
+let feedRequestSequence = 0;
+let latestFeedRequestId = 0;
+let latestLoadingFeedRequestId = 0;
 
 const state = {
   items: [],
   nextCursor: null,
+  searchInputValue: "",
   searchTerm: "",
+  feedType: "posts",
+  followedOnly: false,
+  followedTags: [],
   viewerRole: null,
   viewerId: null,
   isLoading: false,
   isReviewing: false,
   isDeletingPost: false,
+  isManagingTags: false,
 };
 
 const elements = {
@@ -27,11 +51,25 @@ const elements = {
   list: document.querySelector("[data-feed-list]"),
   loadMore: document.querySelector("[data-feed-more]"),
   searchForm: document.querySelector("[data-feed-search-form]"),
+  searchLabel: document.querySelector("[data-feed-search-label]"),
   searchInput: document.querySelector("[data-feed-search-input]"),
-  searchSubmitButton: document.querySelector("[data-feed-search-submit]"),
   searchResetButton: document.querySelector("[data-feed-search-reset]"),
+  followTagsGuest: document.querySelector("[data-follow-tags-guest]"),
+  followTagsAuth: document.querySelector("[data-follow-tags-auth]"),
+  followTagForm: document.querySelector("[data-follow-tag-form]"),
+  followTagInput: document.querySelector("[data-follow-tag-input]"),
+  followTagSubmit: document.querySelector("[data-follow-tag-submit]"),
+  followedTagsDropdown: document.querySelector("[data-followed-tags-dropdown]"),
+  followedTagsSummary: document.querySelector("[data-followed-tags-summary]"),
+  followedTagsList: document.querySelector("[data-followed-tags-list]"),
+  followTagStatus: document.querySelector("[data-follow-tag-status]"),
+  feedTypeButtons: Array.from(document.querySelectorAll("[data-feed-type-button]")),
+  followToggleShell: document.querySelector("[data-feed-follow-toggle-shell]"),
+  followToggleButton: document.querySelector("[data-feed-following-toggle]"),
+  followBanner: document.querySelector("[data-feed-follow-banner]"),
   loginLink: document.querySelector("[data-login-link]"),
   profileLink: document.querySelector("[data-profile-link]"),
+  collectionsLink: document.querySelector("[data-collections-link]"),
   openModalButton: document.querySelector("[data-open-post-modal]"),
   logoutButton: document.querySelector("[data-logout]"),
   modal: document.querySelector("[data-post-modal]"),
@@ -40,42 +78,136 @@ const elements = {
   modalSubmitButton: document.querySelector("[data-post-modal-submit]"),
   postModalForm: document.querySelector("[data-post-modal-form]"),
   postModalStatus: document.querySelector("[data-post-modal-status]"),
+  postMediaInput: document.querySelector("[data-post-media-input]"),
+  postPreviousSelect: document.querySelector("[data-post-previous-select]"),
+  selectedPostMedia: document.querySelector("[data-selected-post-media]"),
+  existingPostMedia: document.querySelector("[data-existing-post-media]"),
+  questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
 };
 
 const statusFlash = createFlash(elements.status);
+const followTagFlash = createFlash(elements.followTagStatus);
+
+function showFollowTagStatus(message, type = "info", kind = "feedback") {
+  followTagFlash.show(message, type);
+  if (elements.followTagStatus) {
+    elements.followTagStatus.dataset.messageKind = kind;
+  }
+}
+
+function clearFollowTagStatus(kind = null) {
+  if (kind && elements.followTagStatus?.dataset.messageKind !== kind) {
+    return;
+  }
+
+  followTagFlash.clear();
+  if (elements.followTagStatus) {
+    delete elements.followTagStatus.dataset.messageKind;
+  }
+}
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
   profileLink: elements.profileLink,
   logoutButton: elements.logoutButton,
-  protectedButtons: [elements.openModalButton],
+  protectedButtons: [elements.collectionsLink, elements.openModalButton],
   logoutRedirectUrl: "./index.html",
 });
 
 function resolveMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria. Faca login para publicar no feed.",
-    "Erro inesperado ao comunicar com a API.",
+    "Authentication required. Sign in to publish to the feed.",
+    "Unexpected error while communicating with the API.",
   );
+}
+
+function resolveFollowTagMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Authentication required. Sign in to follow tags.",
+    "Could not update followed tags.",
+  );
+}
+
+function resolveFeedLoadMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    "Authentication required. Sign in to access followed tags.",
+    "Unexpected error while loading the feed.",
+  );
+}
+
+function setFollowedTags(tags) {
+  state.followedTags = normalizeFollowedTags(tags);
+}
+
+function isCollectionsFeed() {
+  return state.feedType === "collections";
+}
+
+function hasFollowedTags() {
+  return state.followedTags.length > 0;
 }
 
 function hasActiveSearch() {
   return state.searchTerm.length > 0;
 }
 
+function getFeedTypeLabel() {
+  return isCollectionsFeed() ? "collections" : "posts";
+}
+
+function resolveSearchLabel() {
+  return isCollectionsFeed() ? "Search collections" : "Search posts";
+}
+
+function resolveSearchPlaceholder() {
+  return isCollectionsFeed()
+    ? "Search by title, description, or tag"
+    : "Search by title, content, or tag";
+}
+
 function resolveLoadingMessage({ append = false } = {}) {
-  if (append) {
-    return hasActiveSearch() ? "Carregando mais resultados..." : "Carregando mais posts...";
+  const subject = getFeedTypeLabel();
+
+  if (state.followedOnly) {
+    if (append) {
+      return `Loading more ${subject} from the tags you follow...`;
+    }
+
+    return hasActiveSearch()
+      ? `Searching ${subject} from the tags you follow for "${state.searchTerm}"...`
+      : `Loading ${subject} from your followed tags...`;
   }
 
-  return hasActiveSearch() ? `Buscando posts por "${state.searchTerm}"...` : "Carregando feed...";
+  if (append) {
+    return hasActiveSearch() ? "Loading more results..." : `Loading more ${subject}...`;
+  }
+
+  return hasActiveSearch()
+    ? `Searching ${subject} for "${state.searchTerm}"...`
+    : `Loading ${subject} feed...`;
 }
 
 function resolveEmptyFeedMessage() {
+  const subject = getFeedTypeLabel();
+
+  if (state.followedOnly && !hasFollowedTags()) {
+    return isCollectionsFeed()
+      ? "Follow a tag to filter public collections."
+      : "Follow a tag to build your personalized posts feed.";
+  }
+
+  if (state.followedOnly) {
+    return hasActiveSearch()
+      ? `No ${subject} were found in the tags you follow for "${state.searchTerm}".`
+      : `No ${subject} were found in the tags you follow.`;
+  }
+
   return hasActiveSearch()
-    ? `Nenhum post encontrado para "${state.searchTerm}".`
-    : "Nenhuma publicacao ainda.";
+    ? `No ${subject} were found for "${state.searchTerm}".`
+    : `No ${subject} yet.`;
 }
 
 function resolveLoadedFeedMessage() {
@@ -86,20 +218,139 @@ function resolveLoadedFeedMessage() {
   return "";
 }
 
-function syncSearchControls() {
-  if (elements.searchInput) {
-    elements.searchInput.value = state.searchTerm;
-    elements.searchInput.disabled = state.isLoading;
+function resolveFollowedTagsCountLabel(count) {
+  if (count <= 0) {
+    return "Followed tags";
   }
 
-  if (elements.searchSubmitButton) {
-    elements.searchSubmitButton.disabled = state.isLoading;
+  return count === 1 ? "Followed tags (1)" : `Followed tags (${count})`;
+}
+
+function resolveFollowTagValidationMessage(result) {
+  if (!result || !result.errorCode) {
+    return "";
+  }
+
+  if (result.errorCode === "too_long") {
+    return `Use at most ${FOLLOWED_TAG_MAX_LENGTH} characters.`;
+  }
+
+  if (result.errorCode === "invalid_chars") {
+    return `Use only ${FOLLOWED_TAG_ALLOWED_DESCRIPTION}.`;
+  }
+
+  return "Type a tag before submitting.";
+}
+
+function clearSearchDebounce() {
+  if (searchDebounceTimer) {
+    window.clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = null;
+  }
+}
+
+function scheduleSearchReload() {
+  clearSearchDebounce();
+
+  const nextSearchTerm = state.searchInputValue.trim();
+  if (nextSearchTerm === state.searchTerm) {
+    return;
+  }
+
+  searchDebounceTimer = window.setTimeout(() => {
+    searchDebounceTimer = null;
+    loadFeed();
+  }, SEARCH_DEBOUNCE_MS);
+}
+
+function syncSearchControls() {
+  if (elements.searchLabel) {
+    elements.searchLabel.textContent = resolveSearchLabel();
+  }
+
+  if (elements.searchInput) {
+    if (elements.searchInput.value !== state.searchInputValue) {
+      elements.searchInput.value = state.searchInputValue;
+    }
+    elements.searchInput.placeholder = resolveSearchPlaceholder();
   }
 
   if (elements.searchResetButton) {
-    elements.searchResetButton.hidden = !hasActiveSearch();
-    elements.searchResetButton.disabled = state.isLoading;
+    elements.searchResetButton.hidden = state.searchInputValue.length === 0 && !hasActiveSearch();
   }
+}
+
+function previewFollowedTagLabel(labelButton) {
+  const label = labelButton?.textContent?.trim();
+  if (!label) {
+    return;
+  }
+
+  showFollowTagStatus(`Full tag: ${label}`, "info", "preview");
+}
+
+function renderFollowedTagsPanel() {
+  const authenticated = hasSession();
+
+  renderFollowedTagsBanner(elements.followBanner, state.followedTags, {
+    active: authenticated && state.followedOnly && hasFollowedTags(),
+    previewLimit: FOLLOWED_TAG_BANNER_PREVIEW_LIMIT,
+  });
+
+  if (elements.followTagsGuest) {
+    elements.followTagsGuest.hidden = authenticated;
+  }
+
+  if (elements.followTagsAuth) {
+    elements.followTagsAuth.hidden = !authenticated;
+  }
+
+  if (elements.followToggleShell) {
+    elements.followToggleShell.hidden = !authenticated;
+  }
+
+  elements.feedTypeButtons.forEach((button) => {
+    const feedType = String(button.dataset.feedTypeButton ?? "").trim();
+    const isActive = feedType === state.feedType;
+    button.dataset.active = isActive ? "true" : "false";
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    button.classList.toggle("button-ghost", !isActive);
+    button.disabled = state.isLoading || state.isManagingTags;
+  });
+
+  if (!authenticated) {
+    if (elements.followedTagsSummary) {
+      elements.followedTagsSummary.textContent = resolveFollowedTagsCountLabel(0);
+    }
+    if (elements.followedTagsDropdown) {
+      elements.followedTagsDropdown.open = false;
+    }
+    renderFollowedTagsList(elements.followedTagsList, []);
+    return;
+  }
+
+  if (elements.followToggleButton) {
+    elements.followToggleButton.textContent = state.followedOnly ? "On" : "Off";
+    elements.followToggleButton.setAttribute("aria-pressed", state.followedOnly ? "true" : "false");
+    elements.followToggleButton.classList.toggle("button-ghost", !state.followedOnly);
+    elements.followToggleButton.disabled = state.isLoading || state.isManagingTags;
+  }
+
+  if (elements.followTagInput) {
+    elements.followTagInput.disabled = state.isManagingTags;
+  }
+
+  if (elements.followTagSubmit) {
+    elements.followTagSubmit.disabled = state.isManagingTags;
+  }
+
+  if (elements.followedTagsSummary) {
+    elements.followedTagsSummary.textContent = resolveFollowedTagsCountLabel(state.followedTags.length);
+  }
+
+  renderFollowedTagsList(elements.followedTagsList, state.followedTags, {
+    disabled: state.isManagingTags,
+  });
 }
 
 function renderFeed() {
@@ -115,11 +366,20 @@ function renderFeed() {
     return;
   }
 
-  renderFeedList(elements.list, state.items, {
-    viewerRole: state.viewerRole,
-    viewerId: state.viewerId,
-    canReviewPosts: hasSession(),
-  });
+  if (isCollectionsFeed()) {
+    renderCollectionFeedList(elements.list, state.items, {
+      canManageTagFollows: hasSession(),
+      followedTagSet: new Set(state.followedTags),
+    });
+  } else {
+    renderFeedList(elements.list, state.items, {
+      viewerRole: state.viewerRole,
+      viewerId: state.viewerId,
+      canReviewPosts: hasSession(),
+      canManageTagFollows: hasSession(),
+      followedTagSet: new Set(state.followedTags),
+    });
+  }
 
   if (elements.loadMore) {
     elements.loadMore.hidden = !state.nextCursor;
@@ -127,24 +387,61 @@ function renderFeed() {
   }
 }
 
+function getFeedRequest() {
+  if (isCollectionsFeed()) {
+    return state.followedOnly ? api.collections.listFeedFollowing : api.collections.listFeed;
+  }
+
+  return state.followedOnly ? api.feed.listFollowing : api.feed.list;
+}
+
 async function loadFeed({ append = false } = {}) {
-  if (state.isLoading || (append && !state.nextCursor)) {
+  if (append && (state.isLoading || !state.nextCursor)) {
     return;
   }
 
+  const requestId = ++feedRequestSequence;
+  latestFeedRequestId = requestId;
+
+  if (!append) {
+    clearSearchDebounce();
+    state.searchInputValue = state.searchInputValue.trim();
+    state.searchTerm = state.searchInputValue;
+    state.nextCursor = null;
+  }
+
+  if (state.followedOnly && !hasFollowedTags()) {
+    latestLoadingFeedRequestId = 0;
+    state.isLoading = false;
+    syncSearchControls();
+    renderFollowedTagsPanel();
+    state.items = [];
+    state.nextCursor = null;
+    renderFeed();
+    statusFlash.show(resolveEmptyFeedMessage(), "info");
+    return;
+  }
+
+  latestLoadingFeedRequestId = requestId;
   state.isLoading = true;
   syncSearchControls();
+  renderFollowedTagsPanel();
   statusFlash.show(resolveLoadingMessage({ append }), "info");
   if (elements.loadMore) {
     elements.loadMore.disabled = true;
   }
 
   try {
-    const data = await api.feed.list({
+    const data = await getFeedRequest()({
       cursor: append ? state.nextCursor : undefined,
       limit: FEED_LIMIT,
       search: state.searchTerm || undefined,
     });
+
+    // Ignore stale responses when a newer realtime search has already started.
+    if (requestId !== latestFeedRequestId) {
+      return;
+    }
 
     const incoming = Array.isArray(data.items) ? data.items : [];
     state.items = append ? [...state.items, ...incoming] : incoming;
@@ -159,47 +456,35 @@ async function loadFeed({ append = false } = {}) {
       statusFlash.clear();
     }
   } catch (error) {
-    statusFlash.show(resolveMessage(error), "error");
+    if (requestId !== latestFeedRequestId) {
+      return;
+    }
+
+    statusFlash.show(resolveFeedLoadMessage(error), "error");
     if (!append) {
       state.items = [];
       state.nextCursor = null;
       renderFeed();
     }
   } finally {
-    state.isLoading = false;
-    if (elements.loadMore) {
-      elements.loadMore.disabled = false;
+    if (requestId === latestLoadingFeedRequestId) {
+      latestLoadingFeedRequestId = 0;
+      state.isLoading = false;
+      if (elements.loadMore) {
+        elements.loadMore.disabled = false;
+      }
+      syncSearchControls();
+      renderFollowedTagsPanel();
     }
-    syncSearchControls();
   }
 }
 
 async function submitPostCreate(payload) {
-  const created = await api.posts.create(payload);
-  await loadFeed();
-  return created;
+  return api.posts.create(payload);
 }
 
 async function submitPostUpdate(postId, payload) {
-  const updated = await api.posts.update(postId, payload);
-  if (hasActiveSearch()) {
-    await loadFeed();
-    return updated;
-  }
-
-  const index = state.items.findIndex((item) => String(item.id) === String(postId));
-  if (index >= 0) {
-    const current = state.items[index];
-    state.items[index] = {
-      ...current,
-      title: updated.title ?? current.title,
-      content: updated.content ?? current.content,
-      tags: Array.isArray(updated.tags) ? updated.tags : current.tags,
-      updatedAt: updated.updatedAt ?? current.updatedAt,
-    };
-    renderFeed();
-  }
-  return updated;
+  return api.posts.update(postId, payload);
 }
 
 const postModalController = createPostModalController({
@@ -210,11 +495,19 @@ const postModalController = createPostModalController({
   cancelButton: elements.modalCancelButton,
   statusTarget: elements.postModalStatus,
   openCreateButton: elements.openModalButton,
+  mediaInput: elements.postMediaInput,
+  previousPostSelect: elements.postPreviousSelect,
+  selectedMediaTarget: elements.selectedPostMedia,
+  existingMediaTarget: elements.existingPostMedia,
+  questionnaireTarget: elements.questionnaireEditor,
   resolveErrorMessage: resolveMessage,
+  loadOwnedPosts() {
+    return api.posts.listMine();
+  },
   onBeforeOpenCreate() {
     const isAuthenticated = requireSession({
       onFail: () => {
-        statusFlash.show("Faca login para publicar no feed.", "error");
+        statusFlash.show("Sign in to publish to the feed.", "error");
         window.location.href = "./index.html";
       },
     });
@@ -224,46 +517,164 @@ const postModalController = createPostModalController({
   onBeforeOpenEdit() {
     const isAuthenticated = hasSession();
     if (!isAuthenticated) {
-      statusFlash.show("Faca login para editar posts.", "error");
+      statusFlash.show("Sign in to edit posts.", "error");
     }
     return isAuthenticated;
   },
   submitPostCreate,
   submitPostUpdate,
-  async onAfterSuccess({ mode, result }) {
+  uploadPostMedia(postId, files) {
+    return api.posts.uploadMedia(postId, files);
+  },
+  deletePostMedia(postId, mediaId) {
+    return api.posts.deleteMedia(postId, mediaId);
+  },
+  async onMediaChanged({ action }) {
+    if (action === "delete") {
+      await loadFeed();
+    }
+  },
+  async onAfterSuccess({ mode, mediaError, mediaErrorMessage }) {
+    await loadFeed();
     if (mode === "edit") {
-      statusFlash.show("Post atualizado.", "success");
+      statusFlash.show(
+        mediaError
+          ? `Post updated, but the images could not be uploaded: ${mediaErrorMessage ?? "check the selected files."}`
+          : "Post updated.",
+        mediaError ? "error" : "success",
+      );
       return;
     }
 
-    statusFlash.show("Post publicado.", "success");
+    statusFlash.show(
+      mediaError
+        ? `Post published, but the images could not be uploaded: ${mediaErrorMessage ?? "check the selected files."}`
+        : "Post published.",
+      mediaError ? "error" : "success",
+    );
   },
 });
 
-async function syncViewerRole() {
+async function syncViewerContext() {
   if (!hasSession()) {
     state.viewerRole = null;
     state.viewerId = null;
+    state.followedOnly = false;
+    setFollowedTags([]);
+    renderFollowedTagsPanel();
     return;
   }
 
-  try {
-    const profile = await api.users.meProfile();
+  const [profileResult, followedTagsResult] = await Promise.allSettled([
+    api.users.meProfile(),
+    api.users.listFollowedTags(),
+  ]);
+
+  if (profileResult.status === "fulfilled") {
+    const profile = profileResult.value;
     state.viewerRole = profile.role ?? null;
     state.viewerId = profile.id ?? null;
-  } catch {
+  } else {
     state.viewerRole = null;
     state.viewerId = null;
+  }
+
+  if (followedTagsResult.status === "fulfilled") {
+    setFollowedTags(followedTagsResult.value.followedTags);
+  } else {
+    setFollowedTags([]);
+  }
+
+  renderFollowedTagsPanel();
+}
+
+async function toggleFollowTag(tag, currentlyFollowing) {
+  if (state.isManagingTags) {
+    return false;
+  }
+
+  if (!hasSession()) {
+    statusFlash.show("Sign in to follow tags.", "error");
+    return false;
+  }
+
+  const normalizedTag = normalizeFollowTagValue(tag);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  state.isManagingTags = true;
+  renderFollowedTagsPanel();
+  showFollowTagStatus(
+    currentlyFollowing ? `Unfollowing #${normalizedTag}...` : `Following #${normalizedTag}...`,
+    "info",
+  );
+
+  try {
+    const result = currentlyFollowing
+      ? await api.users.unfollowTag(normalizedTag)
+      : await api.users.followTag(normalizedTag);
+
+    setFollowedTags(result.followedTags);
+    renderFollowedTagsPanel();
+    renderFeed();
+
+    if (state.followedOnly) {
+      state.nextCursor = null;
+      await loadFeed();
+    }
+
+    const successMessage = currentlyFollowing
+      ? `You no longer follow #${normalizedTag}.`
+      : `You now follow #${normalizedTag}.`;
+    statusFlash.show(successMessage, "success");
+    showFollowTagStatus(successMessage, "success");
+    return true;
+  } catch (error) {
+    const message = resolveFollowTagMessage(error);
+    statusFlash.show(message, "error");
+    showFollowTagStatus(message, "error");
+    return false;
+  } finally {
+    state.isManagingTags = false;
+    renderFollowedTagsPanel();
+  }
+}
+
+async function handleManualFollowTag(event) {
+  event.preventDefault();
+
+  const formData = new FormData(elements.followTagForm);
+  const rawValue = String(formData.get("tag") ?? "");
+  const validation = validateFollowTagValue(rawValue);
+  const normalizedTag = validation.normalizedValue;
+
+  if (validation.errorCode) {
+    showFollowTagStatus(resolveFollowTagValidationMessage(validation), "error");
+    elements.followTagInput?.focus();
+    return;
+  }
+
+  if (state.followedTags.includes(normalizedTag)) {
+    showFollowTagStatus(`You already follow #${normalizedTag}.`, "info");
+    elements.followTagInput?.focus();
+    elements.followTagInput?.select();
+    return;
+  }
+
+  const success = await toggleFollowTag(normalizedTag, false);
+  if (success) {
+    elements.followTagForm.reset();
   }
 }
 
 async function submitFeedReview(postId, decision, actionsContainer) {
-  if (state.isReviewing) {
+  if (state.isReviewing || isCollectionsFeed()) {
     return;
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para avaliar um post.", "error");
+    statusFlash.show("Sign in to review a post.", "error");
     return;
   }
 
@@ -275,7 +686,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
   reviewButtons.forEach((button) => {
     button.disabled = true;
   });
-  statusFlash.show("Salvando avaliacao...", "info");
+  statusFlash.show("Saving review...", "info");
 
   try {
     const result = await api.posts.review(postId, decision, null);
@@ -283,7 +694,7 @@ async function submitFeedReview(postId, decision, actionsContainer) {
     statusFlash.show(reviewSavedMessage(result), "success");
   } catch (error) {
     statusFlash.show(
-      resolveModerationApiMessage(error, "Falha ao salvar avaliacao."),
+      resolveModerationApiMessage(error, "Could not save the review."),
       "error",
     );
   } finally {
@@ -297,18 +708,18 @@ async function submitFeedReview(postId, decision, actionsContainer) {
 function resolveDeleteMessage(error) {
   return resolveAuthApiMessage(
     error,
-    "Autenticacao necessaria para excluir posts.",
-    "Falha ao excluir o post.",
+    "Authentication required to delete posts.",
+    "Could not delete the post.",
   );
 }
 
 async function deleteFeedPost(postId) {
-  if (state.isDeletingPost) {
+  if (state.isDeletingPost || isCollectionsFeed()) {
     return;
   }
 
   if (!hasSession()) {
-    statusFlash.show("Faca login para excluir posts.", "error");
+    statusFlash.show("Sign in to delete posts.", "error");
     window.location.href = "./index.html";
     return;
   }
@@ -317,18 +728,18 @@ async function deleteFeedPost(postId) {
   const isOwner = String(state.viewerId ?? "") === String(post?.author?.id ?? "");
   if (!["moderator", "admin"].includes(state.viewerRole ?? "") && !isOwner) {
     statusFlash.show(
-      "Apenas autor do post, moderadores ou administradores podem excluir posts.",
+      "Only the post author, moderators, or administrators can delete posts.",
       "error",
     );
     return;
   }
 
   state.isDeletingPost = true;
-  statusFlash.show("Excluindo post...", "info");
+  statusFlash.show("Deleting post...", "info");
   try {
     await api.posts.delete(postId);
     await loadFeed();
-    statusFlash.show("Post excluido.", "success");
+    statusFlash.show("Post deleted.", "success");
   } catch (error) {
     statusFlash.show(resolveDeleteMessage(error), "error");
   } finally {
@@ -337,11 +748,15 @@ async function deleteFeedPost(postId) {
 }
 
 function editFeedPost(postId) {
+  if (isCollectionsFeed()) {
+    return;
+  }
+
   const post = state.items.find((item) => String(item.id) === String(postId));
   const isOwner = String(state.viewerId ?? "") === String(post?.author?.id ?? "");
 
   if (!isOwner) {
-    statusFlash.show("Apenas o autor pode editar este post.", "error");
+    statusFlash.show("Only the author can edit this post.", "error");
     return;
   }
 
@@ -349,78 +764,124 @@ function editFeedPost(postId) {
 }
 
 function bindEvents() {
-  if (elements.searchForm) {
-    elements.searchForm.addEventListener("submit", (event) => {
-      event.preventDefault();
+  elements.searchForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    state.searchInputValue = String(elements.searchInput?.value ?? "");
+    clearSearchDebounce();
+    loadFeed();
+  });
 
-      const formData = new FormData(elements.searchForm);
-      state.searchTerm = String(formData.get("search") ?? "").trim();
-      state.nextCursor = null;
-      loadFeed();
-    });
-  }
+  elements.searchInput?.addEventListener("input", (event) => {
+    state.searchInputValue = String(elements.searchInput?.value ?? event.target?.value ?? "");
+    syncSearchControls();
+    scheduleSearchReload();
+  });
 
-  if (elements.searchResetButton) {
-    elements.searchResetButton.addEventListener("click", () => {
-      state.searchTerm = "";
-      state.nextCursor = null;
-      syncSearchControls();
-      loadFeed();
-      elements.searchInput?.focus();
-    });
-  }
+  elements.searchResetButton?.addEventListener("click", () => {
+    clearSearchDebounce();
+    state.searchInputValue = "";
+    syncSearchControls();
+    loadFeed();
+    elements.searchInput?.focus();
+  });
 
-  if (elements.loadMore) {
-    elements.loadMore.addEventListener("click", () => {
-      loadFeed({ append: true });
-    });
-  }
+  elements.followTagForm?.addEventListener("submit", handleManualFollowTag);
 
-  if (elements.list) {
-    elements.list.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-review-action]");
-      if (!button || !elements.list.contains(button)) {
+  elements.feedTypeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextFeedType = String(button.dataset.feedTypeButton ?? "").trim();
+      if (!nextFeedType || nextFeedType === state.feedType) {
         return;
       }
 
-      const postId = String(button.dataset.postId ?? "").trim();
-      const decision = String(button.dataset.reviewAction ?? "").trim();
+      state.feedType = nextFeedType;
+      state.nextCursor = null;
+      syncSearchControls();
+      renderFollowedTagsPanel();
+      loadFeed();
+    });
+  });
+
+  elements.followToggleButton?.addEventListener("click", () => {
+    if (!hasSession()) {
+      statusFlash.show("Sign in to use followed tags.", "error");
+      return;
+    }
+
+    state.followedOnly = !state.followedOnly;
+    state.nextCursor = null;
+    renderFollowedTagsPanel();
+    loadFeed();
+  });
+
+  elements.followedTagsDropdown?.addEventListener("click", (event) => {
+    const labelButton = event.target.closest("[data-followed-tag-preview]");
+    if (labelButton && elements.followedTagsDropdown.contains(labelButton)) {
+      previewFollowedTagLabel(labelButton);
+      return;
+    }
+
+    const followButton = event.target.closest("[data-follow-tag]");
+    if (followButton && elements.followedTagsDropdown.contains(followButton)) {
+      const tag = String(followButton.dataset.followTag ?? "").trim();
+      const currentlyFollowing = followButton.dataset.following === "true";
+      if (tag) {
+        toggleFollowTag(tag, currentlyFollowing);
+      }
+    }
+  });
+
+  elements.followedTagsDropdown?.addEventListener("toggle", () => {
+    if (!elements.followedTagsDropdown.open) {
+      clearFollowTagStatus("preview");
+    }
+  });
+
+  elements.loadMore?.addEventListener("click", () => {
+    loadFeed({ append: true });
+  });
+
+  elements.list?.addEventListener("click", (event) => {
+    const followButton = event.target.closest("[data-follow-tag]");
+    if (followButton && elements.list.contains(followButton)) {
+      const tag = String(followButton.dataset.followTag ?? "").trim();
+      const currentlyFollowing = followButton.dataset.following === "true";
+      if (tag) {
+        toggleFollowTag(tag, currentlyFollowing);
+      }
+      return;
+    }
+
+    const reviewButton = event.target.closest("[data-review-action]");
+    if (reviewButton && elements.list.contains(reviewButton)) {
+      const postId = String(reviewButton.dataset.postId ?? "").trim();
+      const decision = String(reviewButton.dataset.reviewAction ?? "").trim();
       if (!postId || !decision) {
         return;
       }
 
-      const actionsContainer = button.closest(".review-actions");
+      const actionsContainer = reviewButton.closest(".review-actions");
       submitFeedReview(postId, decision, actionsContainer);
-    });
+      return;
+    }
 
-    elements.list.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-edit-post-id]");
-      if (!button || !elements.list.contains(button)) {
-        return;
+    const editButton = event.target.closest("[data-edit-post-id]");
+    if (editButton && elements.list.contains(editButton)) {
+      const postId = String(editButton.dataset.editPostId ?? "").trim();
+      if (postId) {
+        editFeedPost(postId);
       }
+      return;
+    }
 
-      const postId = String(button.dataset.editPostId ?? "").trim();
-      if (!postId) {
-        return;
+    const deleteButton = event.target.closest("[data-delete-post-id]");
+    if (deleteButton && elements.list.contains(deleteButton)) {
+      const postId = String(deleteButton.dataset.deletePostId ?? "").trim();
+      if (postId) {
+        deleteFeedPost(postId);
       }
-
-      editFeedPost(postId);
-    });
-
-    elements.list.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-delete-post-id]");
-      if (!button || !elements.list.contains(button)) {
-        return;
-      }
-
-      const postId = String(button.dataset.deletePostId ?? "").trim();
-      if (!postId) {
-        return;
-      }
-
-      deleteFeedPost(postId);
-    });
-  }
+    }
+  });
 }
 
 async function init() {
@@ -428,9 +889,11 @@ async function init() {
     return;
   }
 
+  state.searchInputValue = String(elements.searchInput?.value ?? "");
   bindNavigation();
   navbar.refresh();
   syncSearchControls();
+  renderFollowedTagsPanel();
   try {
     const pendingNotice = window.sessionStorage.getItem(FEED_NOTICE_KEY);
     if (pendingNotice) {
@@ -441,7 +904,7 @@ async function init() {
     // noop: sessionStorage can be unavailable in restricted environments
   }
 
-  await syncViewerRole();
+  await syncViewerContext();
   bindEvents();
   await loadFeed();
 }

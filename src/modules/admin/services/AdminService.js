@@ -1,10 +1,5 @@
 import AppError from "../../../common/errors/AppError.js";
-import {
-  buildPostModerationMetrics,
-  buildPrivateMetricsFromAuthorSummary,
-  resolveUnifiedScoreFromPrivateMetrics,
-  resolveTrend,
-} from "../../../common/metrics/moderationMetrics.js";
+import { resolveUnifiedScoreFromPrivateMetrics } from "../../../common/metrics/moderationMetrics.js";
 import { buildAdminEmailSet, normalizeEmail } from "../../../common/security/adminAccess.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
@@ -15,9 +10,10 @@ const MODERATOR_REQUIREMENTS = Object.freeze({
 });
 
 class AdminService {
-  constructor(adminRepository, adminEmails = []) {
+  constructor(adminRepository, adminEmails = [], accountDeletionService = null) {
     this.adminRepository = adminRepository;
     this.adminEmailSet = buildAdminEmailSet(adminEmails);
+    this.accountDeletionService = accountDeletionService;
   }
 
   formatManagedUser(user, postCount = 0) {
@@ -111,16 +107,23 @@ class AdminService {
     requireFields({ action }, ["action"]);
 
     if (!["grant", "revoke"].includes(action)) {
-      throw new AppError("Invalid action", "VALIDATION_ERROR", 400);
+      throw new AppError("The provided action is invalid.", "VALIDATION_ERROR", 400, {
+        field: "action",
+        allowedValues: ["grant", "revoke"],
+      });
     }
 
     const user = await this.adminRepository.findById(userId);
     if (!user) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
+      throw new AppError("User not found.", "NOT_FOUND", 404);
     }
 
     if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
-      throw new AppError("Admin role is managed by project configuration", "FORBIDDEN", 403);
+      throw new AppError(
+        "The administrator role is controlled by the project configuration.",
+        "FORBIDDEN",
+        403,
+      );
     }
 
     if (action === "grant") {
@@ -131,7 +134,11 @@ class AdminService {
       const postCountMap = await this.adminRepository.countPostsByAuthorIds([user._id]);
       const postCount = postCountMap.get(String(user._id)) ?? 0;
       if (!this.isEligibleForModerator(user, postCount)) {
-        throw new AppError("User does not meet moderator requirements", "FORBIDDEN", 403);
+        throw new AppError(
+          "The user does not meet the moderator requirements.",
+          "FORBIDDEN",
+          403,
+        );
       }
 
       const updated = await this.adminRepository.updateRoleById(userId, "moderator");
@@ -146,75 +153,15 @@ class AdminService {
     return this.formatManagedUser(updated);
   }
 
-  async recalculateDerivedStats() {
-    const [postIds, userIds] = await Promise.all([
-      this.adminRepository.listAllPostIds(),
-      this.adminRepository.listAllUserIds(),
-    ]);
-
-    const postSummaryMap = await this.adminRepository.summarizePostDecisions(postIds);
-    const trendUpdates = postIds.map((postId) => {
-      const summary = postSummaryMap.get(String(postId)) ?? {
-        approved: 0,
-        notRelevant: 0,
-      };
-
-      return {
-        postId,
-        trend: resolveTrend(summary.approved, summary.notRelevant),
-        ...buildPostModerationMetrics(summary.approved, summary.notRelevant),
-      };
-    });
-    await this.adminRepository.updatePostTrends(trendUpdates);
-
-    const authorSummaryMap = await this.adminRepository.summarizeAuthorPostMetrics();
-    const metricUpdates = userIds.map((userId) => {
-      const summary = authorSummaryMap.get(String(userId)) ?? null;
-      const metrics = buildPrivateMetricsFromAuthorSummary(summary);
-
-      return {
-        userId,
-        score: metrics.score,
-        totalReviews: metrics.totalReviews,
-      };
-    });
-    await this.adminRepository.updateUserPrivateMetrics(metricUpdates);
-  }
-
   async deleteUserByAdmin({ userId, requesterId }) {
     ensureObjectId(userId, "id");
     ensureObjectId(requesterId, "requesterId");
 
-    if (String(userId) === String(requesterId)) {
-      throw new AppError("Admin cannot delete own account", "FORBIDDEN", 403);
+    if (!this.accountDeletionService) {
+      throw new Error("Account deletion service is unavailable.");
     }
 
-    const user = await this.adminRepository.findById(userId);
-    if (!user) {
-      throw new AppError("User not found", "NOT_FOUND", 404);
-    }
-
-    if (user.role === "admin" || this.adminEmailSet.has(normalizeEmail(user.email))) {
-      throw new AppError("Admin role is managed by project configuration", "FORBIDDEN", 403);
-    }
-
-    const postIds = await this.adminRepository.findPostIdsByAuthorId(userId);
-    await Promise.all([
-      this.adminRepository.deleteCommentsByAuthorId(userId),
-      this.adminRepository.deleteReviewsByReviewerId(userId),
-      this.adminRepository.deletePostRelationsByPostIds(postIds),
-      this.adminRepository.deleteUserById(userId),
-    ]);
-
-    await this.recalculateDerivedStats();
-
-    return {
-      id: String(user._id),
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      deletedAt: new Date().toISOString(),
-    };
+    return this.accountDeletionService.deleteByAdmin({ userId, requesterId });
   }
 }
 

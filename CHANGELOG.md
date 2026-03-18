@@ -2,10 +2,225 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-17
+
+### Changed
+
+- Added a `Confirm password` field to the account-creation form on `index.html` and blocked registration submission until the repeated password matches.
+- Removed the `Search` submit button from `feed.html` and changed feed search to debounced real-time loading with `Enter` still available as an immediate keyboard submit.
+- Restyled `Posts` / `Collections` on `feed.html` as a single segmented control so content-type switching reads as one mutually exclusive filter group instead of competing with the search field.
+- Added a lightweight followed-tags state banner below the feed filter row that appears only while the followed-tags filter is active and previews a few followed tags plus a `+N` overflow count.
+
+### Fixed
+
+- Prevented stale feed-search responses from overwriting newer results by ignoring out-of-order realtime search requests in `src/public/js/pages/feed.js`.
+
+### Docs
+
+- Updated frontend architecture and the frontend guide to describe the account-creation password confirmation check on `index.html`.
+- Updated frontend architecture and the frontend guide to describe the current feed discovery surface, including the debounced search flow, segmented content-type control, and followed-tags state banner.
+- Updated the feed-search RFC and followed-tags RFC to reflect the current feed discovery behavior.
+
+## 2026-03-16
+
+### Changed
+
+- Restored the original compact feed-page followed-tags dropdown as the list container, moved the improved chip-based management UI into it, and kept the manual follow form outside the dropdown.
+- Standardized followed-tag normalization across frontend and backend to trim input, collapse repeated whitespace before validation, lowercase stored values, and restrict canonical followed tags to 32 characters using only letters, numbers, hyphen, and underscore.
+
+### Fixed
+
+- Removed the followed-tags management XSS vector by replacing the unsafe `innerHTML` rendering path with DOM-based chip rendering via `createElement` and `textContent`.
+- Prevented oversized or invalid followed tags from breaking the feed management layout by truncating chip labels visually, keeping the list inside a bounded scroll area, and letting touch users preview the full tag value without resizing the chip.
+
+### Docs
+
+- Updated architecture, frontend, API, and RFC docs to reflect the compact followed-tags dropdown flow and the stricter canonical followed-tag validation rules.
+
+## 2026-03-13
+
+### Added
+
+- Added authenticated self-service account deletion with `DELETE /api/v1/me`.
+- Added a profile-page danger zone and confirmation modal that requires the exact word `DELETE` before permanent account deletion.
+- Added RFC `docs/rfcs/profile-account-deletion.md`.
+
+### Changed
+
+- Unified self-delete and admin delete behind shared backend cleanup so both flows now remove avatar files, authored post-media files, authored content, remaining collection references, and then recalculate derived stats.
+- Blocked `admin` accounts from self-delete on the profile page and in `DELETE /api/v1/me`.
+
+### Fixed
+
+- Updated the `index.html` sign-in and registration forms to use browser-recognizable autocomplete semantics so saved credentials can be suggested again after logout without any JavaScript-managed password handling.
+- Updated the `index.html` boot flow to validate any stored token with `GET /api/v1/me/profile` before redirecting to `feed.html`, so stale or invalid local sessions no longer block the sign-in screen.
+
+### Docs
+
+- Documented the new self-delete endpoint, shared backend cleanup path, and profile danger-zone UX.
+- Documented the frontend rule that auth forms must rely on standard HTML autocomplete tokens instead of manual password autofill logic.
+- Documented the authenticated home-page boot rule that treats stored tokens as tentative until backend validation succeeds.
+
+## 2026-03-12
+
+### Added
+
+- Added `npm run test:populate`, a destructive local-only heavy seed + smoke runner that resets an explicit seed database, creates fake users/content/media, verifies key API flows, and leaves the seeded data available for later manual browsing.
+
+### Changed
+
+- Unified the `feed.html` page header and search/discovery controls into a single header surface, removed the redundant feed helper copy, and hid the inline search label text while preserving the existing search behavior.
+- Refactored the shared post create/edit modal to remove the explicit `regular` vs `questionnaire` post-type selector.
+- Integrated questionnaire authoring into one optional expandable `Add questionnaire / poll` section inside the same modal while preserving the existing post payload shape and backend behavior.
+- Kept questionnaire removal on edit tied to clearing the questionnaire draft and saving, instead of using the expand/collapse control as a destructive toggle.
+- Repositioned the optional poll section below `Post images` and restyled it as a neutral disclosure row so it no longer competes visually with uploads or the `Publish` action.
+- Refined the profile avatar controls into a compact avatar-attached contextual menu with `Upload photo` and `Remove photo`, preserving the existing avatar upload/remove endpoints and owner-only behavior.
+- Realigned collection feed cards, owner collection cards, public collection detail, and questionnaire blocks to the same spacing and chip rhythm used by post/feed cards.
+- Replaced remaining collection-facing `reading path` copy with consistent `collection` terminology and shifted collection/questionnaire accent labels to the existing Patrick typography treatment.
+
+### Fixed
+
+- Kept the post detail comment composer collapsed on initial load so opening a post no longer auto-expands the comment area before the user explicitly chooses to comment.
+- Fixed the profile avatar upload action so the file picker is no longer interrupted by an immediate menu rerender, and removed the obsolete profile-image helper panel from the profile card.
+- Kept the profile reputation badge and approval line compact so they no longer stretch across empty space after the avatar-card refactor.
+- Kept the private moderation metric card full-width while centering its content so low-content states no longer look visually empty on the profile page.
+
+### Docs
+
+- Updated frontend docs to describe the feed page as one unified header/discovery surface instead of a separate header plus discovery panel.
+- Updated frontend architecture and frontend guide docs to describe the integrated expandable questionnaire flow.
+- Updated frontend and RFC docs to describe the profile avatar contextual action menu.
+- Updated the questionnaire RFC with the March 12, 2026 UI decision record.
+- Updated the collections/questionnaire frontend docs and RFCs to record the visual unification with the post/feed card system.
+
+## 2026-03-11
+
+### Added
+
+- Added collections-feed groundwork endpoints:
+  - `GET /api/v1/collections/feed`
+  - `GET /api/v1/collections/feed/following`
+- Added a dedicated owner collections management page to replace feed-embedded collection CRUD.
+
+### Changed
+
+- Removed owner collection CRUD from `feed.html` and turned the page into the shared browsing surface for `Posts` vs `Collections` switching.
+- Simplified collection CTA flow so `feed.html` keeps a single `My collections` link and `collections.html` keeps a single `New collection` trigger.
+- Documented that the future followed-tags mode for the collections feed matches collection tags only.
+- Consolidated the feed search and followed-tags controls into one compact discovery panel below the header, replaced the always-visible followed-tags list with a dropdown, and removed redundant helper copy from that panel.
+
+### Docs
+
+- Updated architecture and API docs to describe the dedicated owner collections page and the collections-feed groundwork endpoints.
+- Updated frontend docs to describe the compact feed discovery panel and followed-tags dropdown behavior.
+
+### Fixed
+
+- Registered feed routes before generic collection-detail routes so `GET /api/v1/collections/feed` is no longer misread as `/collections/:id`.
+- Removed the committed root-level scratch helper scripts (`tmp_check.mjs`, `tmp_fix_encoding.mjs`, `tmp_update_css.mjs`, `tmp_write_renderer.mjs`) because they were one-off developer utilities with no runtime or npm-script role.
+
+### Added
+
+- Added post sequencing with:
+  - `GET /api/v1/me/posts`
+  - `GET /api/v1/posts/:id/sequence`
+  - optional `previousPostId` on post create/update
+- Added public collections with:
+  - `GET /api/v1/collections/:id`
+  - `GET /api/v1/me/collections`
+  - `POST /api/v1/collections`
+  - `PATCH /api/v1/collections/:id`
+  - `DELETE /api/v1/collections/:id`
+  - `POST /api/v1/collections/:id/items`
+  - `DELETE /api/v1/collections/:id/items/:postId`
+  - `PATCH /api/v1/collections/:id/items/reorder`
+- Added public collection page and profile collection-management UI.
+- Added sequence-aware create/edit support in the shared post modal.
+- Added RFC `docs/rfcs/collections-post-sequencing.md`.
+
+### Changed
+
+- Extended feed, owned-post, and post-detail payloads with `sequence` and `collections[]` context.
+- Extended feed search so both feed modes may also match collection tags while preserving chronological ordering.
+- Updated post deletion and admin user deletion flows to remove post references from collections.
+- Moved owner collection management from the profile page to the feed page while keeping the collections API unchanged.
+- Restyled collection and questionnaire surfaces to match the main project UI more closely, with flatter cards and white modal copy.
+- Simplified sequence context chips to a single shorter label.
+
+### Docs
+
+- Updated architecture, API, frontend, and frontend-guide docs to describe collections, sequencing, and their UI/API surfaces.
+- Updated agent/process guidance to require removing or promoting temporary helper scripts before handoff.
+
+## 2026-03-10
+
+### Added
+
+- Added owner-managed profile avatar support with:
+  - `POST /api/v1/me/avatar`
+  - `DELETE /api/v1/me/avatar`
+- Added local-disk avatar storage and a profile-page avatar upload/remove workflow.
+- Added public author chips on feed, post detail, and comments showing avatar, username, and reputation tier without public profile navigation.
+- Added post image upload support with:
+  - `POST /api/v1/posts/:id/media`
+  - `DELETE /api/v1/posts/:id/media/:mediaId`
+- Added local-disk upload storage served from `/uploads`, with post `media[]` metadata stored in MongoDB.
+- Added post create/edit modal support for selecting images and removing existing post images.
+- Added feed/post rendering for uploaded post images and RFC `docs/rfcs/post-image-uploads.md`.
+- Added protected followed-tag endpoints:
+  - `GET /api/v1/me/followed-tags`
+  - `POST /api/v1/me/followed-tags`
+  - `DELETE /api/v1/me/followed-tags/:tag`
+- Added protected chronological followed-tags feed endpoint `GET /api/v1/feed/following`.
+- Added feed-page `Followed tags` mode with manual tag follow form and visible followed-tag list.
+- Added follow/unfollow actions on tag chips in both the feed and post detail views.
+- Added RFC `docs/rfcs/follow-tags-feed.md` for the implemented feature.
+- Added optional post questionnaires with:
+  - single-choice questions and one correct answer per question
+  - questionnaire authoring in the shared post create/edit modal
+  - first-question preview on feed cards
+  - full questionnaire self-check flow on post detail for signed-in users
+- Added RFC `docs/rfcs/post-questionnaires.md` for the implemented feature.
+
+### Changed
+
+- Extended `GET /api/v1/me/profile` to include avatar preview data and public-reputation preview data.
+- Extended feed/post/comment author payloads to include avatar URLs and derived reputation tiers.
+- Enlarged the profile-page username header and repositioned profile identity content around the new avatar controls.
+- Extended post and feed responses to include uploaded post `media[]`.
+- Extended post create/update/feed/detail payloads to include optional `questionnaire` data.
+- Updated post deletion flow to clean up uploaded files from disk.
+- Extended the user model with canonical lowercase `followedTags` storage.
+- Kept personalization chronological by filtering followed tags without changing the default public feed behavior.
+- Updated feed and post renderers to expose tag-based follow controls for authenticated users.
+- Improved user-facing validation/auth/upload error messages with clearer English descriptions and actionable upload limits/details.
+- Tightened post title/content validation to `100` / `3000` characters and enforced the same limits on both post create and edit flows.
+- Improved shared post/comment wrapping and spacing so long text no longer breaks feed/post layouts, with clearer separation between post detail and comments.
+- Reorganized the shared post create/edit modal into clearer sections with explicit post-type selection (`regular post` vs `questionnaire post`) while preserving existing creation, edit, image upload, and questionnaire capabilities.
+- Updated the questionnaire editor UI with cleaner hierarchy, clearer limits, and improved action labels for question/option management.
+- Replaced native-looking file inputs in post/profile flows with a custom file-picker presentation that keeps real upload behavior and accessibility.
+
+### Docs
+
+- Updated architecture, API, frontend, and RFC docs to describe private-profile avatar management and the limited public author summary contract.
+- Updated architecture and API docs to describe post media upload storage, routes, and response changes.
+- Updated architecture, API, and frontend docs to describe followed tags and the new personalized feed flow.
+- Updated architecture, API, frontend, and RFC docs to describe optional post questionnaires and their current self-check tradeoff.
+- Corrected endpoint docs for post/comment deletion authorization to match current code behavior.
+- Updated post validation limits and backend-module rules in the docs to match the current implementation.
+
+### Fixed
+
+- Corrected remaining localization inconsistencies in key frontend labels, status messages, and modal copy.
+- Reduced frontend duplication by centralizing shared auth/status text and followed-tag normalization used by feed and post pages.
+- Simplified feed card click orchestration by consolidating redundant event listeners into a single delegated handler.
+
 ## 2026-03-09
 
 ### Fixed
 
+- Removed the self-referential `Feed` button from `src/public/pages/feed.html` and the self-referential `My profile` button from `src/public/pages/profile.html`.
+- Cleaned `src/public/js/pages/profile.js` so the profile page no longer queries/passes a navbar profile-link hook that was removed from its own markup.
 - Removed the redundant session summary card from `src/public/pages/index.html` and cleaned the home-page script so it no longer queries or toggles session/nav elements that are absent on that page.
 - Preserved home notices by rendering redirect/logout messages through the existing auth status area after the session card removal.
 
@@ -23,7 +238,7 @@ All notable changes to this project should be documented in this file.
 ### Fixed
 
 - Corrected author approval calculation to use `approvedVotes / totalVotes * 100`, clamped to `0..100` and rounded to the nearest integer.
-- Removed redundant "Nao relevante" post metric from feed/post rendering, leaving only approval percentage visible.
+- Removed redundant "Not relevant" post metric from feed/post rendering, leaving only approval percentage visible.
 - Removed redundant profile score display and aligned profile/admin UI labels with approval percentage semantics.
 - Updated architecture/API/frontend docs to describe approval percentage fields and current moderation behavior.
 - Removed redundant explanatory sections and load-success status copy across feed, post, profile, and admin pages while preserving error/loading feedback.
@@ -63,7 +278,7 @@ All notable changes to this project should be documented in this file.
 - Updated auth service to ensure users whose email is in `ADMIN_EMAILS` receive role `admin` on register/login.
 - Updated docs and architecture references to include the new admin module, routes, and role-governance contract.
 - Replaced post edit `prompt` UX with a shared modal controller (`create | edit`) on feed/post pages, including state reset on close/cancel.
-- Replaced comment edit `prompt` UX with inline editing in post details (`Salvar`/`Cancelar`, `Esc` cancela, `Ctrl+Enter` salva) without page reload.
+- Replaced comment edit `prompt` UX with inline editing in post details (`Save`/`Cancel`, `Esc` cancels, `Ctrl+Enter` saves) without page reload.
 - Updated API docs to include existing edit endpoints `PATCH /api/v1/posts/:id` and `PATCH /api/v1/comments/:id`.
 - Updated moderation authorization/rules so any authenticated user (`user` or higher), including the post author, can submit `POST /api/v1/posts/:id/review`.
 - Replaced split private profile metrics (`approvalRate/rejectionRate` and per-decision counts) with a unified `score` metric plus `totalReviews`.
@@ -111,8 +326,8 @@ All notable changes to this project should be documented in this file.
   - `src/public/js/README.frontend.md`
 - Updated root frontend overview in `README.md` to reflect the shared navigation pattern.
 - Refined moderation trend calculation to use a unified validation score (`approvalRate - rejectionRate`) while preserving `positive|neutral|negative` outcomes.
-- Updated profile UI to show a single derived "Score geral" metric based on private approval/rejection percentages.
-- Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positiva`, `neutra`, `negativa`).
+- Updated profile UI to show a single derived "Overall score" metric based on private approval/rejection percentages.
+- Updated feed/post tendency labels and review feedback text to use localized tendency labels (`positive`, `neutral`, `negative`).
 - Removed redundant approval/rejection cards from profile UI, keeping only the consolidated score and tendency.
 - Updated tendency rule: `neutral` is now only the exact 50/50 split; any imbalance becomes `positive` or `negative`.
 

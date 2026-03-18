@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel de Avalia&ccedil;&otilde;es | The Social Network</title>
+    <title>Review Panel | The Social Network</title>
     <link rel="stylesheet" href="../../css/style.css" />
   </head>
   <body>
@@ -11,31 +11,31 @@
       <header class="card app-header">
         <div class="header-copy">
           <img src="../../images/logo-transparent.png" alt="TSN" height="48" />
-          <h1 class="ink-underline">Painel de Avalia&ccedil;&otilde;es</h1>
-          <p class="muted">Gest&atilde;o de revis&otilde;es e moderadores.</p>
+          <h1 class="ink-underline">Review Panel</h1>
+          <p class="muted">Review operations and moderator management.</p>
         </div>
         <nav class="row app-nav">
           <button type="button" class="nav-link" data-nav-href="../feed.html">Feed</button>
-          <button type="button" class="nav-link" data-nav-href="../profile.html" data-profile-link hidden>Meu perfil</button>
-          <button type="button" class="nav-link" data-nav-href="../index.html" data-login-link>Entrar</button>
-          <button type="button" data-logout hidden>Sair</button>
+          <button type="button" class="nav-link" data-nav-href="../profile.html" data-profile-link hidden>My profile</button>
+          <button type="button" class="nav-link" data-nav-href="../index.html" data-login-link>Sign in</button>
+          <button type="button" data-logout hidden>Sign out</button>
         </nav>
       </header>
 
       <section class="card admin-panel" data-admin-panel hidden>
         <div class="row">
-          <h2 class="ink-underline">Gest&atilde;o de moderadores</h2>
-          <button type="button" class="button-ghost" data-admin-refresh>Atualizar</button>
+          <h2 class="ink-underline">Moderator management</h2>
+          <button type="button" class="button-ghost" data-admin-refresh>Refresh</button>
         </div>
         <p class="muted" data-admin-requirements></p>
 
         <section class="admin-panel-section">
-          <h3>Usu&aacute;rios eleg&iacute;veis</h3>
+          <h3>Eligible users</h3>
           <div class="admin-user-grid" data-eligible-list></div>
         </section>
 
         <section class="admin-panel-section">
-          <h3>Moderadores atuais</h3>
+          <h3>Current moderators</h3>
           <div class="admin-user-grid" data-moderators-list></div>
         </section>
       </section>
