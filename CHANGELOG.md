@@ -2,6 +2,12 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-18
+
+### Fixed
+
+- Refined `feed.html` responsiveness for small phones so the segmented `Posts` / `Collections` switch stays on its own row and the `Followed tags` toggle stays on a separate full-width row across the mobile S through mobile L range, while the banner and followed-tags dropdown remain readable without horizontal squeeze or overflow.
+
 ## 2026-03-17
 
 ### Changed
