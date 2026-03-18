@@ -114,7 +114,12 @@ function renderCollectionCard(collection, availablePosts = []) {
             .join("")}
         </select>
       </label>
-      <button type="button" class="button-ghost" data-add-collection-post-button="${escapeHtml(collectionId)}" ${addablePosts.length === 0 ? "disabled" : ""}>
+      <button
+        type="button"
+        class="button-ghost"
+        data-add-collection-post-button="${escapeHtml(collectionId)}"
+        disabled
+      >
         Add to collection
       </button>
       ${

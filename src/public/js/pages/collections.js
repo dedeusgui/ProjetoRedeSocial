@@ -8,6 +8,7 @@ import { clearSession, hasSession } from "../core/session.js";
 import { renderProfileCollectionList } from "../features/profile/content-renderers.js";
 
 const AUTH_REQUIRED_NOTICE = "Authentication required to manage your collections.";
+const ADD_COLLECTION_POST_SELECTION_NOTICE = "Choose a post before adding it.";
 
 const state = {
   ownedPosts: [],
@@ -73,6 +74,49 @@ function handleAuthFailure(error) {
 function renderCollections() {
   renderProfileCollectionList(elements.list, state.collections, {
     availablePosts: state.ownedPosts,
+  });
+  syncAllAddCollectionPostButtonStates();
+}
+
+function getCollectionPostSelect(collectionId) {
+  if (!elements.list || !collectionId) {
+    return null;
+  }
+
+  return elements.list.querySelector(`[data-collection-post-select="${collectionId}"]`);
+}
+
+function getAddCollectionPostButton(collectionId) {
+  if (!elements.list || !collectionId) {
+    return null;
+  }
+
+  return elements.list.querySelector(`[data-add-collection-post-button="${collectionId}"]`);
+}
+
+function syncAddCollectionPostButtonState(collectionId) {
+  const resolvedCollectionId = String(collectionId ?? "").trim();
+  if (!resolvedCollectionId) {
+    return;
+  }
+
+  const select = getCollectionPostSelect(resolvedCollectionId);
+  const button = getAddCollectionPostButton(resolvedCollectionId);
+  if (!button) {
+    return;
+  }
+
+  const hasSelectedPost = String(select?.value ?? "").trim().length > 0;
+  button.disabled = state.isManagingCollections || !hasSelectedPost;
+}
+
+function syncAllAddCollectionPostButtonStates() {
+  const addButtons = Array.from(
+    elements.list?.querySelectorAll("[data-add-collection-post-button]") ?? [],
+  );
+
+  addButtons.forEach((button) => {
+    syncAddCollectionPostButtonState(button.dataset.addCollectionPostButton);
   });
 }
 
@@ -228,6 +272,7 @@ async function addPostToCollection(collectionId, postId) {
   }
 
   state.isManagingCollections = true;
+  syncAddCollectionPostButtonState(collectionId);
   statusFlash.show("Adding post to collection...", "info");
 
   try {
@@ -242,6 +287,7 @@ async function addPostToCollection(collectionId, postId) {
     statusFlash.show(resolveMessage(error), "error");
   } finally {
     state.isManagingCollections = false;
+    syncAddCollectionPostButtonState(collectionId);
   }
 }
 
@@ -346,11 +392,20 @@ function bindEvents() {
     const addButton = event.target.closest("[data-add-collection-post-button]");
     if (addButton && elements.list.contains(addButton)) {
       const collectionId = String(addButton.dataset.addCollectionPostButton ?? "").trim();
-      const select = elements.list.querySelector(`[data-collection-post-select="${collectionId}"]`);
+      const select = getCollectionPostSelect(collectionId);
       const postId = String(select?.value ?? "").trim();
-      if (collectionId && postId) {
-        addPostToCollection(collectionId, postId);
+      if (!collectionId) {
+        return;
       }
+
+      if (!postId) {
+        syncAddCollectionPostButtonState(collectionId);
+        statusFlash.show(ADD_COLLECTION_POST_SELECTION_NOTICE, "error");
+        select?.focus();
+        return;
+      }
+
+      addPostToCollection(collectionId, postId);
       return;
     }
 
@@ -373,6 +428,15 @@ function bindEvents() {
         reorderCollectionItem(collectionId, postId, direction);
       }
     }
+  });
+
+  elements.list?.addEventListener("change", (event) => {
+    const select = event.target.closest("[data-collection-post-select]");
+    if (!select || !elements.list.contains(select)) {
+      return;
+    }
+
+    syncAddCollectionPostButtonState(select.dataset.collectionPostSelect);
   });
 }
 

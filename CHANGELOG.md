@@ -7,6 +7,8 @@ All notable changes to this project should be documented in this file.
 ### Fixed
 
 - Refined `feed.html` responsiveness for small phones so the segmented `Posts` / `Collections` switch stays on its own row and the `Followed tags` toggle stays on a separate full-width row across the mobile S through mobile L range, while the banner and followed-tags dropdown remain readable without horizontal squeeze or overflow.
+- Restored the `Confirm password` field and its frontend hooks on `index.html` so account creation once again blocks submission locally when the repeated password does not match.
+- Fixed the owner collections `Add to collection` flow so the CTA stays disabled until a post is selected, re-disables when the selection is cleared, and shows explicit feedback instead of failing silently when triggered without a valid post.
 
 ## 2026-03-17
 
