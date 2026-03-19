@@ -16,6 +16,8 @@ All notable changes to this project should be documented in this file.
 - Added an owner-only `Manage collection` shortcut to public collection cards and the public collection detail hero, both routing to `collections.html` without adding a new route or inline CRUD surface.
 - Refined the owner collection-card action hierarchy on `collections.html` so `Open collection` stays primary, `Edit` remains secondary, and `Delete` sits in its own destructive row instead of sharing equal visual weight.
 - Tightened the spacing and divider around the owner collection-card `Delete` row so the destructive action stays separated without feeling detached from `Open collection`, `Edit`, and `Add a post`.
+- Added a lightweight native confirmation modal for collection deletion on `collections.html`, with dynamic impact copy, safer default focus on `Cancel`, and button-level loading state while the existing delete API runs.
+- Compacted the collection-delete confirmation modal into a narrower, denser danger dialog so it reads less like a wide banner and more like the existing account-delete modal.
 
 ## 2026-03-18
 

@@ -20,7 +20,9 @@ const state = {
   collections: [],
   followedTags: [],
   editingCollectionId: null,
+  pendingDeleteCollectionId: null,
   isManagingCollections: false,
+  isDeletingCollection: false,
   isManagingFollowedTags: false,
 };
 
@@ -37,10 +39,16 @@ const elements = {
   collectionModalSubmitButton: document.querySelector("[data-collection-modal-submit]"),
   collectionModalForm: document.querySelector("[data-collection-modal-form]"),
   collectionModalStatus: document.querySelector("[data-collection-modal-status]"),
+  deleteCollectionModal: document.querySelector("[data-delete-collection-modal]"),
+  deleteCollectionDescription: document.querySelector("[data-delete-collection-description]"),
+  deleteCollectionCancelButton: document.querySelector("[data-delete-collection-cancel]"),
+  deleteCollectionConfirmButton: document.querySelector("[data-delete-collection-confirm]"),
+  deleteCollectionStatus: document.querySelector("[data-delete-collection-status]"),
 };
 
 const statusFlash = createFlash(elements.status);
 const collectionModalFlash = createFlash(elements.collectionModalStatus);
+const deleteCollectionFlash = createFlash(elements.deleteCollectionStatus);
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
@@ -160,6 +168,69 @@ function setFollowedTags(tags) {
   state.followedTags = normalizeFollowedTags(tags);
 }
 
+function getManagedCollectionPostCount(collection) {
+  if (Array.isArray(collection?.items)) {
+    return collection.items.length;
+  }
+
+  const fallbackCount = Number(collection?.itemCount);
+  return Number.isFinite(fallbackCount) && fallbackCount >= 0 ? fallbackCount : 0;
+}
+
+function resolveDeleteCollectionImpactMessage(collection) {
+  const itemCount = getManagedCollectionPostCount(collection);
+  if (itemCount <= 0) {
+    return "This collection is empty.";
+  }
+
+  if (itemCount === 1) {
+    return "This will remove this collection and its 1 post.";
+  }
+
+  return `This will remove this collection and its ${itemCount} posts.`;
+}
+
+function syncDeleteCollectionModalUi() {
+  const collection = getManagedCollection(state.pendingDeleteCollectionId);
+
+  if (elements.deleteCollectionDescription) {
+    elements.deleteCollectionDescription.textContent = collection
+      ? resolveDeleteCollectionImpactMessage(collection)
+      : "";
+  }
+
+  if (elements.deleteCollectionCancelButton) {
+    elements.deleteCollectionCancelButton.disabled = state.isDeletingCollection;
+  }
+
+  if (elements.deleteCollectionConfirmButton) {
+    elements.deleteCollectionConfirmButton.disabled =
+      state.isDeletingCollection || !state.pendingDeleteCollectionId;
+    elements.deleteCollectionConfirmButton.textContent = state.isDeletingCollection
+      ? "Deleting..."
+      : "Delete collection";
+  }
+}
+
+function resetDeleteCollectionModal() {
+  state.pendingDeleteCollectionId = null;
+  state.isDeletingCollection = false;
+  deleteCollectionFlash.clear();
+  syncDeleteCollectionModalUi();
+}
+
+function closeDeleteCollectionModal({ force = false } = {}) {
+  if (!force && state.isDeletingCollection) {
+    return;
+  }
+
+  if (!elements.deleteCollectionModal?.open) {
+    return;
+  }
+
+  elements.deleteCollectionModal.close();
+}
+
 function resetCollectionModal() {
   state.editingCollectionId = null;
   elements.collectionModalForm?.reset();
@@ -208,6 +279,26 @@ function openCollectionModalEdit(collectionId) {
   }
 
   elements.collectionModal?.showModal();
+}
+
+function openDeleteCollectionModal(collectionId) {
+  if (!hasSession()) {
+    redirectToHome();
+    return;
+  }
+
+  const collection = getManagedCollection(collectionId);
+  if (!collection) {
+    return;
+  }
+
+  state.pendingDeleteCollectionId = String(collectionId);
+  deleteCollectionFlash.clear();
+  syncDeleteCollectionModalUi();
+  elements.deleteCollectionModal?.showModal();
+  window.requestAnimationFrame(() => {
+    elements.deleteCollectionCancelButton?.focus();
+  });
 }
 
 async function refreshCollections({ showLoading = true } = {}) {
@@ -291,26 +382,35 @@ async function submitCollectionModal(event) {
   }
 }
 
-async function deleteCollection(collectionId) {
-  if (!collectionId || state.isManagingCollections) {
+async function deleteCollection() {
+  const collectionId = String(state.pendingDeleteCollectionId ?? "").trim();
+  if (!collectionId || state.isManagingCollections || state.isDeletingCollection) {
     return;
   }
 
   state.isManagingCollections = true;
+  state.isDeletingCollection = true;
+  syncDeleteCollectionModalUi();
+  deleteCollectionFlash.show("Deleting collection...", "info");
   statusFlash.show("Deleting collection...", "info");
 
   try {
     await api.collections.delete(collectionId);
     await refreshCollections({ showLoading: false });
+    closeDeleteCollectionModal({ force: true });
     statusFlash.show("Collection deleted.", "success");
   } catch (error) {
     if (handleAuthFailure(error)) {
       return;
     }
 
-    statusFlash.show(resolveMessage(error), "error");
+    const message = resolveMessage(error);
+    deleteCollectionFlash.show(message, "error");
+    statusFlash.show(message, "error");
   } finally {
+    state.isDeletingCollection = false;
     state.isManagingCollections = false;
+    syncDeleteCollectionModalUi();
   }
 }
 
@@ -465,6 +565,32 @@ function bindEvents() {
     elements.collectionModal.addEventListener("close", resetCollectionModal);
   }
 
+  elements.deleteCollectionCancelButton?.addEventListener("click", () => {
+    closeDeleteCollectionModal();
+  });
+
+  elements.deleteCollectionConfirmButton?.addEventListener("click", () => {
+    deleteCollection();
+  });
+
+  if (elements.deleteCollectionModal) {
+    elements.deleteCollectionModal.addEventListener("click", (event) => {
+      if (event.target === elements.deleteCollectionModal && !state.isDeletingCollection) {
+        closeDeleteCollectionModal();
+      }
+    });
+
+    elements.deleteCollectionModal.addEventListener("cancel", (event) => {
+      if (state.isDeletingCollection) {
+        event.preventDefault();
+      }
+    });
+
+    elements.deleteCollectionModal.addEventListener("close", () => {
+      resetDeleteCollectionModal();
+    });
+  }
+
   elements.collectionModalForm?.addEventListener("submit", submitCollectionModal);
 
   elements.list?.addEventListener("click", (event) => {
@@ -491,7 +617,7 @@ function bindEvents() {
     if (deleteButton && elements.list.contains(deleteButton)) {
       const collectionId = String(deleteButton.dataset.deleteCollectionId ?? "").trim();
       if (collectionId) {
-        deleteCollection(collectionId);
+        openDeleteCollectionModal(collectionId);
       }
       return;
     }
