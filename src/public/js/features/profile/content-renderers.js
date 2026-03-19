@@ -136,16 +136,20 @@ function renderCollectionCard(
         </div>
       </div>
       ${renderCollectionTags(collection.tags, { canManageTagFollows, followedTagSet })}
-      <div class="review-actions review-actions-inline">
-        <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">
-          Open collection
-        </button>
-        <button type="button" class="button-ghost" data-edit-collection-id="${escapeHtml(collectionId)}">
-          Edit
-        </button>
-        <button type="button" class="button-reject" data-delete-collection-id="${escapeHtml(collectionId)}">
-          Delete
-        </button>
+      <div class="collection-card-actions">
+        <div class="collection-card-primary-actions">
+          <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">
+            Open collection
+          </button>
+          <button type="button" class="button-ghost" data-edit-collection-id="${escapeHtml(collectionId)}">
+            Edit
+          </button>
+        </div>
+        <div class="collection-card-danger-actions">
+          <button type="button" class="button-reject" data-delete-collection-id="${escapeHtml(collectionId)}">
+            Delete
+          </button>
+        </div>
       </div>
       <label class="managed-collection-select">
         Add a post
