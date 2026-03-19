@@ -21,36 +21,8 @@ function renderSequenceContext(sequence, postId) {
   `;
 }
 
-function renderCollectionLinks(collections) {
-  return (Array.isArray(collections) ? collections : [])
-    .map(
-      (collection) => `
-        <button
-          type="button"
-          class="button-ghost button-link-inline post-context-link"
-          data-nav-href="./collection.html?id=${encodeURIComponent(String(collection.id ?? ""))}"
-        >
-          ${escapeHtml(collection.title ?? "Collection")}
-        </button>
-      `,
-    )
-    .join("");
-}
-
 export function renderPostContextLinks({ postId, sequence, collections } = {}) {
-  const items = [
-    renderSequenceContext(sequence, postId),
-    Array.isArray(collections) && collections.length > 0
-      ? `
-        <div class="post-context-group" aria-label="Collection context">
-          <span class="post-context-pill post-context-pill-static">Collection(s)</span>
-          ${renderCollectionLinks(collections)}
-        </div>
-      `
-      : "",
-  ]
-    .filter(Boolean)
-    .join("");
+  const items = [renderSequenceContext(sequence, postId)].filter(Boolean).join("");
 
   if (!items) {
     return "";
@@ -68,12 +40,5 @@ export function renderCollectionPillList(collections, { emptyLabel = "No collect
     return `<p class="muted">${escapeHtml(emptyLabel)}</p>`;
   }
 
-  return `
-    <div class="post-context-strip" aria-label="Related collections">
-      <div class="post-context-group">
-        <span class="post-context-pill post-context-pill-static">Collection(s)</span>
-        ${renderCollectionLinks(collections)}
-      </div>
-    </div>
-  `;
+  return "";
 }

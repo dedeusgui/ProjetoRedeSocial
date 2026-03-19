@@ -14,6 +14,8 @@ import { renderCollectionView } from "../features/collections/renderers.js";
 const state = {
   collectionData: null,
   followedTags: [],
+  viewerId: null,
+  viewerRole: null,
   isManagingTags: false,
 };
 
@@ -33,6 +35,8 @@ const navbar = initNavbar({
   logoutButton: elements.logoutButton,
   logoutRedirectUrl: "./index.html",
   onLogout() {
+    state.viewerId = null;
+    state.viewerRole = null;
     setFollowedTags([]);
     renderCurrentCollection();
   },
@@ -82,7 +86,12 @@ function renderCurrentCollection() {
     return;
   }
 
+  const isOwner =
+    String(state.viewerId ?? "").trim().length > 0 &&
+    String(state.viewerId ?? "").trim() === String(state.collectionData?.author?.id ?? "").trim();
+
   renderCollectionView(elements.view, state.collectionData, {
+    isOwner,
     canManageTagFollows: hasSession(),
     followedTagSet: new Set(state.followedTags),
   });
@@ -90,14 +99,28 @@ function renderCurrentCollection() {
 
 async function syncViewerContext() {
   if (!hasSession()) {
+    state.viewerId = null;
+    state.viewerRole = null;
     setFollowedTags([]);
     return;
   }
 
-  try {
-    const result = await api.users.listFollowedTags();
-    setFollowedTags(result.followedTags);
-  } catch {
+  const [profileResult, followedTagsResult] = await Promise.allSettled([
+    api.users.meProfile(),
+    api.users.listFollowedTags(),
+  ]);
+
+  if (profileResult.status === "fulfilled") {
+    state.viewerId = profileResult.value.id ?? null;
+    state.viewerRole = profileResult.value.role ?? null;
+  } else {
+    state.viewerId = null;
+    state.viewerRole = null;
+  }
+
+  if (followedTagsResult.status === "fulfilled") {
+    setFollowedTags(followedTagsResult.value.followedTags);
+  } else {
     setFollowedTags([]);
   }
 }

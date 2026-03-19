@@ -368,6 +368,8 @@ function renderFeed() {
 
   if (isCollectionsFeed()) {
     renderCollectionFeedList(elements.list, state.items, {
+      currentUserId: state.viewerId,
+      currentUserRole: state.viewerRole,
       canManageTagFollows: hasSession(),
       followedTagSet: new Set(state.followedTags),
     });

@@ -75,6 +75,7 @@ export function renderCollectionView(
   target,
   collection,
   {
+    isOwner = false,
     canManageTagFollows = false,
     followedTagSet = new Set(),
   } = {},
@@ -101,9 +102,17 @@ export function renderCollectionView(
         <h2 class="post-title collection-title">${escapeHtml(collection?.title ?? "Collection")}</h2>
         <p class="post-content collection-description">${escapeHtml(collection?.description ?? "")}</p>
       </div>
-      <div class="collection-hero-meta">
-        <span class="post-context-pill post-context-pill-static">Manual order</span>
-      </div>
+      ${
+        isOwner
+          ? `
+            <div class="feed-card-actions">
+              <button type="button" class="button-link button-link-inline" data-nav-href="./collections.html">
+                Manage collection
+              </button>
+            </div>
+          `
+          : ""
+      }
       ${renderTags(collection?.tags, { canManageTagFollows, followedTagSet })}
     </section>
       <section class="collection-post-list">

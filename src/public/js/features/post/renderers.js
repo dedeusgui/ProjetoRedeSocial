@@ -202,6 +202,9 @@ export function renderPostView(
 
   const comments = Array.isArray(post.comments) ? post.comments : [];
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
+  const collectionMembership = renderCollectionPillList(post.collections, {
+    emptyLabel: "This post is not part of any collection yet.",
+  });
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
 
   target.innerHTML = `
@@ -237,14 +240,18 @@ export function renderPostView(
       <p class="muted status-line" data-review-status></p>
     </article>
     ${renderSequencePanel(post.sequenceItems, post.id)}
-    <section class="card collection-panel">
-      <div class="row comments-panel-header">
-        <h3 class="ink-underline">Collections with this post</h3>
-      </div>
-      ${renderCollectionPillList(post.collections, {
-        emptyLabel: "This post is not part of any collection yet.",
-      })}
-    </section>
+    ${
+      collectionMembership
+        ? `
+          <section class="card collection-panel">
+            <div class="row comments-panel-header">
+              <h3 class="ink-underline">Collections with this post</h3>
+            </div>
+            ${collectionMembership}
+          </section>
+        `
+        : ""
+    }
     <section class="card comments-panel" data-comments-panel>
       <div class="row comments-panel-header">
         <h3 class="ink-underline">Comments</h3>

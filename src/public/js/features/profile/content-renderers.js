@@ -133,12 +133,8 @@ function renderCollectionCard(
         </div>
         <div class="collection-hero-meta">
           <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? collectionItems.length ?? 0))} post(s)</span>
-          <span class="post-context-pill post-context-pill-static">Manual order</span>
         </div>
       </div>
-      ${renderCollectionPillList([{ id: collection.id, title: collection.title }], {
-        emptyLabel: "",
-      })}
       ${renderCollectionTags(collection.tags, { canManageTagFollows, followedTagSet })}
       <div class="review-actions review-actions-inline">
         <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">

@@ -13,8 +13,8 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `features/admin/renderers.js`: admin-oriented renderers
 - `features/posts/post-modal.js`: shared create/edit modal orchestration, including sequence selection for owned posts
 - `features/profile/content-renderers.js`: owner post cards and reusable collection-management surfaces, including owner-collection tag follow/unfollow actions
-- `features/collections/renderers.js`: public collection detail rendering, including collection-tag follow/unfollow actions for authenticated users
-- `features/collections/feed-renderers.js`: collection-feed card rendering for `feed.html`
+- `features/collections/renderers.js`: public collection detail rendering, including collection-tag follow/unfollow actions for authenticated users and an owner-only `Manage collection` shortcut
+- `features/collections/feed-renderers.js`: collection-feed card rendering for `feed.html`, including an owner-only `Manage collection` shortcut back to `collections.html`
 
 ## Responsibilities
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.
@@ -45,7 +45,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
 - For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including debounced real-time search, the grouped `Posts` vs `Collections` segmented control with immediate switching, the authenticated followed-tags toggle, the lightweight active-filter banner below that row, the manual follow form, and the compact followed-tags dropdown; renderer code should stay limited to card, tag, sequence, collection context, and safe followed-tags dropdown markup.
-- Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; avoid duplicating collection-create CTAs across those pages.
+- Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; owner-facing shortcuts on public/feed collection surfaces may link back to `collections.html`, but creation and CRUD orchestration still belong there.
 - Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
 - Keep profile avatar management attached to the avatar itself on `profile.html`; `pages/profile.js` should orchestrate the contextual upload/remove menu and outside-click closing while reusing the existing avatar API methods.
 - Keep permanent account deletion on `profile.html` inside the existing native dialog pattern; require the exact uppercase word `DELETE`, clear the local session after success, and redirect away from the protected screen.

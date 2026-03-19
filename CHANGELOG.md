@@ -8,6 +8,12 @@ All notable changes to this project should be documented in this file.
 
 - Restored tag follow/unfollow actions on `collection.html`, so authenticated users can manage followed tags directly from the public collection detail page instead of only from feed cards or post detail.
 - Restored tag follow/unfollow actions on `collections.html`, so owner collection cards in `My collections` now match the collection feed and collection detail behavior.
+- Removed collection navigation buttons from post-context surfaces, so posts still show collection membership but no longer use embedded links to open `collection.html`.
+- Removed the remaining static collection pills from post and collection surfaces, including `Collection(s)`, collection-title pills, and `Manual order`, without changing collection CRUD or navigation entry points.
+
+### Changed
+
+- Added an owner-only `Manage collection` shortcut to public collection cards and the public collection detail hero, both routing to `collections.html` without adding a new route or inline CRUD surface.
 
 ## 2026-03-18
 

@@ -47,10 +47,16 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
 function createCollectionFeedCard(
   collection,
   {
+    currentUserId = null,
+    currentUserRole = null,
     canManageTagFollows = false,
     followedTagSet = new Set(),
   } = {},
 ) {
+  const viewerId = String(currentUserId ?? "").trim();
+  const ownerId = String(collection?.author?.id ?? "").trim();
+  const isOwner = viewerId.length > 0 && ownerId.length > 0 && viewerId === ownerId;
+
   const article = document.createElement("article");
   article.className = "card post-card managed-collection-card";
 
@@ -68,11 +74,6 @@ function createCollectionFeedCard(
       <h2 class="post-title"></h2>
       <p class="post-content"></p>
     </div>
-    <div class="post-context-strip" aria-label="Collection context">
-      <div class="post-context-group">
-        <span class="post-context-pill post-context-pill-static">Manual order</span>
-      </div>
-    </div>
     ${renderTags(collection.tags, { canManageTagFollows, followedTagSet })}
     <div class="feed-card-actions">
       <button
@@ -82,6 +83,19 @@ function createCollectionFeedCard(
       >
         Open collection
       </button>
+      ${
+        isOwner
+          ? `
+            <button
+              type="button"
+              class="button-ghost button-link-inline"
+              data-nav-href="./collections.html"
+            >
+              Manage collection
+            </button>
+          `
+          : ""
+      }
     </div>
   `;
 
