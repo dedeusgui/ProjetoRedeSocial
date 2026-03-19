@@ -4,6 +4,10 @@ import {
   normalizeFollowTagValue,
 } from "../../core/followed-tags.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
+import {
+  COMMENT_MAX_LENGTH,
+  formatCommentCharacterCount,
+} from "./constants.js";
 import { renderCollectionPillList, renderPostContextLinks } from "../posts/context-renderers.js";
 import { renderQuestionnaireDetail } from "../questionnaire/renderers.js";
 
@@ -94,9 +98,13 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
               <textarea
                 class="comment-edit-input"
                 rows="4"
+                maxlength="${COMMENT_MAX_LENGTH}"
                 data-comment-edit-input-id="${escapeHtml(comment.id)}"
               >${escapeHtml(draft)}</textarea>
             </label>
+            <p class="muted" data-comment-edit-counter-id="${escapeHtml(comment.id)}">
+              ${escapeHtml(formatCommentCharacterCount(draft.length))}
+            </p>
             <div class="review-actions review-actions-inline">
               <button
                 type="button"

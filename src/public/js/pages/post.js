@@ -9,6 +9,10 @@ import {
 import { resolveAuthApiMessage, resolveModerationApiMessage } from "../core/http-state.js";
 import { hasSession } from "../core/session.js";
 import { reviewSavedMessage } from "../features/moderation/renderers.js";
+import {
+  COMMENT_MAX_LENGTH,
+  formatCommentCharacterCount,
+} from "../features/post/constants.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
 import { renderPostView } from "../features/post/renderers.js";
 
@@ -45,6 +49,8 @@ const elements = {
   commentForm: document.querySelector("[data-comment-form]"),
   commentHelp: document.querySelector("[data-comment-help]"),
   commentComposer: document.querySelector("[data-comment-compose]"),
+  commentInput: document.querySelector("[data-comment-compose-input]"),
+  commentCounter: document.querySelector("[data-comment-compose-counter]"),
   modal: document.querySelector("[data-post-modal]"),
   modalTitle: document.querySelector("[data-post-modal-title]"),
   modalCancelButton: document.querySelector("[data-post-modal-cancel]"),
@@ -117,6 +123,33 @@ function setFollowedTags(tags) {
   state.followedTags = normalizeFollowedTags(tags);
 }
 
+function formatCommentLengthMessage() {
+  return `Use at most ${COMMENT_MAX_LENGTH} characters.`;
+}
+
+function updateCommentComposerCounter(length) {
+  if (!elements.commentCounter) {
+    return;
+  }
+
+  elements.commentCounter.textContent = formatCommentCharacterCount(length);
+}
+
+function updateCommentEditCounter(commentId, length) {
+  const counter = elements.view?.querySelector(
+    `[data-comment-edit-counter-id="${String(commentId)}"]`,
+  );
+  if (!counter) {
+    return;
+  }
+
+  counter.textContent = formatCommentCharacterCount(length);
+}
+
+function isCommentContentTooLong(content) {
+  return String(content ?? "").trim().length > COMMENT_MAX_LENGTH;
+}
+
 function resetCommentEditState() {
   state.commentEdit.editingCommentId = null;
   state.commentEdit.draft = "";
@@ -147,11 +180,13 @@ function renderSessionState() {
   const commentsVisible = state.commentsOpen;
 
   if (elements.commentForm) {
-    const textarea = elements.commentForm.querySelector("textarea[name='content']");
+    const textarea = elements.commentInput;
     const submit = elements.commentForm.querySelector("button[type='submit']");
 
     if (textarea) {
       textarea.disabled = !isAuthenticated || !commentsVisible;
+      textarea.maxLength = COMMENT_MAX_LENGTH;
+      updateCommentComposerCounter(textarea.value.length);
     }
 
     if (submit) {
@@ -405,9 +440,16 @@ async function handleCommentSubmit(event) {
     return;
   }
 
+  if (isCommentContentTooLong(content)) {
+    statusFlash.show(formatCommentLengthMessage(), "error");
+    elements.commentInput?.focus();
+    return;
+  }
+
   try {
     await api.posts.createComment(postId, content);
     elements.commentForm.reset();
+    updateCommentComposerCounter(elements.commentInput?.value.length ?? 0);
     await loadPost();
     statusFlash.show("Comment posted.", "success");
   } catch (error) {
@@ -630,6 +672,12 @@ async function saveCommentEdit(commentId) {
     return;
   }
 
+  if (isCommentContentTooLong(nextContent)) {
+    statusFlash.show(formatCommentLengthMessage(), "error");
+    focusCommentEditInput(commentId);
+    return;
+  }
+
   state.commentEdit.isSaving = true;
   renderCurrentPost();
   statusFlash.show("Saving comment changes...", "info");
@@ -707,6 +755,10 @@ function bindEvents() {
   if (elements.commentForm) {
     elements.commentForm.addEventListener("submit", handleCommentSubmit);
   }
+
+  elements.commentInput?.addEventListener("input", (event) => {
+    updateCommentComposerCounter(String(event.target?.value ?? "").length);
+  });
 
   if (elements.view) {
     elements.view.addEventListener("click", (event) => {
@@ -836,6 +888,7 @@ function bindEvents() {
       }
 
       state.commentEdit.draft = String(input.value ?? "");
+      updateCommentEditCounter(commentId, state.commentEdit.draft.length);
     });
 
     elements.view.addEventListener("keydown", (event) => {

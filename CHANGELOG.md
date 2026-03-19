@@ -2,10 +2,18 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-19
+
+### Fixed
+
+- Restored tag follow/unfollow actions on `collection.html`, so authenticated users can manage followed tags directly from the public collection detail page instead of only from feed cards or post detail.
+- Restored tag follow/unfollow actions on `collections.html`, so owner collection cards in `My collections` now match the collection feed and collection detail behavior.
+
 ## 2026-03-18
 
 ### Fixed
 
+- Mirrored the backend comment-length rule on `post.html` so both the comment composer and inline edit textarea now stop at 2000 characters and show a simple live counter before any invalid request reaches the API.
 - Refined `feed.html` responsiveness for small phones so the segmented `Posts` / `Collections` switch stays on its own row and the `Followed tags` toggle stays on a separate full-width row across the mobile S through mobile L range, while the banner and followed-tags dropdown remain readable without horizontal squeeze or overflow.
 - Restored the `Confirm password` field and its frontend hooks on `index.html` so account creation once again blocks submission locally when the repeated password does not match.
 - Fixed the owner collections `Add to collection` flow so the CTA stays disabled until a post is selected, re-disables when the selection is cleared, and shows explicit feedback instead of failing silently when triggered without a valid post.

@@ -2,9 +2,14 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import {
+  normalizeFollowTagValue,
+  normalizeFollowedTags,
+} from "../core/followed-tags.js";
 import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 import { clearSession, hasSession } from "../core/session.js";
+import { UI_TEXT } from "../core/ui-text.js";
 import { renderProfileCollectionList } from "../features/profile/content-renderers.js";
 
 const AUTH_REQUIRED_NOTICE = "Authentication required to manage your collections.";
@@ -13,8 +18,10 @@ const ADD_COLLECTION_POST_SELECTION_NOTICE = "Choose a post before adding it.";
 const state = {
   ownedPosts: [],
   collections: [],
+  followedTags: [],
   editingCollectionId: null,
   isManagingCollections: false,
+  isManagingFollowedTags: false,
 };
 
 const elements = {
@@ -72,9 +79,26 @@ function handleAuthFailure(error) {
 }
 
 function renderCollections() {
+  const preservedSelections = new Map(
+    Array.from(elements.list?.querySelectorAll("[data-collection-post-select]") ?? []).map((select) => [
+      String(select.dataset.collectionPostSelect ?? "").trim(),
+      String(select.value ?? ""),
+    ]),
+  );
+
   renderProfileCollectionList(elements.list, state.collections, {
     availablePosts: state.ownedPosts,
+    canManageTagFollows: hasSession(),
+    followedTagSet: new Set(state.followedTags),
   });
+
+  preservedSelections.forEach((value, collectionId) => {
+    const select = getCollectionPostSelect(collectionId);
+    if (select && Array.from(select.options).some((option) => option.value === value)) {
+      select.value = value;
+    }
+  });
+
   syncAllAddCollectionPostButtonStates();
 }
 
@@ -122,6 +146,18 @@ function syncAllAddCollectionPostButtonStates() {
 
 function getManagedCollection(collectionId) {
   return state.collections.find((item) => String(item.id) === String(collectionId));
+}
+
+function resolveFollowTagMessage(error) {
+  return resolveAuthApiMessage(
+    error,
+    UI_TEXT.auth.loginToFollowTags,
+    UI_TEXT.followTags.updateError,
+  );
+}
+
+function setFollowedTags(tags) {
+  state.followedTags = normalizeFollowedTags(tags);
 }
 
 function resetCollectionModal() {
@@ -191,6 +227,18 @@ async function refreshCollections({ showLoading = true } = {}) {
     ]);
     state.ownedPosts = Array.isArray(posts) ? posts : [];
     state.collections = Array.isArray(collections) ? collections : [];
+
+    try {
+      const followedTags = await api.users.listFollowedTags();
+      setFollowedTags(followedTags.followedTags);
+    } catch (error) {
+      if (handleAuthFailure(error)) {
+        return;
+      }
+
+      setFollowedTags([]);
+    }
+
     renderCollections();
     statusFlash.clear();
   } catch (error) {
@@ -291,6 +339,55 @@ async function addPostToCollection(collectionId, postId) {
   }
 }
 
+async function toggleFollowTag(tag, currentlyFollowing) {
+  if (state.isManagingFollowedTags) {
+    return false;
+  }
+
+  if (!hasSession()) {
+    redirectToHome(UI_TEXT.auth.loginToFollowTags);
+    return false;
+  }
+
+  const normalizedTag = normalizeFollowTagValue(tag);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  state.isManagingFollowedTags = true;
+  statusFlash.show(
+    currentlyFollowing
+      ? UI_TEXT.followTags.loadingUnfollow(normalizedTag)
+      : UI_TEXT.followTags.loadingFollow(normalizedTag),
+    "info",
+  );
+
+  try {
+    const result = currentlyFollowing
+      ? await api.users.unfollowTag(normalizedTag)
+      : await api.users.followTag(normalizedTag);
+
+    setFollowedTags(result.followedTags);
+    renderCollections();
+    statusFlash.show(
+      currentlyFollowing
+        ? UI_TEXT.followTags.stoppedFollowing(normalizedTag)
+        : UI_TEXT.followTags.nowFollowing(normalizedTag),
+      "success",
+    );
+    return true;
+  } catch (error) {
+    if (handleAuthFailure(error)) {
+      return false;
+    }
+
+    statusFlash.show(resolveFollowTagMessage(error), "error");
+    return false;
+  } finally {
+    state.isManagingFollowedTags = false;
+  }
+}
+
 async function removePostFromCollection(collectionId, postId) {
   if (!collectionId || !postId || state.isManagingCollections) {
     return;
@@ -371,6 +468,16 @@ function bindEvents() {
   elements.collectionModalForm?.addEventListener("submit", submitCollectionModal);
 
   elements.list?.addEventListener("click", (event) => {
+    const followButton = event.target.closest("[data-follow-tag]");
+    if (followButton && elements.list.contains(followButton)) {
+      const tag = String(followButton.dataset.followTag ?? "").trim();
+      const currentlyFollowing = followButton.dataset.following === "true";
+      if (tag) {
+        toggleFollowTag(tag, currentlyFollowing);
+      }
+      return;
+    }
+
     const editButton = event.target.closest("[data-edit-collection-id]");
     if (editButton && elements.list.contains(editButton)) {
       const collectionId = String(editButton.dataset.editCollectionId ?? "").trim();

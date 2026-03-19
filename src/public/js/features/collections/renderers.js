@@ -1,6 +1,49 @@
 import { escapeHtml, formatDateTime } from "../../core/formatters.js";
+import {
+  formatFollowTagLabel,
+  normalizeFollowTagValue,
+} from "../../core/followed-tags.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
 import { renderPostContextLinks } from "../posts/context-renderers.js";
+
+function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Set() } = {}) {
+  if (!Array.isArray(tags) || tags.length === 0) {
+    return "<p class='muted post-tags'>No tags yet.</p>";
+  }
+
+  return `
+    <ul class="tag-list" aria-label="Collection tags">
+      ${tags
+        .map((tag) => {
+          const followTag = normalizeFollowTagValue(tag);
+          const label = formatFollowTagLabel(tag);
+          const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
+
+          return `
+            <li class="tag-item tag-item-actionable">
+              <span class="tag-label">#${escapeHtml(label)}</span>
+              ${
+                canManageTagFollows && followTag
+                  ? `
+                    <button
+                      type="button"
+                      class="tag-follow-button ${isFollowing ? "button-ghost" : ""}"
+                      data-follow-tag="${escapeHtml(followTag)}"
+                      data-following="${isFollowing ? "true" : "false"}"
+                      aria-pressed="${isFollowing ? "true" : "false"}"
+                    >
+                      ${isFollowing ? "Following" : "Follow"}
+                    </button>
+                  `
+                  : ""
+              }
+            </li>
+          `;
+        })
+        .join("")}
+    </ul>
+  `;
+}
 
 function renderCollectionPost(post, index) {
   return `
@@ -28,7 +71,14 @@ function renderCollectionPost(post, index) {
   `;
 }
 
-export function renderCollectionView(target, collection) {
+export function renderCollectionView(
+  target,
+  collection,
+  {
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
+  } = {},
+) {
   if (!target) {
     return;
   }
@@ -54,11 +104,7 @@ export function renderCollectionView(target, collection) {
       <div class="collection-hero-meta">
         <span class="post-context-pill post-context-pill-static">Manual order</span>
       </div>
-      <ul class="tag-list" aria-label="Collection tags">
-        ${(Array.isArray(collection?.tags) ? collection.tags : [])
-          .map((tag) => `<li class="tag-item"><span class="tag-label">#${escapeHtml(tag)}</span></li>`)
-          .join("")}
-      </ul>
+      ${renderTags(collection?.tags, { canManageTagFollows, followedTagSet })}
     </section>
       <section class="collection-post-list">
       ${items.length === 0 ? "<p class='muted'>No visible posts are available in this collection.</p>" : items.map(renderCollectionPost).join("")}

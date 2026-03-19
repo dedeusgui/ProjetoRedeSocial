@@ -12,8 +12,8 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `pages/`: page bootstrap + event binding + orchestration
 - `features/admin/renderers.js`: admin-oriented renderers
 - `features/posts/post-modal.js`: shared create/edit modal orchestration, including sequence selection for owned posts
-- `features/profile/content-renderers.js`: owner post cards and reusable collection-management surfaces
-- `features/collections/renderers.js`: public collection detail rendering
+- `features/profile/content-renderers.js`: owner post cards and reusable collection-management surfaces, including owner-collection tag follow/unfollow actions
+- `features/collections/renderers.js`: public collection detail rendering, including collection-tag follow/unfollow actions for authenticated users
 - `features/collections/feed-renderers.js`: collection-feed card rendering for `feed.html`
 
 ## Responsibilities
