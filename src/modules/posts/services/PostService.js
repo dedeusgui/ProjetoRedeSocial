@@ -82,8 +82,35 @@ class PostService {
     return summary;
   }
 
+  resolvePostAuthorId(post) {
+    if (!post) {
+      return null;
+    }
+
+    const authorId = post.authorId ?? null;
+
+    if (authorId === null || authorId === undefined) {
+      return null;
+    }
+
+    if (typeof authorId === "string") {
+      return authorId;
+    }
+
+    if (authorId._id !== undefined && authorId._id !== null) {
+      return authorId._id;
+    }
+
+    if (typeof authorId.toHexString === "function") {
+      return authorId;
+    }
+
+    return authorId.id ?? authorId;
+  }
+
   ensurePostOwner(post, requester, message) {
-    const isOwner = String(post.authorId) === String(requester?.id);
+    const ownerId = this.resolvePostAuthorId(post);
+    const isOwner = String(ownerId ?? "") === String(requester?.id ?? "");
     if (!isOwner) {
       throw new AppError(message, "FORBIDDEN", 403);
     }
@@ -508,7 +535,7 @@ class PostService {
 
   async updatePostByRequester(postId, requester, payload) {
     ensureObjectId(postId, "postId");
-    const post = await this.postRepository.findById(postId);
+    const post = await this.postRepository.findByIdOrNull(postId);
     if (!post) {
       throw new AppError("Post not found.", "NOT_FOUND", 404);
     }

@@ -4,6 +4,10 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-20
 
+### Fixed
+
+- Restored `PATCH /api/v1/posts/:id` for the real post author after a backend ownership-check regression in the post edit flow started reading a populated `authorId` during the author comparison.
+
 ### Added
 
 - Added `GET /api/v1/admin/users/:id/delete-preview` so the admin tools can load a risk-gated deletion summary before any destructive action runs.
