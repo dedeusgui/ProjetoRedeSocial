@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
+import Collection from "../../../models/collection.js";
+import Comment from "../../../models/comment.js";
 import AccountDeletionRepository from "../../../common/users/AccountDeletionRepository.js";
 import Post from "../../../models/post.js";
+import PostReview from "../../../models/post_review.js";
 import User from "../../../models/user.js";
 
 class AdminRepository extends AccountDeletionRepository {
@@ -79,6 +82,60 @@ class AdminRepository extends AccountDeletionRepository {
       .select("username email role privateMetrics createdAt updatedAt")
       .sort({ createdAt: -1, username: 1 })
       .lean();
+  }
+
+  async summarizeDeleteImpactByUserId(userId, { recentCommentSince = null } = {}) {
+    const authorId = new mongoose.Types.ObjectId(String(userId));
+    const visibleCommentFilter = {
+      authorId,
+      status: "visible",
+    };
+
+    const [
+      postSummary,
+      collectionCount,
+      commentCount,
+      visibleCommentCount,
+      recentVisibleCommentCount,
+      reviewsWrittenCount,
+    ] = await Promise.all([
+      Post.aggregate([
+        {
+          $match: {
+            authorId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            postCount: { $sum: 1 },
+            reviewsReceivedCount: { $sum: "$moderationMetrics.totalReviews" },
+          },
+        },
+      ]),
+      Collection.countDocuments({ authorId }),
+      Comment.countDocuments({ authorId }),
+      Comment.countDocuments(visibleCommentFilter),
+      recentCommentSince
+        ? Comment.countDocuments({
+          ...visibleCommentFilter,
+          createdAt: { $gte: recentCommentSince },
+        })
+        : 0,
+      PostReview.countDocuments({ reviewerId: authorId }),
+    ]);
+
+    const summary = postSummary[0] ?? null;
+
+    return {
+      postCount: summary?.postCount ?? 0,
+      collectionCount,
+      commentCount,
+      visibleCommentCount,
+      recentVisibleCommentCount,
+      reviewsReceivedCount: summary?.reviewsReceivedCount ?? 0,
+      reviewsWrittenCount,
+    };
   }
 
   async findById(userId) {

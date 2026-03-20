@@ -2374,6 +2374,25 @@ select:focus-visible {
   gap: var(--space-3);
 }
 
+.danger-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2);
+}
+
+.danger-summary-item {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.danger-summary-item strong {
+  color: var(--text-0);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .danger-modal-actions {
   justify-content: flex-end;
 }

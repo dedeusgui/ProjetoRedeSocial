@@ -20,6 +20,13 @@ function createAdminRoutes(controller) {
     asyncHandler(controller.getModeratorEligibility),
   );
 
+  router.get(
+    "/admin/users/:id/delete-preview",
+    auth,
+    roles("admin"),
+    asyncHandler(controller.getDeleteUserPreview),
+  );
+
   router.patch(
     "/admin/users/:id/moderator",
     auth,

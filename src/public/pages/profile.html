@@ -46,6 +46,57 @@
         <div class="admin-user-grid" data-admin-users-list></div>
       </section>
 
+      <dialog class="modal modal-compact" data-admin-delete-user-modal>
+        <section class="card modal-card danger-modal-card danger-modal-card-compact">
+          <div class="danger-modal-header">
+            <div class="danger-modal-heading">
+              <span class="danger-modal-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 3.5 21 20.5H3L12 3.5Zm0 5.4v5.5m0 2.85v.25" />
+                </svg>
+              </span>
+              <div class="danger-modal-heading-copy">
+                <h2 class="ink-underline">Delete user?</h2>
+                <p class="muted">This action permanently removes the account and cannot be undone.</p>
+              </div>
+            </div>
+          </div>
+          <form class="modal-form-layout" data-admin-delete-user-form>
+            <section class="modal-form-section danger-modal-section">
+              <div data-admin-delete-user-summary></div>
+            </section>
+
+            <section class="modal-form-section danger-modal-section" data-admin-delete-impact-section hidden>
+              <p class="muted" data-admin-delete-impact-lead></p>
+              <ul class="danger-modal-list" data-admin-delete-impact-list></ul>
+            </section>
+
+            <section class="modal-form-section danger-modal-section" data-admin-delete-confirmation-section hidden>
+              <label>
+                Type <strong data-admin-delete-confirmation-handle>@username</strong> to confirm
+                <input
+                  name="adminDeleteConfirmation"
+                  autocomplete="off"
+                  spellcheck="false"
+                  data-admin-delete-confirmation
+                />
+                <span class="muted">The button stays disabled until the exact handle is entered.</span>
+              </label>
+            </section>
+
+            <div class="row modal-submit-row danger-modal-actions">
+              <button type="button" class="button-ghost" data-admin-delete-user-cancel>
+                Cancel
+              </button>
+              <button type="submit" class="button-reject" data-admin-delete-user-confirm disabled>
+                Delete user
+              </button>
+            </div>
+          </form>
+          <p class="muted status-line" data-admin-delete-user-status></p>
+        </section>
+      </dialog>
+
       <section class="card danger-zone-card" data-profile-danger-zone hidden>
         <div class="danger-zone-header">
           <div class="danger-zone-copy">

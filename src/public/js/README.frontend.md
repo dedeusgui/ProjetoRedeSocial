@@ -49,6 +49,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
 - Keep profile avatar management attached to the avatar itself on `profile.html`; `pages/profile.js` should orchestrate the contextual upload/remove menu and outside-click closing while reusing the existing avatar API methods.
 - Keep permanent account deletion on `profile.html` inside the existing native dialog pattern; require the exact uppercase word `DELETE`, clear the local session after success, and redirect away from the protected screen.
+- Keep admin-side user deletion on `profile.html` inside the same native danger-dialog language; fetch a backend preview first, keep `level_1` for low-impact accounts, and require exact `@username` confirmation for `level_2` once the backend flags posts, collections, or meaningful visible-comment activity.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
 - Keep collection and questionnaire blocks visually aligned with post/feed cards by reusing the same spacing rhythm, chip treatment, and Patrick accent labels.

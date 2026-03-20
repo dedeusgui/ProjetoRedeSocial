@@ -2,6 +2,22 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-20
+
+### Added
+
+- Added `GET /api/v1/admin/users/:id/delete-preview` so the admin tools can load a risk-gated deletion summary before any destructive action runs.
+
+### Changed
+
+- Replaced the direct `Delete user` action in the profile admin tools with a native confirmation modal that now has two levels: summary-only for low-impact accounts, and impact-preview plus exact `@username` confirmation for users with posts, collections, or meaningful visible-comment activity.
+- Narrowed admin-side account deletion so only standard users (`role: user`) can be deleted from the admin tools; `moderator` and `admin` accounts no longer expose that action.
+- Added a hybrid visible-comment threshold to the admin delete preview so active non-posting users can still fall into `level_2` without forcing the strong modal for only a few comments.
+
+### Docs
+
+- Updated API, backend architecture, frontend architecture, and frontend guide docs to describe the new admin delete-preview endpoint and the two-level admin deletion modal.
+
 ## 2026-03-19
 
 ### Fixed

@@ -247,6 +247,9 @@ export const api = {
     listUsers() {
       return request("GET", "/admin/users");
     },
+    getDeletePreview(userId) {
+      return request("GET", `/admin/users/${userId}/delete-preview`);
+    },
     listModeratorEligibility() {
       return request("GET", "/admin/moderator-eligibility");
     },

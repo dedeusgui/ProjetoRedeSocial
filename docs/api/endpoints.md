@@ -472,6 +472,40 @@ Example request:
     - `postCount`
     - `createdAt`
 
+### `GET /api/v1/admin/users/:id/delete-preview`
+
+- Auth: required (`admin`)
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Returns:
+  - `user`
+    - `id`
+    - `username`
+    - `email`
+    - `role`
+    - `score`
+    - `totalReviews`
+    - `postCount`
+    - `createdAt`
+  - `canDelete`
+  - `blockingReason` (`string | null`)
+  - `riskLevel` (`level_1 | level_2`)
+  - `impact`
+    - `postCount`
+    - `collectionCount`
+    - `commentCount`
+    - `reviewsReceivedCount`
+    - `reviewsWrittenCount`
+- Rules:
+  - only `role: user` is deletable through the admin tools
+  - `moderator` and `admin` accounts return `canDelete: false`
+  - `level_2` is returned when `postCount` or `collectionCount` is greater than `0`
+  - `level_2` is also returned when the user reaches comment-activity thresholds using visible comments only:
+    - `10+` visible comments total, or
+    - `5+` visible comments in the last `30` days
+  - `impact.commentCount` remains the authored-comment count surfaced to the modal; the threshold calculation is handled server-side
+
 ### `GET /api/v1/admin/moderator-eligibility`
 
 - Auth: required (`admin`)
@@ -504,7 +538,8 @@ Example request:
 - Success: `200`
 - Rules:
   - admins cannot delete their own account
-  - config-managed admins cannot be deleted
+  - only `role: user` can be deleted by this endpoint
+  - `moderator` and `admin` accounts cannot be deleted
 - Side effects:
   - deletes user-authored posts, comments, and reviews
   - deletes authored collections
