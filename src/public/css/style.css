@@ -2565,6 +2565,43 @@ select:focus-visible {
   gap: var(--space-3);
 }
 
+.collection-membership-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.collection-membership-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(59, 74, 98, 0.5);
+  border-radius: var(--radius-1);
+  background: rgba(13, 19, 28, 0.88);
+}
+
+.collection-membership-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.collection-membership-copy .collection-item-title {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.collection-panel-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
 .sequence-item-current {
   border: 1px solid rgba(104, 131, 168, 0.95);
   border-radius: var(--radius-1);

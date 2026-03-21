@@ -195,6 +195,7 @@ export function renderPostView(
     canManageTagFollows = false,
     followedTagSet = new Set(),
     questionnaireSession = null,
+    isPostOwner = false,
   } = {},
 ) {
   if (!target) {
@@ -205,6 +206,7 @@ export function renderPostView(
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
   const collectionMembership = renderCollectionPillList(post.collections, {
     emptyLabel: "This post is not part of any collection yet.",
+    canOpenCollections: isPostOwner,
   });
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
 
@@ -241,18 +243,27 @@ export function renderPostView(
       <p class="muted status-line" data-review-status></p>
     </article>
     ${renderSequencePanel(post.sequenceItems, post.id)}
-    ${
-      collectionMembership
-        ? `
-          <section class="card collection-panel">
-            <div class="row comments-panel-header">
-              <h3 class="ink-underline">Collections with this post</h3>
+    <section class="card collection-panel">
+      <div class="row comments-panel-header">
+        <h3 class="ink-underline">Collections with this post</h3>
+      </div>
+      ${collectionMembership}
+      ${
+        isPostOwner
+          ? `
+            <div class="collection-panel-actions">
+              <button
+                type="button"
+                class="button-ghost button-link-inline"
+                data-nav-href="./collections.html"
+              >
+                + Add to collection
+              </button>
             </div>
-            ${collectionMembership}
-          </section>
-        `
-        : ""
-    }
+          `
+          : ""
+      }
+    </section>
     <section class="card comments-panel" data-comments-panel>
       <div class="row comments-panel-header">
         <h3 class="ink-underline">Comments</h3>

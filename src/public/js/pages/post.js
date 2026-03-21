@@ -253,6 +253,7 @@ function renderCurrentPost() {
     canManageTagFollows: hasSession(),
     followedTagSet: new Set(state.followedTags),
     questionnaireSession: state.questionnaireSession,
+    isPostOwner: canEditPost,
   });
 
   refreshReviewActions();

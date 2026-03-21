@@ -35,10 +35,44 @@ export function renderPostContextLinks({ postId, sequence, collections } = {}) {
   `;
 }
 
-export function renderCollectionPillList(collections, { emptyLabel = "No collections yet." } = {}) {
-  if (!Array.isArray(collections) || collections.length === 0) {
+export function renderCollectionPillList(
+  collections,
+  { emptyLabel = "No collections yet.", canOpenCollections = false } = {},
+) {
+  const items = Array.isArray(collections) ? collections.filter(Boolean) : [];
+
+  if (items.length === 0) {
     return `<p class="muted">${escapeHtml(emptyLabel)}</p>`;
   }
 
-  return "";
+  return `
+    <ul class="collection-membership-list" aria-label="Collections with this post">
+      ${items
+        .map((collection) => {
+          const collectionId = String(collection.id ?? "").trim();
+
+          return `
+            <li class="collection-membership-item">
+              <div class="collection-membership-copy">
+                <span class="collection-item-title">${escapeHtml(collection.title ?? "Untitled collection")}</span>
+              </div>
+              ${
+                canOpenCollections && collectionId
+                  ? `
+                    <button
+                      type="button"
+                      class="button-ghost button-link-inline"
+                      data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}"
+                    >
+                      Open
+                    </button>
+                  `
+                  : ""
+              }
+            </li>
+          `;
+        })
+        .join("")}
+    </ul>
+  `;
 }
