@@ -23,13 +23,6 @@ export function formatDateTime(value) {
   return Number.isNaN(date.getTime()) ? "-" : dateFormatter.format(date);
 }
 
-export function parseCsvTags(rawValue) {
-  return String(rawValue ?? "")
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0);
-}
-
 function toFiniteNumber(value, fallback = 0) {
   const numberValue = Number(value);
   if (!Number.isFinite(numberValue)) {

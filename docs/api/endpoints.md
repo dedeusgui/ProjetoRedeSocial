@@ -153,7 +153,7 @@ Example request:
 - Body:
   - `title` (required string, non-empty, max `100`)
   - `content` (required string, non-empty, max `3000`)
-  - `tags` (optional array of strings)
+  - `tags` (optional array of strings, max `5`; each stored as canonical lowercase without leading `#`, with internal spaces normalized to hyphen, unsupported characters removed, duplicate normalized tags rejected, and max `10` characters)
   - `previousPostId` (optional ObjectId for a visible post by the same author)
   - `questionnaire` (optional object)
     - `title` (optional string, max `120`)
@@ -191,7 +191,7 @@ Example request:
 - Body (at least one field required):
   - `title` (optional string, non-empty, max `100`)
   - `content` (optional string, non-empty, max `3000`)
-  - `tags` (optional array of strings)
+  - `tags` (optional array of strings using the same normalization and limits as `POST /api/v1/posts`)
   - `questionnaire` (optional object or `null`)
   - `previousPostId` (optional ObjectId or `null`; send `null` to remove the sequence parent)
     - same structure and limits as `POST /api/v1/posts`
@@ -336,7 +336,7 @@ Example request:
 - Body:
   - `title` (required string, non-empty, max `120`)
   - `description` (optional string, max `500`)
-  - `tags` (optional array of strings, normalized to lowercase without leading `#`)
+  - `tags` (optional array of strings, max `5`; each stored as canonical lowercase without leading `#`, with internal spaces normalized to hyphen, unsupported characters removed, duplicate normalized tags rejected, and max `10` characters)
 - Success: `201`
 - Returns:
   - created collection detail payload
@@ -349,7 +349,7 @@ Example request:
 - Body (at least one field required):
   - `title` (optional string, non-empty, max `120`)
   - `description` (optional string, max `500`)
-  - `tags` (optional array of strings)
+  - `tags` (optional array of strings using the same normalization and limits as `POST /api/v1/collections`)
 - Success: `200`
 - Rules:
   - only collection owner can edit

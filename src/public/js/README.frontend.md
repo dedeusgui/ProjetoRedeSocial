@@ -21,9 +21,11 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `features/*/renderers.js`: receive data and return/update DOM.
 - `core/session.js`: token lifecycle and auth checks.
 - `core/formatters.js`: shared formatting utilities for percentages, dates, and labels used by renderers.
+- `core/content-tags.js`: shared parse/normalize/validate helpers for post and collection tag inputs, including the current 5-tag and 10-character normalized-tag limits.
 - `core/http-state.js`: normalize API error messages for UI.
 - `core/followed-tags.js`: shared normalization for followed-tag values.
 - `core/ui-text.js`: shared English UI copy for auth/session/status feedback.
+- `components/tag-input.js`: reusable realtime preview + validation UI for simple comma-separated tag inputs, including rule indicators, normalized-tag chips, and submit-time validation feedback.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.
 - `components/flash.js`: transient status/feedback messaging.
@@ -47,6 +49,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including debounced real-time search, the grouped `Posts` vs `Collections` segmented control with immediate switching, the authenticated followed-tags toggle, the lightweight active-filter banner below that row, the manual follow form, and the compact followed-tags dropdown; renderer code should stay limited to card, tag, sequence, collection context, and safe followed-tags dropdown markup.
 - Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; owner-facing shortcuts on public/feed collection surfaces may link back to `collections.html`, but creation and CRUD orchestration still belong there, including the lightweight native confirmation modal used for collection deletion.
 - Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
+- Keep post and collection tag entry on a single comma-separated text input backed by `core/content-tags.js` and `components/tag-input.js`; current shared limits are 5 tags per item and 10 characters per normalized tag.
 - Keep profile avatar management attached to the avatar itself on `profile.html`; `pages/profile.js` should orchestrate the contextual upload/remove menu and outside-click closing while reusing the existing avatar API methods.
 - Keep permanent account deletion on `profile.html` inside the existing native dialog pattern; require the exact uppercase word `DELETE`, clear the local session after success, and redirect away from the protected screen.
 - Keep admin-side user deletion on `profile.html` inside the same native danger-dialog language; fetch a backend preview first, keep `level_1` for low-impact accounts, and require exact `@username` confirmation for `level_2` once the backend flags posts, collections, or meaningful visible-comment activity.

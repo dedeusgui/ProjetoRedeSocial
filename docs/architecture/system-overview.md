@@ -6,6 +6,7 @@ The system is a social network API and static frontend focused on knowledge shar
 
 - chronological feed (no recommendation algorithm)
 - authenticated users can follow tags and open a separate chronological followed-tags feed
+- posts and collections use shared canonical content tags, limited to 5 tags per item and 10 characters per normalized tag
 - binary moderation decisions on posts (`approved`, `not_relevant`)
 - post-level approval percentage is public in feed and post detail
 - full user aggregate metrics remain private to authenticated profile/admin endpoints

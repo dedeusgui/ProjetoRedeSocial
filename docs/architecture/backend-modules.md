@@ -55,11 +55,13 @@ Shared account deletion is also composed in `src/server.js` and injected into th
 - `posts`: a post can also include one optional questionnaire stored directly on the post document.
 - `posts`: questionnaires are limited to 10 questions, each with 2 to 6 options and exactly one correct answer.
 - `posts`: post `title` is limited to 100 characters and `content` is limited to 3000 characters on create/edit; questionnaire title is limited to 120 characters.
+- `posts`: post tags are normalized to canonical lowercase values without leading `#`; internal spaces become hyphens, unsupported characters are removed, duplicate normalized tags are rejected, each tag is limited to 10 characters, and each post is limited to 5 tags.
 - `posts`: only the post author can add or remove post images.
 - `posts`: only the post author can create, edit, or remove a questionnaire because it follows post ownership rules.
 - `posts`: authenticated post deletion is allowed for post author, moderator, or admin.
 - `posts`: post detail author data is limited to avatar URL, username, and derived reputation tier.
 - `collections`: collection reads are public; create/edit/delete/item management are owner-only.
+- `collections`: collection tags follow the same canonical normalization used by post tags; duplicate normalized tags are rejected, each tag is limited to 10 characters, and each collection is limited to 5 tags.
 - `collections`: only the owner's visible posts may be added, duplicates are rejected, and reorder requests must contain the exact same post set.
 - `collections`: owner CRUD is exposed on a dedicated authenticated management page, while public collection browsing remains read-only.
 - `comments`: authenticated comment deletion is allowed for comment author, moderator, or admin.

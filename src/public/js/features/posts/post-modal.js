@@ -1,5 +1,7 @@
 ﻿import { createFlash } from "../../components/flash.js";
-import { escapeHtml, parseCsvTags } from "../../core/formatters.js";
+import { createTagInputController } from "../../components/tag-input.js";
+import { resolveContentTagValidationMessage } from "../../core/content-tags.js";
+import { escapeHtml } from "../../core/formatters.js";
 import { createQuestionnaireEditor } from "./questionnaire-editor.js";
 
 export function createPostModalController({
@@ -36,6 +38,11 @@ export function createPostModalController({
   const questionnairePanel = form?.querySelector("[data-post-questionnaire-panel]") ?? null;
   const questionnaireHelper = form?.querySelector("[data-post-questionnaire-helper]") ?? null;
   const mediaSummary = form?.querySelector("[data-post-media-summary]") ?? null;
+  const tagInput = form?.querySelector("[name='tags']") ?? null;
+  const tagInputController = createTagInputController({
+    input: tagInput,
+    noun: "tags",
+  });
 
   if (questionnaireToggle && questionnairePanel) {
     if (!questionnairePanel.id) {
@@ -176,7 +183,7 @@ export function createPostModalController({
     const payload = {
       title: String(formData.get("title") ?? "").trim(),
       content: String(formData.get("content") ?? "").trim(),
-      tags: parseCsvTags(formData.get("tags")),
+      tags: tagInputController.getNormalizedTags(),
     };
     const previousPostId = String(formData.get("previousPostId") ?? "").trim();
     const questionnaireSummary = questionnaireEditor.getSummary();
@@ -350,7 +357,9 @@ export function createPostModalController({
     }
 
     if (tagsField) {
-      tagsField.value = Array.isArray(post?.tags) ? post.tags.join(", ") : "";
+      const nextValue = Array.isArray(post?.tags) ? post.tags.join(", ") : "";
+      tagsField.value = nextValue;
+      tagInputController.setValue(nextValue);
     }
 
     state.existingMedia = Array.isArray(post?.media) ? [...post.media] : [];
@@ -387,6 +396,7 @@ export function createPostModalController({
       previousPostSelect.innerHTML = '<option value="">Standalone post</option>';
     }
 
+    tagInputController.sync();
     questionnaireEditor.reset();
     setQuestionnaireExpanded(false);
     syncControls();
@@ -445,6 +455,13 @@ export function createPostModalController({
   async function handleSubmit(event) {
     event.preventDefault();
     if (!form || state.isSubmitting) {
+      return;
+    }
+
+    const tagValidation = tagInputController.getValidation();
+    if (tagValidation.hasErrors) {
+      statusFlash.show(resolveContentTagValidationMessage(tagValidation), "error");
+      tagInputController.focus();
       return;
     }
 

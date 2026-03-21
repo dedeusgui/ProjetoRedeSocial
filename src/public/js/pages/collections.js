@@ -2,11 +2,12 @@ import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
+import { createTagInputController } from "../components/tag-input.js";
+import { resolveContentTagValidationMessage } from "../core/content-tags.js";
 import {
   normalizeFollowTagValue,
   normalizeFollowedTags,
 } from "../core/followed-tags.js";
-import { parseCsvTags } from "../core/formatters.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 import { clearSession, hasSession } from "../core/session.js";
 import { UI_TEXT } from "../core/ui-text.js";
@@ -49,6 +50,10 @@ const elements = {
 const statusFlash = createFlash(elements.status);
 const collectionModalFlash = createFlash(elements.collectionModalStatus);
 const deleteCollectionFlash = createFlash(elements.deleteCollectionStatus);
+const collectionTagInputController = createTagInputController({
+  input: elements.collectionModalForm?.querySelector("[name='tags']") ?? null,
+  noun: "tags",
+});
 
 const navbar = initNavbar({
   loginLink: elements.loginLink,
@@ -244,6 +249,7 @@ function resetCollectionModal() {
   }
 
   collectionModalFlash.clear();
+  collectionTagInputController.sync();
 }
 
 function openCollectionModalCreate() {
@@ -266,9 +272,9 @@ function openCollectionModalEdit(collectionId) {
   state.editingCollectionId = String(collectionId);
   elements.collectionModalForm.querySelector("[name='title']").value = collection.title ?? "";
   elements.collectionModalForm.querySelector("[name='description']").value = collection.description ?? "";
-  elements.collectionModalForm.querySelector("[name='tags']").value = Array.isArray(collection.tags)
-    ? collection.tags.join(", ")
-    : "";
+  collectionTagInputController.setValue(
+    Array.isArray(collection.tags) ? collection.tags.join(", ") : "",
+  );
 
   if (elements.collectionModalTitle) {
     elements.collectionModalTitle.textContent = "Edit collection";
@@ -347,11 +353,18 @@ async function submitCollectionModal(event) {
     return;
   }
 
+  const tagValidation = collectionTagInputController.getValidation();
+  if (tagValidation.hasErrors) {
+    collectionModalFlash.show(resolveContentTagValidationMessage(tagValidation), "error");
+    collectionTagInputController.focus();
+    return;
+  }
+
   const formData = new FormData(elements.collectionModalForm);
   const payload = {
     title: String(formData.get("title") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim(),
-    tags: parseCsvTags(formData.get("tags")),
+    tags: collectionTagInputController.getNormalizedTags(),
   };
 
   state.isManagingCollections = true;

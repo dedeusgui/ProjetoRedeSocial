@@ -2,6 +2,22 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-21
+
+### Changed
+
+- Unified post and collection tag handling around one canonical rule set: comma-separated input still feeds `tags[]`, but stored tags are now normalized to lowercase without leading `#`, internal spaces become hyphens, unsupported characters are removed, each tag is capped at `10` characters, and both posts and collections are capped at `5` tags.
+- Upgraded the shared post modal and the collection modal with realtime normalized-tag previews, visible rule indicators, and submit-blocking tag validation before API requests are sent.
+
+### Added
+
+- Added shared backend/frontend tag utilities plus a reusable frontend tag-input component so post and collection forms no longer duplicate parsing, normalization, or validation rules.
+- Added unit coverage for the shared tag utilities to keep frontend and backend limits aligned.
+
+### Docs
+
+- Updated API, backend architecture, frontend architecture, and frontend guide docs to describe the unified post/collection tag rules and the new realtime validation flow.
+
 ## 2026-03-20
 
 ### Fixed
