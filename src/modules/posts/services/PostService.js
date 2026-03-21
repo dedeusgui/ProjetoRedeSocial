@@ -13,6 +13,7 @@ import {
   validateQuestionnaireShape,
 } from "../../../common/posts/questionnaire.js";
 import { buildSequenceSummary, resolvePreviousPostId } from "../../../common/posts/sequence.js";
+import { validateContentTags } from "../../../common/tags/contentTags.js";
 import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
@@ -82,8 +83,35 @@ class PostService {
     return summary;
   }
 
+  resolvePostAuthorId(post) {
+    if (!post) {
+      return null;
+    }
+
+    const authorId = post.authorId ?? null;
+
+    if (authorId === null || authorId === undefined) {
+      return null;
+    }
+
+    if (typeof authorId === "string") {
+      return authorId;
+    }
+
+    if (authorId._id !== undefined && authorId._id !== null) {
+      return authorId._id;
+    }
+
+    if (typeof authorId.toHexString === "function") {
+      return authorId;
+    }
+
+    return authorId.id ?? authorId;
+  }
+
   ensurePostOwner(post, requester, message) {
-    const isOwner = String(post.authorId) === String(requester?.id);
+    const ownerId = this.resolvePostAuthorId(post);
+    const isOwner = String(ownerId ?? "") === String(requester?.id ?? "");
     if (!isOwner) {
       throw new AppError(message, "FORBIDDEN", 403);
     }
@@ -145,6 +173,58 @@ class PostService {
 
     const normalized = String(value).trim();
     return normalized.length > 0 ? normalized : null;
+  }
+
+  normalizeTags(tags) {
+    const analysis = validateContentTags(tags);
+
+    if (analysis.tagCount > analysis.maxItems) {
+      throw new AppError(
+        `A post can include at most ${analysis.maxItems} tags.`,
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tags",
+          maxItems: analysis.maxItems,
+          tagCount: analysis.tagCount,
+          overflowTags: analysis.overflowTags,
+        },
+      );
+    }
+
+    if (analysis.tooLongTags.length > 0) {
+      throw new AppError(
+        `Each post tag must be at most ${analysis.maxLength} characters.`,
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tags",
+          maxLength: analysis.maxLength,
+          tooLongTags: analysis.tooLongTags,
+        },
+      );
+    }
+
+    if (analysis.duplicateTags.length > 0) {
+      throw new AppError("Post tags must be unique.", "VALIDATION_ERROR", 400, {
+        field: "tags",
+        duplicateTags: analysis.duplicateTags,
+      });
+    }
+
+    if (analysis.emptyTags.length > 0) {
+      throw new AppError(
+        "Each post tag must contain at least one letter or number after normalization.",
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tags",
+          emptyTags: analysis.emptyTags,
+        },
+      );
+    }
+
+    return analysis.normalizedTags;
   }
 
   async validatePreviousPostId({ authorId, currentPostId = null, previousPostId }) {
@@ -294,11 +374,7 @@ class PostService {
       authorId,
       title: payload.title.trim(),
       content: payload.content.trim(),
-      tags: Array.isArray(payload.tags)
-        ? payload.tags
-            .map((tag) => String(tag).trim())
-            .filter((tag) => tag.length > 0)
-        : [],
+      tags: this.normalizeTags(payload.tags),
       media: [],
       questionnaire: validateQuestionnaireShape(payload.questionnaire) ?? null,
       sequence: previousPostId ? { previousPostId } : null,
@@ -326,9 +402,7 @@ class PostService {
     }
 
     if (payload.tags !== undefined) {
-      updates.tags = payload.tags
-        .map((tag) => String(tag).trim())
-        .filter((tag) => tag.length > 0);
+      updates.tags = this.normalizeTags(payload.tags);
     }
 
     if (payload.questionnaire !== undefined) {
@@ -508,7 +582,7 @@ class PostService {
 
   async updatePostByRequester(postId, requester, payload) {
     ensureObjectId(postId, "postId");
-    const post = await this.postRepository.findById(postId);
+    const post = await this.postRepository.findByIdOrNull(postId);
     if (!post) {
       throw new AppError("Post not found.", "NOT_FOUND", 404);
     }

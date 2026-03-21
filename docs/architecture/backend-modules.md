@@ -10,7 +10,7 @@
 | `comments` | `GET /posts/:id/comments`, `POST /posts/:id/comments`, `DELETE /comments/:id` | Create visible comments, list visible comments by post with public author summaries, edit comments by owner, delete comments by owner/moderator/admin | `CommentRepository` |
 | `collections` | `GET /collections/:id`, `GET /me/collections`, `POST /collections`, `PATCH /collections/:id`, `DELETE /collections/:id`, `POST /collections/:id/items`, `DELETE /collections/:id/items/:postId`, `PATCH /collections/:id/items/reorder` | Create public collections, manage ordered collection items, validate owner-only collection rules, preserve manual item order, and resolve collection summaries/search matches for other modules | `CollectionRepository`, `Post` model |
 | `feed` | `GET /feed`, `GET /feed/following`, `GET /collections/feed`, `GET /collections/feed/following` | Return chronological published posts with cursor pagination and optional search, including public author summaries, optional questionnaire payload, media, sequence summaries, and collection summaries; return a chronological followed-tags post feed for authenticated users; provide chronological collection-feed groundwork with optional search and followed-tag filtering by collection tags | `FeedRepository`, `UserService`, `CollectionService` |
-| `admin` | `GET /admin/users`, `GET /admin/moderator-eligibility`, `PATCH /admin/users/:id/moderator`, `DELETE /admin/users/:id` | Sync bootstrap admins from environment, list users/roles, manage moderator eligibility/promotion, and delete users through the shared account-deletion flow | `AdminRepository`, shared account deletion service, `roles` middleware |
+| `admin` | `GET /admin/users`, `GET /admin/users/:id/delete-preview`, `GET /admin/moderator-eligibility`, `PATCH /admin/users/:id/moderator`, `DELETE /admin/users/:id` | Sync bootstrap admins from environment, list users/roles, provide admin-side user-deletion impact previews, manage moderator eligibility/promotion, and delete standard users through the shared account-deletion flow | `AdminRepository`, shared account deletion service, `roles` middleware |
 | `moderation` | `POST /posts/:id/review` | Upsert review, recompute post trend + approval percentages, recompute author private metrics | `ModerationRepository`, `PostService` |
 
 ## Composition Flow
@@ -55,17 +55,22 @@ Shared account deletion is also composed in `src/server.js` and injected into th
 - `posts`: a post can also include one optional questionnaire stored directly on the post document.
 - `posts`: questionnaires are limited to 10 questions, each with 2 to 6 options and exactly one correct answer.
 - `posts`: post `title` is limited to 100 characters and `content` is limited to 3000 characters on create/edit; questionnaire title is limited to 120 characters.
+- `posts`: post tags are normalized to canonical lowercase values without leading `#`; internal spaces become hyphens, unsupported characters are removed, duplicate normalized tags are rejected, each tag is limited to 10 characters, and each post is limited to 5 tags.
 - `posts`: only the post author can add or remove post images.
 - `posts`: only the post author can create, edit, or remove a questionnaire because it follows post ownership rules.
 - `posts`: authenticated post deletion is allowed for post author, moderator, or admin.
 - `posts`: post detail author data is limited to avatar URL, username, and derived reputation tier.
 - `collections`: collection reads are public; create/edit/delete/item management are owner-only.
+- `collections`: collection tags follow the same canonical normalization used by post tags; duplicate normalized tags are rejected, each tag is limited to 10 characters, and each collection is limited to 5 tags.
 - `collections`: only the owner's visible posts may be added, duplicates are rejected, and reorder requests must contain the exact same post set.
 - `collections`: owner CRUD is exposed on a dedicated authenticated management page, while public collection browsing remains read-only.
 - `comments`: authenticated comment deletion is allowed for comment author, moderator, or admin.
 - `comments`: comment author data is limited to avatar URL, username, and derived reputation tier.
 - `admin`: `admin` role is bootstrap-managed through `ADMIN_EMAILS`; API can only grant/revoke `moderator`.
 - `admin`: moderator eligibility requires minimum posts, minimum account age, and minimum approval percentage (`privateMetrics.score`) of 40%.
+- `admin`: only standard users (`role: user`) can be deleted through admin tools; moderators and admins are blocked.
+- `admin`: admin delete preview classifies the modal as `level_1` when the target user has no posts, no collections, and stays below the visible-comment thresholds.
+- `admin`: visible comments promote the delete preview to `level_2` only when the target user has `10+` visible comments total or `5+` visible comments in the last `30` days.
 - `admin`: deleting a user removes authored collections, removes authored posts from all remaining collections, deletes avatar/post-media files, and recalculates remaining derived stats through the shared account-deletion flow.
 - `moderation`: any authenticated user can review posts, including own posts.
 - `moderation`: trend is derived from post moderation percentages (`approvalPercentage - notRelevantPercentage`):

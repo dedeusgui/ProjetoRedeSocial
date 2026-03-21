@@ -153,7 +153,7 @@ Example request:
 - Body:
   - `title` (required string, non-empty, max `100`)
   - `content` (required string, non-empty, max `3000`)
-  - `tags` (optional array of strings)
+  - `tags` (optional array of strings, max `5`; each stored as canonical lowercase without leading `#`, with internal spaces normalized to hyphen, unsupported characters removed, duplicate normalized tags rejected, and max `10` characters)
   - `previousPostId` (optional ObjectId for a visible post by the same author)
   - `questionnaire` (optional object)
     - `title` (optional string, max `120`)
@@ -191,7 +191,7 @@ Example request:
 - Body (at least one field required):
   - `title` (optional string, non-empty, max `100`)
   - `content` (optional string, non-empty, max `3000`)
-  - `tags` (optional array of strings)
+  - `tags` (optional array of strings using the same normalization and limits as `POST /api/v1/posts`)
   - `questionnaire` (optional object or `null`)
   - `previousPostId` (optional ObjectId or `null`; send `null` to remove the sequence parent)
     - same structure and limits as `POST /api/v1/posts`
@@ -336,7 +336,7 @@ Example request:
 - Body:
   - `title` (required string, non-empty, max `120`)
   - `description` (optional string, max `500`)
-  - `tags` (optional array of strings, normalized to lowercase without leading `#`)
+  - `tags` (optional array of strings, max `5`; each stored as canonical lowercase without leading `#`, with internal spaces normalized to hyphen, unsupported characters removed, duplicate normalized tags rejected, and max `10` characters)
 - Success: `201`
 - Returns:
   - created collection detail payload
@@ -349,7 +349,7 @@ Example request:
 - Body (at least one field required):
   - `title` (optional string, non-empty, max `120`)
   - `description` (optional string, max `500`)
-  - `tags` (optional array of strings)
+  - `tags` (optional array of strings using the same normalization and limits as `POST /api/v1/collections`)
 - Success: `200`
 - Rules:
   - only collection owner can edit
@@ -472,6 +472,40 @@ Example request:
     - `postCount`
     - `createdAt`
 
+### `GET /api/v1/admin/users/:id/delete-preview`
+
+- Auth: required (`admin`)
+- Path params:
+  - `id` must be a valid ObjectId
+- Success: `200`
+- Returns:
+  - `user`
+    - `id`
+    - `username`
+    - `email`
+    - `role`
+    - `score`
+    - `totalReviews`
+    - `postCount`
+    - `createdAt`
+  - `canDelete`
+  - `blockingReason` (`string | null`)
+  - `riskLevel` (`level_1 | level_2`)
+  - `impact`
+    - `postCount`
+    - `collectionCount`
+    - `commentCount`
+    - `reviewsReceivedCount`
+    - `reviewsWrittenCount`
+- Rules:
+  - only `role: user` is deletable through the admin tools
+  - `moderator` and `admin` accounts return `canDelete: false`
+  - `level_2` is returned when `postCount` or `collectionCount` is greater than `0`
+  - `level_2` is also returned when the user reaches comment-activity thresholds using visible comments only:
+    - `10+` visible comments total, or
+    - `5+` visible comments in the last `30` days
+  - `impact.commentCount` remains the authored-comment count surfaced to the modal; the threshold calculation is handled server-side
+
 ### `GET /api/v1/admin/moderator-eligibility`
 
 - Auth: required (`admin`)
@@ -504,7 +538,8 @@ Example request:
 - Success: `200`
 - Rules:
   - admins cannot delete their own account
-  - config-managed admins cannot be deleted
+  - only `role: user` can be deleted by this endpoint
+  - `moderator` and `admin` accounts cannot be deleted
 - Side effects:
   - deletes user-authored posts, comments, and reviews
   - deletes authored collections

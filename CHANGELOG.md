@@ -2,6 +2,72 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-21
+
+### Changed
+
+- Unified post and collection tag handling around one canonical rule set: comma-separated input still feeds `tags[]`, but stored tags are now normalized to lowercase without leading `#`, internal spaces become hyphens, unsupported characters are removed, each tag is capped at `10` characters, and both posts and collections are capped at `5` tags.
+- Upgraded the shared post modal and the collection modal with realtime normalized-tag previews, visible rule indicators, and submit-blocking tag validation before API requests are sent.
+- Changed the shared post modal so repeated image selections now accumulate up to 4 temporary uploads with local previews and per-item removal, while edit mode keeps saved images ahead of newly selected ones.
+- Reframed shared post-image surfaces around a balanced `4:3` crop so feed previews and post-detail gallery items no longer look flattened when users upload vertical or square images.
+- Tightened the post-detail image gallery into a stable two-column grid with a one-column fallback on narrow screens so multiple images read as one cohesive block instead of loose individual tiles.
+- Changed feed post-image previews so posts with multiple saved images now show a compact `+N` overlay on the first preview instead of helper text below the image.
+
+### Added
+
+- Added shared backend/frontend tag utilities plus a reusable frontend tag-input component so post and collection forms no longer duplicate parsing, normalization, or validation rules.
+- Added unit coverage for the shared tag utilities to keep frontend and backend limits aligned.
+
+### Docs
+
+- Updated API, backend architecture, frontend architecture, and frontend guide docs to describe the unified post/collection tag rules and the new realtime validation flow.
+
+## 2026-03-20
+
+### Fixed
+
+- Restored `PATCH /api/v1/posts/:id` for the real post author after a backend ownership-check regression in the post edit flow started reading a populated `authorId` during the author comparison.
+
+### Added
+
+- Added `GET /api/v1/admin/users/:id/delete-preview` so the admin tools can load a risk-gated deletion summary before any destructive action runs.
+
+### Changed
+
+- Replaced the direct `Delete user` action in the profile admin tools with a native confirmation modal that now has two levels: summary-only for low-impact accounts, and impact-preview plus exact `@username` confirmation for users with posts, collections, or meaningful visible-comment activity.
+- Narrowed admin-side account deletion so only standard users (`role: user`) can be deleted from the admin tools; `moderator` and `admin` accounts no longer expose that action.
+- Added a hybrid visible-comment threshold to the admin delete preview so active non-posting users can still fall into `level_2` without forcing the strong modal for only a few comments.
+
+### Docs
+
+- Updated API, backend architecture, frontend architecture, and frontend guide docs to describe the new admin delete-preview endpoint and the two-level admin deletion modal.
+
+## 2026-03-19
+
+### Fixed
+
+- Restored tag follow/unfollow actions on `collection.html`, so authenticated users can manage followed tags directly from the public collection detail page instead of only from feed cards or post detail.
+- Restored tag follow/unfollow actions on `collections.html`, so owner collection cards in `My collections` now match the collection feed and collection detail behavior.
+- Removed collection navigation buttons from post-context surfaces, so posts still show collection membership but no longer use embedded links to open `collection.html`.
+- Removed the remaining static collection pills from post and collection surfaces, including `Collection(s)`, collection-title pills, and `Manual order`, without changing collection CRUD or navigation entry points.
+
+### Changed
+
+- Added an owner-only `Manage collection` shortcut to public collection cards and the public collection detail hero, both routing to `collections.html` without adding a new route or inline CRUD surface.
+- Refined the owner collection-card action hierarchy on `collections.html` so `Open collection` stays primary, `Edit` remains secondary, and `Delete` sits in its own destructive row instead of sharing equal visual weight.
+- Tightened the spacing and divider around the owner collection-card `Delete` row so the destructive action stays separated without feeling detached from `Open collection`, `Edit`, and `Add a post`.
+- Added a lightweight native confirmation modal for collection deletion on `collections.html`, with dynamic impact copy, safer default focus on `Cancel`, and button-level loading state while the existing delete API runs.
+- Compacted the collection-delete confirmation modal into a narrower, denser danger dialog so it reads less like a wide banner and more like the existing account-delete modal.
+
+## 2026-03-18
+
+### Fixed
+
+- Mirrored the backend comment-length rule on `post.html` so both the comment composer and inline edit textarea now stop at 2000 characters and show a simple live counter before any invalid request reaches the API.
+- Refined `feed.html` responsiveness for small phones so the segmented `Posts` / `Collections` switch stays on its own row and the `Followed tags` toggle stays on a separate full-width row across the mobile S through mobile L range, while the banner and followed-tags dropdown remain readable without horizontal squeeze or overflow.
+- Restored the `Confirm password` field and its frontend hooks on `index.html` so account creation once again blocks submission locally when the repeated password does not match.
+- Fixed the owner collections `Add to collection` flow so the CTA stays disabled until a post is selected, re-disables when the selection is cleared, and shows explicit feedback instead of failing silently when triggered without a valid post.
+
 ## 2026-03-17
 
 ### Changed

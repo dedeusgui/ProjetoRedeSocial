@@ -161,6 +161,14 @@ class AccountDeletionService {
       );
     }
 
+    if (user.role !== "user") {
+      throw new AppError(
+        "Only standard users can be deleted from the admin tools.",
+        "FORBIDDEN",
+        403,
+      );
+    }
+
     return this.performDeletion(user);
   }
 }

@@ -103,7 +103,6 @@ export function renderProfileView(
 
         <div class="metrics-grid">
           <article class="card metric-box">
-            <h3 class="ink-underline">Private moderation metrics</h3>
             <p class="metric-box-value"><strong>Approval: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
             <p class="muted">Reviews received: ${escapeHtml(totalReviews)}</p>
           </article>

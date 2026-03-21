@@ -2,13 +2,12 @@ import AppError from "../../../common/errors/AppError.js";
 import { formatPostMediaCollection } from "../../../common/media/postMedia.js";
 import { formatQuestionnaire } from "../../../common/posts/questionnaire.js";
 import { buildSequenceSummary } from "../../../common/posts/sequence.js";
-import { normalizeLooseTagValues } from "../../../common/tags/followedTags.js";
+import { validateContentTags } from "../../../common/tags/contentTags.js";
 import { buildPublicAuthorSummary } from "../../../common/users/publicAuthor.js";
 import { ensureObjectId, requireFields } from "../../../common/validation/index.js";
 
 const COLLECTION_TITLE_MAX_LENGTH = 120;
 const COLLECTION_DESCRIPTION_MAX_LENGTH = 500;
-const COLLECTION_MAX_TAGS = 12;
 
 class CollectionService {
   constructor(collectionRepository) {
@@ -23,20 +22,55 @@ class CollectionService {
   }
 
   normalizeTags(tags) {
-    const normalized = normalizeLooseTagValues(tags);
-    if (normalized.length > COLLECTION_MAX_TAGS) {
+    const analysis = validateContentTags(tags);
+
+    if (analysis.tagCount > analysis.maxItems) {
       throw new AppError(
-        `A collection can include at most ${COLLECTION_MAX_TAGS} tags.`,
+        `A collection can include at most ${analysis.maxItems} tags.`,
         "VALIDATION_ERROR",
         400,
         {
           field: "tags",
-          maxItems: COLLECTION_MAX_TAGS,
+          maxItems: analysis.maxItems,
+          tagCount: analysis.tagCount,
+          overflowTags: analysis.overflowTags,
         },
       );
     }
 
-    return normalized;
+    if (analysis.tooLongTags.length > 0) {
+      throw new AppError(
+        `Each collection tag must be at most ${analysis.maxLength} characters.`,
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tags",
+          maxLength: analysis.maxLength,
+          tooLongTags: analysis.tooLongTags,
+        },
+      );
+    }
+
+    if (analysis.duplicateTags.length > 0) {
+      throw new AppError("Collection tags must be unique.", "VALIDATION_ERROR", 400, {
+        field: "tags",
+        duplicateTags: analysis.duplicateTags,
+      });
+    }
+
+    if (analysis.emptyTags.length > 0) {
+      throw new AppError(
+        "Each collection tag must contain at least one letter or number after normalization.",
+        "VALIDATION_ERROR",
+        400,
+        {
+          field: "tags",
+          emptyTags: analysis.emptyTags,
+        },
+      );
+    }
+
+    return analysis.normalizedTags;
   }
 
   validateCollectionFields(payload, { partial = false } = {}) {

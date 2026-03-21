@@ -1,5 +1,12 @@
 ﻿import { createFlash } from "../../components/flash.js";
-import { escapeHtml, parseCsvTags } from "../../core/formatters.js";
+import { createTagInputController } from "../../components/tag-input.js";
+import { resolveContentTagValidationMessage } from "../../core/content-tags.js";
+import { escapeHtml } from "../../core/formatters.js";
+import {
+  POST_MEDIA_MAX_ITEMS,
+  appendPostImageSelection,
+  getRemainingPostImageSlots,
+} from "./media-selection.js";
 import { createQuestionnaireEditor } from "./questionnaire-editor.js";
 
 export function createPostModalController({
@@ -36,6 +43,11 @@ export function createPostModalController({
   const questionnairePanel = form?.querySelector("[data-post-questionnaire-panel]") ?? null;
   const questionnaireHelper = form?.querySelector("[data-post-questionnaire-helper]") ?? null;
   const mediaSummary = form?.querySelector("[data-post-media-summary]") ?? null;
+  const tagInput = form?.querySelector("[name='tags']") ?? null;
+  const tagInputController = createTagInputController({
+    input: tagInput,
+    noun: "tags",
+  });
 
   if (questionnaireToggle && questionnairePanel) {
     if (!questionnairePanel.id) {
@@ -51,10 +63,12 @@ export function createPostModalController({
     isSubmitting: false,
     isRemovingMedia: false,
     existingMedia: [],
+    selectedMedia: [],
     hadExistingQuestionnaire: false,
     hadExistingPreviousPost: false,
     ownedPosts: [],
   };
+  let nextSelectedMediaId = 0;
 
   function setQuestionnaireExpanded(shouldExpand = false) {
     const isExpanded = Boolean(shouldExpand);
@@ -176,7 +190,7 @@ export function createPostModalController({
     const payload = {
       title: String(formData.get("title") ?? "").trim(),
       content: String(formData.get("content") ?? "").trim(),
-      tags: parseCsvTags(formData.get("tags")),
+      tags: tagInputController.getNormalizedTags(),
     };
     const previousPostId = String(formData.get("previousPostId") ?? "").trim();
     const questionnaireSummary = questionnaireEditor.getSummary();
@@ -208,7 +222,38 @@ export function createPostModalController({
   }
 
   function getSelectedFiles() {
-    return Array.from(mediaInput?.files ?? []);
+    return state.selectedMedia.map((item) => item.file);
+  }
+
+  function getRemainingMediaSlots() {
+    return getRemainingPostImageSlots({
+      occupiedSlots: state.existingMedia.length,
+      selectedCount: state.selectedMedia.length,
+      maxItems: POST_MEDIA_MAX_ITEMS,
+    });
+  }
+
+  function createSelectedMediaItem(file) {
+    return {
+      id: String(nextSelectedMediaId++),
+      file,
+      previewUrl: URL.createObjectURL(file),
+    };
+  }
+
+  function revokeSelectedMediaItem(item) {
+    if (item?.previewUrl) {
+      URL.revokeObjectURL(item.previewUrl);
+    }
+  }
+
+  function clearSelectedMedia() {
+    state.selectedMedia.forEach(revokeSelectedMediaItem);
+    state.selectedMedia = [];
+
+    if (mediaInput) {
+      mediaInput.value = "";
+    }
   }
 
   function renderMediaSummary(files) {
@@ -216,17 +261,35 @@ export function createPostModalController({
       return;
     }
 
-    if (!Array.isArray(files) || files.length === 0) {
-      mediaSummary.textContent = "No images selected.";
+    const safeFiles = Array.isArray(files) ? files : [];
+    const totalCount = state.existingMedia.length + safeFiles.length;
+    const remainingSlots = getRemainingMediaSlots();
+
+    if (safeFiles.length === 0) {
+      if (totalCount === 0) {
+        mediaSummary.textContent = `No images selected. Up to ${POST_MEDIA_MAX_ITEMS} images.`;
+        return;
+      }
+
+      mediaSummary.textContent =
+        remainingSlots > 0
+          ? `${totalCount} of ${POST_MEDIA_MAX_ITEMS} image slots filled. ${remainingSlots} left.`
+          : `${POST_MEDIA_MAX_ITEMS} of ${POST_MEDIA_MAX_ITEMS} image slots filled.`;
       return;
     }
 
-    if (files.length === 1) {
-      mediaSummary.textContent = files[0].name;
+    if (safeFiles.length === 1) {
+      mediaSummary.textContent =
+        remainingSlots > 0
+          ? `${safeFiles[0].name}. ${remainingSlots} slot${remainingSlots === 1 ? "" : "s"} left.`
+          : `${safeFiles[0].name}. Image limit reached.`;
       return;
     }
 
-    mediaSummary.textContent = `${files.length} images selected.`;
+    mediaSummary.textContent =
+      remainingSlots > 0
+        ? `${safeFiles.length} new images selected. ${remainingSlots} slot${remainingSlots === 1 ? "" : "s"} left.`
+        : `${safeFiles.length} new images selected. Image limit reached.`;
   }
 
   function renderSelectedMedia() {
@@ -234,10 +297,9 @@ export function createPostModalController({
       return;
     }
 
-    const files = getSelectedFiles();
-    renderMediaSummary(files);
+    renderMediaSummary(getSelectedFiles());
 
-    if (files.length === 0) {
+    if (state.selectedMedia.length === 0) {
       selectedMediaTarget.innerHTML = "<p class='muted'>No new images selected.</p>";
       return;
     }
@@ -245,14 +307,29 @@ export function createPostModalController({
     selectedMediaTarget.innerHTML = `
       <h4 class="modal-media-heading">New uploads</h4>
       <ul class="modal-media-list" aria-label="New selected images">
-        ${files
+        ${state.selectedMedia
           .map(
-            (file) => `
-              <li class="modal-media-item modal-media-item-simple">
+            (item) => `
+              <li class="modal-media-item">
+                <img
+                  class="modal-media-thumb"
+                  src="${escapeHtml(item.previewUrl)}"
+                  alt="${escapeHtml(item.file.name)}"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <div class="modal-media-copy">
-                  <strong>${escapeHtml(file.name)}</strong>
-                  <span class="muted">${escapeHtml(`${Math.max(1, Math.round(file.size / 1024))} KB`)}</span>
+                  <strong>${escapeHtml(item.file.name)}</strong>
+                  <span class="muted">${escapeHtml(`${Math.max(1, Math.round(item.file.size / 1024))} KB`)}</span>
                 </div>
+                <button
+                  type="button"
+                  class="button-ghost"
+                  data-remove-selected-post-media-id="${escapeHtml(item.id)}"
+                  ${state.isSubmitting || state.isRemovingMedia ? "disabled" : ""}
+                >
+                  Remove
+                </button>
               </li>
             `,
           )
@@ -291,6 +368,7 @@ export function createPostModalController({
                   src="${escapeHtml(media.url ?? "")}"
                   alt="${escapeHtml(media.originalName ?? "Post image")}"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div class="modal-media-copy">
                   <strong>${escapeHtml(media.originalName ?? "Image")}</strong>
@@ -314,7 +392,8 @@ export function createPostModalController({
 
   function syncControls() {
     if (mediaInput) {
-      mediaInput.disabled = state.isSubmitting || state.isRemovingMedia;
+      mediaInput.disabled =
+        state.isSubmitting || state.isRemovingMedia || getRemainingMediaSlots() === 0;
     }
 
     if (previousPostSelect) {
@@ -350,9 +429,12 @@ export function createPostModalController({
     }
 
     if (tagsField) {
-      tagsField.value = Array.isArray(post?.tags) ? post.tags.join(", ") : "";
+      const nextValue = Array.isArray(post?.tags) ? post.tags.join(", ") : "";
+      tagsField.value = nextValue;
+      tagInputController.setValue(nextValue);
     }
 
+    clearSelectedMedia();
     state.existingMedia = Array.isArray(post?.media) ? [...post.media] : [];
     state.hadExistingQuestionnaire = Boolean(post?.questionnaire);
     state.hadExistingPreviousPost = Boolean(post?.sequence?.previousPostId);
@@ -374,19 +456,17 @@ export function createPostModalController({
     state.isSubmitting = false;
     state.isRemovingMedia = false;
     state.existingMedia = [];
+    clearSelectedMedia();
     state.hadExistingQuestionnaire = false;
     state.hadExistingPreviousPost = false;
     setMode("create");
     statusFlash.clear();
 
-    if (mediaInput) {
-      mediaInput.value = "";
-    }
-
     if (previousPostSelect) {
       previousPostSelect.innerHTML = '<option value="">Standalone post</option>';
     }
 
+    tagInputController.sync();
     questionnaireEditor.reset();
     setQuestionnaireExpanded(false);
     syncControls();
@@ -448,6 +528,13 @@ export function createPostModalController({
       return;
     }
 
+    const tagValidation = tagInputController.getValidation();
+    if (tagValidation.hasErrors) {
+      statusFlash.show(resolveContentTagValidationMessage(tagValidation), "error");
+      tagInputController.focus();
+      return;
+    }
+
     const payload = buildPayload();
     const selectedFiles = getSelectedFiles();
     state.isSubmitting = true;
@@ -480,9 +567,7 @@ export function createPostModalController({
         try {
           mediaResult = await uploadPostMedia(targetPostId, selectedFiles);
           state.existingMedia = Array.isArray(mediaResult?.media) ? [...mediaResult.media] : [];
-          if (mediaInput) {
-            mediaInput.value = "";
-          }
+          clearSelectedMedia();
           syncControls();
           if (typeof onMediaChanged === "function") {
             await onMediaChanged({
@@ -565,6 +650,67 @@ export function createPostModalController({
     }
   }
 
+  function handleRemoveSelectedMedia(event) {
+    const button = event.target.closest("[data-remove-selected-post-media-id]");
+    if (!button || state.isSubmitting || state.isRemovingMedia) {
+      return;
+    }
+
+    const selectedMediaId = String(button.dataset.removeSelectedPostMediaId ?? "").trim();
+    if (!selectedMediaId) {
+      return;
+    }
+
+    const selectedMediaItem = state.selectedMedia.find((item) => item.id === selectedMediaId);
+    if (!selectedMediaItem) {
+      return;
+    }
+
+    revokeSelectedMediaItem(selectedMediaItem);
+    state.selectedMedia = state.selectedMedia.filter((item) => item.id !== selectedMediaId);
+    syncControls();
+  }
+
+  function handleMediaSelectionChange(event) {
+    const incomingFiles = Array.from(event.target?.files ?? []);
+    if (incomingFiles.length === 0) {
+      return;
+    }
+
+    const selectionResult = appendPostImageSelection(
+      getSelectedFiles(),
+      incomingFiles,
+      {
+        occupiedSlots: state.existingMedia.length,
+        maxItems: POST_MEDIA_MAX_ITEMS,
+      },
+    );
+
+    if (selectionResult.acceptedIncomingFiles.length > 0) {
+      state.selectedMedia = [
+        ...state.selectedMedia,
+        ...selectionResult.acceptedIncomingFiles.map(createSelectedMediaItem),
+      ];
+    }
+
+    if (mediaInput) {
+      mediaInput.value = "";
+    }
+
+    if (selectionResult.invalidTypeCount > 0 && selectionResult.overflowCount > 0) {
+      statusFlash.show(
+        `Some files were ignored. Only images are allowed, and each post supports up to ${POST_MEDIA_MAX_ITEMS} images.`,
+        "warn",
+      );
+    } else if (selectionResult.invalidTypeCount > 0) {
+      statusFlash.show("Only image files can be selected here.", "warn");
+    } else if (selectionResult.overflowCount > 0) {
+      statusFlash.show(`Each post supports up to ${POST_MEDIA_MAX_ITEMS} images.`, "warn");
+    }
+
+    syncControls();
+  }
+
   function bindEvents() {
     if (openCreateButton) {
       openCreateButton.addEventListener("click", openPostModalCreate);
@@ -575,7 +721,7 @@ export function createPostModalController({
     }
 
     if (mediaInput) {
-      mediaInput.addEventListener("change", renderSelectedMedia);
+      mediaInput.addEventListener("change", handleMediaSelectionChange);
     }
 
     if (questionnaireToggle) {
@@ -610,6 +756,10 @@ export function createPostModalController({
 
     if (existingMediaTarget) {
       existingMediaTarget.addEventListener("click", handleRemoveExistingMedia);
+    }
+
+    if (selectedMediaTarget) {
+      selectedMediaTarget.addEventListener("click", handleRemoveSelectedMedia);
     }
   }
 

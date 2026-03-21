@@ -4,6 +4,10 @@ import {
   normalizeFollowTagValue,
 } from "../../core/followed-tags.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
+import {
+  COMMENT_MAX_LENGTH,
+  formatCommentCharacterCount,
+} from "./constants.js";
 import { renderCollectionPillList, renderPostContextLinks } from "../posts/context-renderers.js";
 import { renderQuestionnaireDetail } from "../questionnaire/renderers.js";
 
@@ -24,6 +28,7 @@ function renderPostMedia(media, fallbackText) {
                 src="${escapeHtml(item.url)}"
                 alt="${escapeHtml(item.originalName ?? fallbackText ?? "Post image")}"
                 loading="lazy"
+                decoding="async"
               />
             </figure>
           `,
@@ -94,9 +99,13 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
               <textarea
                 class="comment-edit-input"
                 rows="4"
+                maxlength="${COMMENT_MAX_LENGTH}"
                 data-comment-edit-input-id="${escapeHtml(comment.id)}"
               >${escapeHtml(draft)}</textarea>
             </label>
+            <p class="muted" data-comment-edit-counter-id="${escapeHtml(comment.id)}">
+              ${escapeHtml(formatCommentCharacterCount(draft.length))}
+            </p>
             <div class="review-actions review-actions-inline">
               <button
                 type="button"
@@ -194,6 +203,9 @@ export function renderPostView(
 
   const comments = Array.isArray(post.comments) ? post.comments : [];
   const tags = Array.isArray(post.tags) && post.tags.length > 0 ? post.tags : [];
+  const collectionMembership = renderCollectionPillList(post.collections, {
+    emptyLabel: "This post is not part of any collection yet.",
+  });
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
 
   target.innerHTML = `
@@ -229,14 +241,18 @@ export function renderPostView(
       <p class="muted status-line" data-review-status></p>
     </article>
     ${renderSequencePanel(post.sequenceItems, post.id)}
-    <section class="card collection-panel">
-      <div class="row comments-panel-header">
-        <h3 class="ink-underline">Collections with this post</h3>
-      </div>
-      ${renderCollectionPillList(post.collections, {
-        emptyLabel: "This post is not part of any collection yet.",
-      })}
-    </section>
+    ${
+      collectionMembership
+        ? `
+          <section class="card collection-panel">
+            <div class="row comments-panel-header">
+              <h3 class="ink-underline">Collections with this post</h3>
+            </div>
+            ${collectionMembership}
+          </section>
+        `
+        : ""
+    }
     <section class="card comments-panel" data-comments-panel>
       <div class="row comments-panel-header">
         <h3 class="ink-underline">Comments</h3>

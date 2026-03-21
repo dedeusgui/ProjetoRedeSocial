@@ -8,12 +8,64 @@ const MODERATOR_REQUIREMENTS = Object.freeze({
   minAccountAgeDays: 14,
   minScore: 40,
 });
+const DELETE_LEVEL_2_VISIBLE_COMMENT_TOTAL_THRESHOLD = 10;
+const DELETE_LEVEL_2_VISIBLE_COMMENT_RECENT_THRESHOLD = 5;
+const DELETE_LEVEL_2_VISIBLE_COMMENT_RECENT_WINDOW_DAYS = 30;
 
 class AdminService {
   constructor(adminRepository, adminEmails = [], accountDeletionService = null) {
     this.adminRepository = adminRepository;
     this.adminEmailSet = buildAdminEmailSet(adminEmails);
     this.accountDeletionService = accountDeletionService;
+  }
+
+  resolveAdminDeleteEligibility(user, requesterId = null) {
+    if (requesterId && String(user?._id ?? "") === String(requesterId)) {
+      return {
+        canDelete: false,
+        blockingReason: "An administrator cannot delete their own account.",
+      };
+    }
+
+    if (user?.role === "admin" || this.adminEmailSet.has(normalizeEmail(user?.email))) {
+      return {
+        canDelete: false,
+        blockingReason: "Administrator accounts cannot be deleted from the admin tools.",
+      };
+    }
+
+    if (user?.role !== "user") {
+      return {
+        canDelete: false,
+        blockingReason: "Only standard users can be deleted from the admin tools.",
+      };
+    }
+
+    return {
+      canDelete: true,
+      blockingReason: null,
+    };
+  }
+
+  resolveDeleteRiskLevel(impact) {
+    const hasImpact = [
+      impact?.postCount,
+      impact?.collectionCount,
+      Number(impact?.visibleCommentCount) >= DELETE_LEVEL_2_VISIBLE_COMMENT_TOTAL_THRESHOLD ? 1 : 0,
+      Number(impact?.recentVisibleCommentCount) >= DELETE_LEVEL_2_VISIBLE_COMMENT_RECENT_THRESHOLD ? 1 : 0,
+    ].some((value) => Number(value) > 0);
+
+    return hasImpact ? "level_2" : "level_1";
+  }
+
+  buildDeletePreviewImpact(impact) {
+    return {
+      postCount: impact?.postCount ?? 0,
+      collectionCount: impact?.collectionCount ?? 0,
+      commentCount: impact?.commentCount ?? 0,
+      reviewsReceivedCount: impact?.reviewsReceivedCount ?? 0,
+      reviewsWrittenCount: impact?.reviewsWrittenCount ?? 0,
+    };
   }
 
   formatManagedUser(user, postCount = 0) {
@@ -102,6 +154,32 @@ class AdminService {
       ));
   }
 
+  async getDeleteUserPreview({ userId, requesterId }) {
+    ensureObjectId(userId, "id");
+    ensureObjectId(requesterId, "requesterId");
+
+    const user = await this.adminRepository.findById(userId);
+    if (!user) {
+      throw new AppError("User not found.", "NOT_FOUND", 404);
+    }
+
+    const { canDelete, blockingReason } = this.resolveAdminDeleteEligibility(user, requesterId);
+    const recentCommentSince = new Date(
+      Date.now() - DELETE_LEVEL_2_VISIBLE_COMMENT_RECENT_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const impact = await this.adminRepository.summarizeDeleteImpactByUserId(userId, {
+      recentCommentSince,
+    });
+
+    return {
+      user: this.formatManagedUser(user, impact.postCount),
+      canDelete,
+      blockingReason,
+      riskLevel: this.resolveDeleteRiskLevel(impact),
+      impact: this.buildDeletePreviewImpact(impact),
+    };
+  }
+
   async updateModeratorRole({ userId, action }) {
     ensureObjectId(userId, "id");
     requireFields({ action }, ["action"]);
@@ -159,6 +237,16 @@ class AdminService {
 
     if (!this.accountDeletionService) {
       throw new Error("Account deletion service is unavailable.");
+    }
+
+    const user = await this.adminRepository.findById(userId);
+    if (!user) {
+      throw new AppError("User not found.", "NOT_FOUND", 404);
+    }
+
+    const { canDelete, blockingReason } = this.resolveAdminDeleteEligibility(user, requesterId);
+    if (!canDelete) {
+      throw new AppError(blockingReason, "FORBIDDEN", 403);
     }
 
     return this.accountDeletionService.deleteByAdmin({ userId, requesterId });

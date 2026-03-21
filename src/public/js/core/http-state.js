@@ -28,6 +28,22 @@ function resolveValidationDetailsMessage(error) {
     return `Each image must be at most ${details.maxFileSizeMb} MB.`;
   }
 
+  if (details.field === "tags" && typeof details.maxItems === "number" && typeof details.tagCount === "number") {
+    return `Use up to ${details.maxItems} tags.`;
+  }
+
+  if (details.field === "tags" && typeof details.maxLength === "number") {
+    return `Use at most ${details.maxLength} characters per tag.`;
+  }
+
+  if (details.field === "tags" && Array.isArray(details.duplicateTags) && details.duplicateTags.length > 0) {
+    return "Each tag must be unique.";
+  }
+
+  if (details.field === "tags" && Array.isArray(details.emptyTags) && details.emptyTags.length > 0) {
+    return "Each tag must contain at least one letter or number after normalization.";
+  }
+
   if (isAvatarField && typeof details.maxItemsPerRequest === "number") {
     return `You can upload up to ${details.maxItemsPerRequest} ${uploadSubject}${details.maxItemsPerRequest > 1 ? "s" : ""} per request.`;
   }

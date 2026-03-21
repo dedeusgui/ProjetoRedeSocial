@@ -4,6 +4,7 @@ class AdminController {
   constructor(adminService) {
     this.adminService = adminService;
     this.getUsersWithRoles = this.getUsersWithRoles.bind(this);
+    this.getDeleteUserPreview = this.getDeleteUserPreview.bind(this);
     this.getModeratorEligibility = this.getModeratorEligibility.bind(this);
     this.updateModeratorRole = this.updateModeratorRole.bind(this);
     this.deleteUserByAdmin = this.deleteUserByAdmin.bind(this);
@@ -16,6 +17,14 @@ class AdminController {
 
   async getModeratorEligibility(req, res) {
     const result = await this.adminService.listModeratorEligibility();
+    return sendSuccess(res, result);
+  }
+
+  async getDeleteUserPreview(req, res) {
+    const result = await this.adminService.getDeleteUserPreview({
+      userId: req.params.id,
+      requesterId: req.user.id,
+    });
     return sendSuccess(res, result);
   }
 

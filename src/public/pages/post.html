@@ -31,7 +31,15 @@
         <form data-comment-form>
           <label>
             Comment
-            <textarea name="content" rows="4" placeholder="Write your comment" required></textarea>
+            <textarea
+              name="content"
+              rows="4"
+              placeholder="Write your comment"
+              required
+              maxlength="2000"
+              data-comment-compose-input
+            ></textarea>
+            <span class="muted" data-comment-compose-counter>0/2000</span>
           </label>
           <button type="submit">Post comment</button>
         </form>

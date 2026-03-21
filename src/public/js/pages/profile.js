@@ -4,7 +4,7 @@ import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
 import { clearSession, hasSession } from "../core/session.js";
-import { renderAdminUserList } from "../features/admin/renderers.js";
+import { renderAdminDeleteUserPreview, renderAdminUserList } from "../features/admin/renderers.js";
 import { renderProfilePostList } from "../features/profile/content-renderers.js";
 import { renderProfileView } from "../features/profile/renderers.js";
 import { createPostModalController } from "../features/posts/post-modal.js";
@@ -13,6 +13,7 @@ const AUTH_REQUIRED_NOTICE = "Authentication required to access your profile.";
 const ACCOUNT_DELETED_NOTICE = "Your account was permanently deleted.";
 const DELETE_ACCOUNT_CONFIRMATION = "DELETE";
 const DELETE_ACCOUNT_BLOCKED_NOTICE = "Admin accounts cannot be deleted from the profile page.";
+const DELETE_USER_ROLE_BLOCKED_NOTICE = "Only standard users can be deleted from the admin tools.";
 
 const elements = {
   loginLink: document.querySelector("[data-login-link]"),
@@ -25,6 +26,18 @@ const elements = {
   adminUsersStatus: document.querySelector("[data-admin-users-status]"),
   adminUsersList: document.querySelector("[data-admin-users-list]"),
   adminUsersRefresh: document.querySelector("[data-admin-users-refresh]"),
+  adminDeleteUserModal: document.querySelector("[data-admin-delete-user-modal]"),
+  adminDeleteUserForm: document.querySelector("[data-admin-delete-user-form]"),
+  adminDeleteUserSummary: document.querySelector("[data-admin-delete-user-summary]"),
+  adminDeleteImpactSection: document.querySelector("[data-admin-delete-impact-section]"),
+  adminDeleteImpactLead: document.querySelector("[data-admin-delete-impact-lead]"),
+  adminDeleteImpactList: document.querySelector("[data-admin-delete-impact-list]"),
+  adminDeleteConfirmationSection: document.querySelector("[data-admin-delete-confirmation-section]"),
+  adminDeleteConfirmationHandle: document.querySelector("[data-admin-delete-confirmation-handle]"),
+  adminDeleteConfirmationInput: document.querySelector("[data-admin-delete-confirmation]"),
+  adminDeleteUserCancelButton: document.querySelector("[data-admin-delete-user-cancel]"),
+  adminDeleteUserConfirmButton: document.querySelector("[data-admin-delete-user-confirm]"),
+  adminDeleteUserStatus: document.querySelector("[data-admin-delete-user-status]"),
   dangerZone: document.querySelector("[data-profile-danger-zone]"),
   deleteAccountNote: document.querySelector("[data-delete-account-note]"),
   openDeleteAccountModalButton: document.querySelector("[data-open-delete-account-modal]"),
@@ -52,11 +65,15 @@ const elements = {
 const statusFlash = createFlash(elements.status);
 const postsFlash = createFlash(elements.postsStatus);
 const adminUsersFlash = createFlash(elements.adminUsersStatus);
+const adminDeleteUserFlash = createFlash(elements.adminDeleteUserStatus);
 const deleteAccountFlash = createFlash(elements.deleteAccountStatus);
 
 const state = {
   currentUserId: null,
+  pendingAdminDeleteUserId: null,
+  adminDeletePreview: null,
   isDeletingUser: false,
+  isLoadingAdminDeletePreview: false,
   isDeletingAccount: false,
   isUpdatingAvatar: false,
   isAvatarMenuOpen: false,
@@ -161,6 +178,94 @@ function closeAvatarMenu({ focusTarget = "none" } = {}) {
 
 function renderOwnedContent() {
   renderProfilePostList(elements.posts, state.posts);
+}
+
+function getAdminDeleteConfirmationValue() {
+  const username = String(state.adminDeletePreview?.user?.username ?? "").trim();
+  return username ? `@${username}` : "";
+}
+
+function canDeleteManagedUser(preview = state.adminDeletePreview) {
+  return Boolean(preview?.canDelete) && String(preview?.user?.role ?? "") === "user";
+}
+
+function requiresAdminDeleteUsernameConfirmation(preview = state.adminDeletePreview) {
+  return canDeleteManagedUser(preview) && preview?.riskLevel === "level_2";
+}
+
+function renderAdminDeleteUserState() {
+  renderAdminDeleteUserPreview(
+    {
+      summaryTarget: elements.adminDeleteUserSummary,
+      impactLeadTarget: elements.adminDeleteImpactLead,
+      impactListTarget: elements.adminDeleteImpactList,
+    },
+    state.adminDeletePreview,
+  );
+}
+
+function updateAdminDeleteUserModalUi() {
+  const requiresConfirmation = requiresAdminDeleteUsernameConfirmation();
+  const expectedConfirmation = getAdminDeleteConfirmationValue();
+  const confirmationValue = elements.adminDeleteConfirmationInput?.value ?? "";
+  const canConfirmDeletion =
+    canDeleteManagedUser() &&
+    !state.isLoadingAdminDeletePreview &&
+    !state.isDeletingUser &&
+    (!requiresConfirmation || confirmationValue === expectedConfirmation);
+
+  if (elements.adminDeleteImpactSection) {
+    elements.adminDeleteImpactSection.hidden = !requiresConfirmation;
+  }
+
+  if (elements.adminDeleteConfirmationSection) {
+    elements.adminDeleteConfirmationSection.hidden = !requiresConfirmation;
+  }
+
+  if (elements.adminDeleteConfirmationHandle) {
+    elements.adminDeleteConfirmationHandle.textContent = expectedConfirmation || "@username";
+  }
+
+  if (elements.adminDeleteConfirmationInput) {
+    elements.adminDeleteConfirmationInput.disabled =
+      state.isLoadingAdminDeletePreview ||
+      state.isDeletingUser ||
+      !requiresConfirmation;
+  }
+
+  if (elements.adminDeleteUserCancelButton) {
+    elements.adminDeleteUserCancelButton.disabled = state.isDeletingUser;
+  }
+
+  if (elements.adminDeleteUserConfirmButton) {
+    elements.adminDeleteUserConfirmButton.disabled = !canConfirmDeletion;
+    elements.adminDeleteUserConfirmButton.textContent = state.isDeletingUser
+      ? "Deleting..."
+      : "Delete user";
+  }
+}
+
+function resetAdminDeleteUserModalState() {
+  state.pendingAdminDeleteUserId = null;
+  state.adminDeletePreview = null;
+  state.isDeletingUser = false;
+  state.isLoadingAdminDeletePreview = false;
+  elements.adminDeleteUserForm?.reset();
+  adminDeleteUserFlash.clear();
+  renderAdminDeleteUserState();
+  updateAdminDeleteUserModalUi();
+}
+
+function closeAdminDeleteUserModal({ force = false } = {}) {
+  if (!force && state.isDeletingUser) {
+    return;
+  }
+
+  if (!elements.adminDeleteUserModal?.open) {
+    return;
+  }
+
+  elements.adminDeleteUserModal.close();
 }
 
 function canDeleteOwnAccount() {
@@ -314,6 +419,14 @@ function resolveAdminUsersMessage(error) {
   );
 }
 
+function resolveAdminDeleteUserMessage(error, fallbackMessage = "Could not load the deletion preview.") {
+  return resolveAuthApiMessage(
+    error,
+    AUTH_REQUIRED_NOTICE,
+    fallbackMessage,
+  );
+}
+
 async function loadAdminUsers() {
   if (!elements.adminUsersList) {
     return;
@@ -327,25 +440,114 @@ async function loadAdminUsers() {
     });
     adminUsersFlash.clear();
   } catch (error) {
+    if (handleAuthFailure(error)) {
+      return;
+    }
+
     adminUsersFlash.show(resolveAdminUsersMessage(error), "error");
   }
 }
 
-async function deleteUserForTesting(userId) {
-  if (!userId || state.isDeletingUser) {
+async function openAdminDeleteUserModal(userId) {
+  const resolvedUserId = String(userId ?? "").trim();
+  if (!resolvedUserId || state.isDeletingUser || state.isLoadingAdminDeletePreview) {
+    return;
+  }
+
+  state.pendingAdminDeleteUserId = resolvedUserId;
+  state.adminDeletePreview = null;
+  state.isLoadingAdminDeletePreview = true;
+  elements.adminDeleteUserForm?.reset();
+  renderAdminDeleteUserState();
+  updateAdminDeleteUserModalUi();
+  adminDeleteUserFlash.show("Loading deletion impact...", "info");
+  elements.adminDeleteUserModal?.showModal();
+
+  window.requestAnimationFrame(() => {
+    elements.adminDeleteUserCancelButton?.focus();
+  });
+
+  try {
+    const preview = await api.admin.getDeletePreview(resolvedUserId);
+
+    if (String(state.pendingAdminDeleteUserId ?? "") !== resolvedUserId) {
+      return;
+    }
+
+    state.adminDeletePreview = preview;
+    renderAdminDeleteUserState();
+    updateAdminDeleteUserModalUi();
+
+    if (!canDeleteManagedUser(preview)) {
+      const message = preview?.blockingReason ?? DELETE_USER_ROLE_BLOCKED_NOTICE;
+      adminDeleteUserFlash.show(message, "error");
+      adminUsersFlash.show(message, "error");
+      return;
+    }
+
+    adminDeleteUserFlash.clear();
+  } catch (error) {
+    if (handleAuthFailure(error)) {
+      return;
+    }
+
+    const message = resolveAdminDeleteUserMessage(error);
+    adminDeleteUserFlash.show(message, "error");
+    adminUsersFlash.show(message, "error");
+  } finally {
+    if (String(state.pendingAdminDeleteUserId ?? "") === resolvedUserId) {
+      state.isLoadingAdminDeletePreview = false;
+      updateAdminDeleteUserModalUi();
+    }
+  }
+}
+
+async function deleteManagedUser(event) {
+  event.preventDefault();
+
+  const preview = state.adminDeletePreview;
+  const userId = String(preview?.user?.id ?? state.pendingAdminDeleteUserId ?? "").trim();
+  if (!userId || state.isDeletingUser || state.isLoadingAdminDeletePreview) {
+    return;
+  }
+
+  if (!canDeleteManagedUser(preview)) {
+    const message = preview?.blockingReason ?? DELETE_USER_ROLE_BLOCKED_NOTICE;
+    adminDeleteUserFlash.show(message, "error");
+    adminUsersFlash.show(message, "error");
+    updateAdminDeleteUserModalUi();
+    return;
+  }
+
+  if (
+    requiresAdminDeleteUsernameConfirmation(preview) &&
+    (elements.adminDeleteConfirmationInput?.value ?? "") !== getAdminDeleteConfirmationValue()
+  ) {
+    updateAdminDeleteUserModalUi();
     return;
   }
 
   state.isDeletingUser = true;
+  updateAdminDeleteUserModalUi();
+  adminDeleteUserFlash.show("Deleting user...", "info");
   adminUsersFlash.show("Deleting user...", "info");
+
   try {
     await api.admin.deleteUser(userId);
+    closeAdminDeleteUserModal({ force: true });
     await loadAdminUsers();
     adminUsersFlash.show("User deleted and statistics recalculated.", "success");
   } catch (error) {
-    adminUsersFlash.show(resolveAdminUsersMessage(error), "error");
+    if (handleAuthFailure(error)) {
+      return;
+    }
+
+    const message = resolveAdminDeleteUserMessage(error, "Could not delete the user.");
+    adminDeleteUserFlash.show(message, "error");
+    adminUsersFlash.show(message, "error");
   } finally {
     state.isDeletingUser = false;
+    updateAdminDeleteUserModalUi();
   }
 }
 
@@ -540,8 +742,36 @@ function bindAdminEvents() {
 
       const userId = String(button.dataset.adminDeleteUserId ?? "").trim();
       if (userId) {
-        deleteUserForTesting(userId);
+        openAdminDeleteUserModal(userId);
       }
+    });
+  }
+
+  elements.adminDeleteConfirmationInput?.addEventListener("input", () => {
+    updateAdminDeleteUserModalUi();
+  });
+
+  elements.adminDeleteUserCancelButton?.addEventListener("click", () => {
+    closeAdminDeleteUserModal();
+  });
+
+  elements.adminDeleteUserForm?.addEventListener("submit", deleteManagedUser);
+
+  if (elements.adminDeleteUserModal) {
+    elements.adminDeleteUserModal.addEventListener("click", (event) => {
+      if (event.target === elements.adminDeleteUserModal && !state.isDeletingUser) {
+        closeAdminDeleteUserModal();
+      }
+    });
+
+    elements.adminDeleteUserModal.addEventListener("cancel", (event) => {
+      if (state.isDeletingUser) {
+        event.preventDefault();
+      }
+    });
+
+    elements.adminDeleteUserModal.addEventListener("close", () => {
+      resetAdminDeleteUserModalState();
     });
   }
 }

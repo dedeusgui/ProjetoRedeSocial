@@ -1,4 +1,8 @@
 import { escapeHtml, formatDateTime } from "../../core/formatters.js";
+import {
+  formatFollowTagLabel,
+  normalizeFollowTagValue,
+} from "../../core/followed-tags.js";
 import { renderCollectionPillList, renderPostContextLinks } from "../posts/context-renderers.js";
 
 function renderPostListItem(post) {
@@ -60,7 +64,59 @@ function renderCollectionItemRow(item, index, itemCount) {
   `;
 }
 
-function renderCollectionCard(collection, availablePosts = []) {
+function renderCollectionTags(
+  tags,
+  {
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
+  } = {},
+) {
+  if (!Array.isArray(tags) || tags.length === 0) {
+    return "<p class='muted post-tags'>No tags yet.</p>";
+  }
+
+  return `
+    <ul class="tag-list" aria-label="Collection tags">
+      ${tags
+        .map((tag) => {
+          const followTag = normalizeFollowTagValue(tag);
+          const label = formatFollowTagLabel(tag);
+          const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
+
+          return `
+            <li class="tag-item tag-item-actionable">
+              <span class="tag-label">#${escapeHtml(label)}</span>
+              ${
+                canManageTagFollows && followTag
+                  ? `
+                    <button
+                      type="button"
+                      class="tag-follow-button ${isFollowing ? "button-ghost" : ""}"
+                      data-follow-tag="${escapeHtml(followTag)}"
+                      data-following="${isFollowing ? "true" : "false"}"
+                      aria-pressed="${isFollowing ? "true" : "false"}"
+                    >
+                      ${isFollowing ? "Following" : "Follow"}
+                    </button>
+                  `
+                  : ""
+              }
+            </li>
+          `;
+        })
+        .join("")}
+    </ul>
+  `;
+}
+
+function renderCollectionCard(
+  collection,
+  availablePosts = [],
+  {
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
+  } = {},
+) {
   const collectionId = String(collection.id ?? "");
   const collectionItems = Array.isArray(collection.items) ? collection.items : [];
   const addablePosts = availablePosts.filter(
@@ -77,27 +133,23 @@ function renderCollectionCard(collection, availablePosts = []) {
         </div>
         <div class="collection-hero-meta">
           <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? collectionItems.length ?? 0))} post(s)</span>
-          <span class="post-context-pill post-context-pill-static">Manual order</span>
         </div>
       </div>
-      ${renderCollectionPillList([{ id: collection.id, title: collection.title }], {
-        emptyLabel: "",
-      })}
-      <ul class="tag-list" aria-label="Collection tags">
-        ${(Array.isArray(collection.tags) ? collection.tags : [])
-          .map((tag) => `<li class="tag-item"><span class="tag-label">#${escapeHtml(tag)}</span></li>`)
-          .join("")}
-      </ul>
-      <div class="review-actions review-actions-inline">
-        <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">
-          Open collection
-        </button>
-        <button type="button" class="button-ghost" data-edit-collection-id="${escapeHtml(collectionId)}">
-          Edit
-        </button>
-        <button type="button" class="button-reject" data-delete-collection-id="${escapeHtml(collectionId)}">
-          Delete
-        </button>
+      ${renderCollectionTags(collection.tags, { canManageTagFollows, followedTagSet })}
+      <div class="collection-card-actions">
+        <div class="collection-card-primary-actions">
+          <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">
+            Open collection
+          </button>
+          <button type="button" class="button-ghost" data-edit-collection-id="${escapeHtml(collectionId)}">
+            Edit
+          </button>
+        </div>
+        <div class="collection-card-danger-actions">
+          <button type="button" class="button-reject" data-delete-collection-id="${escapeHtml(collectionId)}">
+            Delete
+          </button>
+        </div>
       </div>
       <label class="managed-collection-select">
         Add a post
@@ -114,7 +166,12 @@ function renderCollectionCard(collection, availablePosts = []) {
             .join("")}
         </select>
       </label>
-      <button type="button" class="button-ghost" data-add-collection-post-button="${escapeHtml(collectionId)}" ${addablePosts.length === 0 ? "disabled" : ""}>
+      <button
+        type="button"
+        class="button-ghost"
+        data-add-collection-post-button="${escapeHtml(collectionId)}"
+        disabled
+      >
         Add to collection
       </button>
       ${
@@ -155,7 +212,16 @@ export function renderProfilePostList(target, posts) {
   target.innerHTML = items.map((post) => renderPostListItem(post)).join("");
 }
 
-export function renderProfileCollectionList(target, collections, { availablePosts = [] } = {}) {
+export function renderProfileCollectionList(
+  target,
+  collections,
+  {
+    availablePosts = [],
+    canManageTagFollows = false,
+    followedTagSet = new Set(),
+    followedTags = [],
+  } = {},
+) {
   if (!target) {
     return;
   }
@@ -166,7 +232,15 @@ export function renderProfileCollectionList(target, collections, { availablePost
     return;
   }
 
+  const resolvedFollowedTagSet =
+    followedTagSet instanceof Set ? followedTagSet : new Set(Array.isArray(followedTags) ? followedTags : []);
+
   target.innerHTML = items
-    .map((collection) => renderCollectionCard(collection, availablePosts))
+    .map((collection) =>
+      renderCollectionCard(collection, availablePosts, {
+        canManageTagFollows,
+        followedTagSet: resolvedFollowedTagSet,
+      }),
+    )
     .join("");
 }

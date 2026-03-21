@@ -13,7 +13,7 @@ export function renderAdminUserList(target, users, { currentAdminId = null } = {
   target.innerHTML = users
     .map((user) => {
       const canDelete =
-        user.role !== "admin" &&
+        user.role === "user" &&
         String(user.id) !== String(currentAdminId ?? "");
 
       return `
@@ -28,4 +28,86 @@ export function renderAdminUserList(target, users, { currentAdminId = null } = {
       `;
     })
     .join("");
+}
+
+function formatCountLabel(count, singular, plural = `${singular}s`) {
+  const safeCount = Number.isFinite(Number(count)) ? Number(count) : 0;
+  return `${safeCount} ${safeCount === 1 ? singular : plural}`;
+}
+
+function buildDeleteImpactLines(impact) {
+  const safeImpact = impact ?? {};
+  const lines = [];
+
+  if (Number(safeImpact.postCount) > 0) {
+    lines.push(`This will delete ${formatCountLabel(safeImpact.postCount, "post")}.`);
+  }
+
+  if (Number(safeImpact.collectionCount) > 0) {
+    lines.push(`This will delete ${formatCountLabel(safeImpact.collectionCount, "collection")}.`);
+  }
+
+  if (Number(safeImpact.commentCount) > 0) {
+    lines.push(`This will delete ${formatCountLabel(safeImpact.commentCount, "comment")}.`);
+  }
+
+  if (Number(safeImpact.reviewsReceivedCount) > 0) {
+    lines.push(`This user has ${formatCountLabel(safeImpact.reviewsReceivedCount, "review")} received.`);
+  }
+
+  if (Number(safeImpact.reviewsWrittenCount) > 0) {
+    lines.push(`This user has ${formatCountLabel(safeImpact.reviewsWrittenCount, "review")} written.`);
+  }
+
+  return lines;
+}
+
+export function renderAdminDeleteUserPreview(
+  {
+    summaryTarget,
+    impactLeadTarget,
+    impactListTarget,
+  },
+  preview,
+) {
+  if (summaryTarget) {
+    if (!preview?.user) {
+      summaryTarget.innerHTML = "";
+    } else {
+      summaryTarget.innerHTML = `
+        <div class="danger-summary-grid">
+          <p class="danger-summary-item">
+            <span class="muted">Handle</span>
+            <strong>@${escapeHtml(preview.user.username)}</strong>
+          </p>
+          <p class="danger-summary-item">
+            <span class="muted">Email</span>
+            <strong>${escapeHtml(preview.user.email)}</strong>
+          </p>
+          <p class="danger-summary-item">
+            <span class="muted">Role</span>
+            <strong>${escapeHtml(preview.user.role)}</strong>
+          </p>
+          <p class="danger-summary-item">
+            <span class="muted">Created</span>
+            <strong>${escapeHtml(formatDateTime(preview.user.createdAt))}</strong>
+          </p>
+        </div>
+      `;
+    }
+  }
+
+  if (impactLeadTarget) {
+    impactLeadTarget.textContent =
+      preview?.riskLevel === "level_2"
+        ? "Deleting this user will also remove related content and account activity."
+        : "";
+  }
+
+  if (impactListTarget) {
+    const lines = buildDeleteImpactLines(preview?.impact);
+    impactListTarget.innerHTML = lines
+      .map((line) => `<li>${escapeHtml(line)}</li>`)
+      .join("");
+  }
 }

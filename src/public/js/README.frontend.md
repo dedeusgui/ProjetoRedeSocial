@@ -12,18 +12,20 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `pages/`: page bootstrap + event binding + orchestration
 - `features/admin/renderers.js`: admin-oriented renderers
 - `features/posts/post-modal.js`: shared create/edit modal orchestration, including sequence selection for owned posts
-- `features/profile/content-renderers.js`: owner post cards and reusable collection-management surfaces
-- `features/collections/renderers.js`: public collection detail rendering
-- `features/collections/feed-renderers.js`: collection-feed card rendering for `feed.html`
+- `features/profile/content-renderers.js`: owner post cards and reusable collection-management surfaces, including owner-collection tag follow/unfollow actions plus grouped safe collection actions with a separate destructive `Delete` row
+- `features/collections/renderers.js`: public collection detail rendering, including collection-tag follow/unfollow actions for authenticated users and an owner-only `Manage collection` shortcut
+- `features/collections/feed-renderers.js`: collection-feed card rendering for `feed.html`, including an owner-only `Manage collection` shortcut back to `collections.html`
 
 ## Responsibilities
 - `pages/*`: no duplicated rendering templates and no direct localStorage handling.
 - `features/*/renderers.js`: receive data and return/update DOM.
 - `core/session.js`: token lifecycle and auth checks.
 - `core/formatters.js`: shared formatting utilities for percentages, dates, and labels used by renderers.
+- `core/content-tags.js`: shared parse/normalize/validate helpers for post and collection tag inputs, including the current 5-tag and 10-character normalized-tag limits.
 - `core/http-state.js`: normalize API error messages for UI.
 - `core/followed-tags.js`: shared normalization for followed-tag values.
 - `core/ui-text.js`: shared English UI copy for auth/session/status feedback.
+- `components/tag-input.js`: reusable realtime preview + validation UI for simple comma-separated tag inputs, including rule indicators, normalized-tag chips, and submit-time validation feedback.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.
 - `components/flash.js`: transient status/feedback messaging.
@@ -45,10 +47,13 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `hasSession()`/`requireSession()` for protected actions.
 - For admin pages, verify role by calling `api.users.meProfile()` and enforcing `role === "admin"` before admin API calls.
 - For the feed page, keep the unified header/discovery behavior in `pages/feed.js`, including debounced real-time search, the grouped `Posts` vs `Collections` segmented control with immediate switching, the authenticated followed-tags toggle, the lightweight active-filter banner below that row, the manual follow form, and the compact followed-tags dropdown; renderer code should stay limited to card, tag, sequence, collection context, and safe followed-tags dropdown markup.
-- Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; avoid duplicating collection-create CTAs across those pages.
-- Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action.
+- Keep owner collection management on `pages/collections.js`, collection-feed browsing on `pages/feed.js`, and public collection reads on `pages/collection.js`; owner-facing shortcuts on public/feed collection surfaces may link back to `collections.html`, but creation and CRUD orchestration still belong there, including the lightweight native confirmation modal used for collection deletion.
+- Keep the shared post modal ordered as base post fields, post images, then a neutral disclosure-style `Add poll (optional)` section without changing the post payload contract or making the poll compete with the primary publish action; post-image picking should accumulate across repeated selections up to 4 files, preserve insertion order, and in edit mode keep already-saved images before newly selected uploads.
+- Keep shared feed/detail post-media framing close to `4:3` so first-image previews and gallery cards stay balanced for vertical, square, and landscape uploads; keep the post-detail gallery as a stable two-column grid with a one-column fallback on narrow screens, and when feed cards have more than one saved image, keep the overflow cue as a compact `+N` overlay on the first preview instead of extra helper copy below it.
+- Keep post and collection tag entry on a single comma-separated text input backed by `core/content-tags.js` and `components/tag-input.js`; current shared limits are 5 tags per item and 10 characters per normalized tag.
 - Keep profile avatar management attached to the avatar itself on `profile.html`; `pages/profile.js` should orchestrate the contextual upload/remove menu and outside-click closing while reusing the existing avatar API methods.
 - Keep permanent account deletion on `profile.html` inside the existing native dialog pattern; require the exact uppercase word `DELETE`, clear the local session after success, and redirect away from the protected screen.
+- Keep admin-side user deletion on `profile.html` inside the same native danger-dialog language; fetch a backend preview first, keep `level_1` for low-impact accounts, and require exact `@username` confirmation for `level_2` once the backend flags posts, collections, or meaningful visible-comment activity.
 - Feed, profile, and collection cards should show concise sequence membership when a post belongs to a sequence, while the full ordered sequence stays on `post.html`.
 - Keep public author surfaces non-clickable; the product does not expose public profile pages.
 - Keep collection and questionnaire blocks visually aligned with post/feed cards by reusing the same spacing rhythm, chip treatment, and Patrick accent labels.
