@@ -4,6 +4,10 @@ All notable changes to this project should be documented in this file.
 
 ## 2026-03-21
 
+### Fixed
+
+- Fixed the post detail gallery so it now keeps one consistent grid for every media count: a single image spans the full row in `16:9`, two and four images stay in square tiles, and a three-image gallery promotes the first image without switching to a separate JS-driven layout path.
+
 ### Changed
 
 - Unified post and collection tag handling around one canonical rule set: comma-separated input still feeds `tags[]`, but stored tags are now normalized to lowercase without leading `#`, internal spaces become hyphens, unsupported characters are removed, each tag is capped at `10` characters, and both posts and collections are capped at `5` tags.

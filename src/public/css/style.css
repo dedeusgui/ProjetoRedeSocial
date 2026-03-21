@@ -1092,6 +1092,20 @@ select:focus-visible {
   gap: 8px;
 }
 
+.post-media-gallery > .post-media-frame {
+  aspect-ratio: 1 / 1;
+}
+
+.post-media-gallery > .post-media-frame:only-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 9;
+}
+
+.post-media-gallery:has(> .post-media-frame:nth-child(3):last-child) > .post-media-frame:first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 6;
+}
+
 .post-media-image,
 .modal-media-thumb {
   width: 100%;
