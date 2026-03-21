@@ -28,6 +28,7 @@ function renderPostMedia(media, fallbackText) {
                 src="${escapeHtml(item.url)}"
                 alt="${escapeHtml(item.originalName ?? fallbackText ?? "Post image")}"
                 loading="lazy"
+                decoding="async"
               />
             </figure>
           `,

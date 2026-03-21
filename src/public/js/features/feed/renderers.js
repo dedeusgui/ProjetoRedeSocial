@@ -29,19 +29,25 @@ function renderFeedMedia(media, fallbackText) {
   }
 
   const extraCount = Math.max(0, (Array.isArray(media) ? media.length : 0) - 1);
+  const extraImagesLabel =
+    extraCount === 1 ? "1 more image in this post" : `${extraCount} more images in this post`;
   return `
     <figure class="post-media-preview">
-      <img
-        class="post-media-image"
-        src="${escapeHtml(firstMedia.url)}"
-        alt="${escapeHtml(firstMedia.originalName ?? fallbackText ?? "Post image")}"
-        loading="lazy"
-      />
-      ${
-        extraCount > 0
-          ? `<figcaption class="muted">+${escapeHtml(String(extraCount))} more image(s)</figcaption>`
-          : ""
-      }
+      <div class="post-media-cover">
+        <img
+          class="post-media-image"
+          src="${escapeHtml(firstMedia.url)}"
+          alt="${escapeHtml(firstMedia.originalName ?? fallbackText ?? "Post image")}"
+          loading="lazy"
+          decoding="async"
+        />
+        ${
+          extraCount > 0
+            ? `<span class="more-images-overlay" aria-hidden="true">+${escapeHtml(String(extraCount))}</span>`
+            : ""
+        }
+      </div>
+      ${extraCount > 0 ? `<figcaption class="sr-only">${escapeHtml(extraImagesLabel)}</figcaption>` : ""}
     </figure>
   `;
 }

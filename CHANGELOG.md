@@ -8,6 +8,10 @@ All notable changes to this project should be documented in this file.
 
 - Unified post and collection tag handling around one canonical rule set: comma-separated input still feeds `tags[]`, but stored tags are now normalized to lowercase without leading `#`, internal spaces become hyphens, unsupported characters are removed, each tag is capped at `10` characters, and both posts and collections are capped at `5` tags.
 - Upgraded the shared post modal and the collection modal with realtime normalized-tag previews, visible rule indicators, and submit-blocking tag validation before API requests are sent.
+- Changed the shared post modal so repeated image selections now accumulate up to 4 temporary uploads with local previews and per-item removal, while edit mode keeps saved images ahead of newly selected ones.
+- Reframed shared post-image surfaces around a balanced `4:3` crop so feed previews and post-detail gallery items no longer look flattened when users upload vertical or square images.
+- Tightened the post-detail image gallery into a stable two-column grid with a one-column fallback on narrow screens so multiple images read as one cohesive block instead of loose individual tiles.
+- Changed feed post-image previews so posts with multiple saved images now show a compact `+N` overlay on the first preview instead of helper text below the image.
 
 ### Added
 

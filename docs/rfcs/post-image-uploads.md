@@ -64,6 +64,13 @@ Store uploaded files on local disk under a runtime uploads folder served by Expr
   - only post authors can manage post media
   - moderators/admins keep delete-post powers only
 
+## Implementation Notes
+
+- The shared post modal uses a simple native file input with `multiple`, but repeated selections now accumulate into one temporary client-side list until the post reaches the 4-image limit.
+- Each temporary selection item renders a local preview, file name, and remove control before upload.
+- Ordering stays simple: new selections keep insertion order, and on edit the already-saved images remain first while newly selected images are appended after them.
+- On feed cards, the first saved image remains the only preview image, but posts with additional saved images now expose that overflow through a compact `+N` overlay on top of the preview.
+
 ## API and Interface Impact
 
 - New/changed endpoints:
@@ -114,7 +121,9 @@ Ship as a normal feature update. Rollback is removing the new endpoints/UI and d
 - API integration checks:
   - upload success, remove success, invalid type/size, unauthorized user
 - Frontend/manual checks:
-  - create/edit modal upload flow, partial-success message, gallery rendering
+  - create modal accumulates repeated image selections up to 4, with preview and remove controls
+  - edit modal keeps saved images first, appends newly selected images after them, and re-enables selection when a saved or temporary image is removed
+  - partial-success message, gallery rendering
 
 ## Documentation Updates Required
 
