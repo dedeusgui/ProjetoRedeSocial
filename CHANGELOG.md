@@ -2,6 +2,12 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-22
+
+### Fixed
+
+- Consolidated the shared stylesheet around one source of truth for modal, collection, and questionnaire surfaces by removing the late override block, moving the surviving rules next to their original definitions, keeping `.ink-underline` as a plain title helper without a hidden pseudo-element override, and restoring `.muted` semantics inside modal cards instead of redefining them contextually.
+
 ## 2026-03-21
 
 ### Fixed

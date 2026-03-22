@@ -3,3 +3,4 @@ node_modules
 /uploads
 /tmp_*.mjs
 audit-report.md
+.css-audit.report.md
