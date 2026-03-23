@@ -57,7 +57,7 @@ Reference guide:
 - Prefer shared `bindNavigation()` for internal navigation controls.
 - Live regions and helper text should be reserved for loading, error, and non-obvious action feedback, not for restating visible page context.
 - Ambient visual effects should live in shared CSS and stay behind content, subtle by default, and safe under `prefers-reduced-motion`.
-- Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts.
+- Post-level approval percentage is allowed in feed/post pages; user aggregate approval metrics stay private to profile/admin contexts, and any surfaced approval percentage should reuse the same low/medium/high color semantics as reputation (`0-39`, `40-69`, `70-100`).
 - Public author UI on feed/post/comment surfaces must remain non-navigable and limited to avatar, username, and derived reputation tier.
 - The profile self-delete flow should reuse the existing native `<dialog>` modal pattern, require the exact uppercase word `DELETE`, and clear the local session before redirecting away from the protected screen on success.
 - The admin `Delete user` flow on `profile.html` should reuse the native `<dialog>` danger-modal pattern, hide the action for `moderator` and `admin` rows, keep `level_1` for low-impact accounts, and require exact `@username` entry for `level_2`, which is triggered by posts, collections, or meaningful visible-comment activity.

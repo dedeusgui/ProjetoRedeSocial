@@ -55,4 +55,17 @@ export function trendClass(trend) {
   return "status-neutral";
 }
 
+export function reputationTierClass(tier) {
+  if (tier === "high") return "status-positive";
+  if (tier === "medium") return "status-neutral";
+  return "status-negative";
+}
+
+export function approvalClass(value) {
+  const safeValue = normalizePercentage(value);
+  if (safeValue >= 70) return "status-positive";
+  if (safeValue >= 40) return "status-neutral";
+  return "status-negative";
+}
+
 

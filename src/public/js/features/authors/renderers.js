@@ -1,4 +1,4 @@
-import { escapeHtml } from "../../core/formatters.js";
+import { escapeHtml, reputationTierClass } from "../../core/formatters.js";
 
 function resolveAvatarInitial(username) {
   const normalized = String(username ?? "").trim();
@@ -36,8 +36,7 @@ export function renderAvatar({ avatarUrl = null, username = "", alt = "", classN
 export function renderReputationBadge(reputation = null, className = "") {
   const tier = reputation?.tier ?? "low";
   const label = reputation?.label ?? "Low";
-  const toneClass =
-    tier === "high" ? "status-positive" : tier === "medium" ? "status-neutral" : "status-negative";
+  const toneClass = reputationTierClass(tier);
 
   return `
     <span class="reputation-badge ${escapeHtml(toneClass)} ${escapeHtml(className)}">

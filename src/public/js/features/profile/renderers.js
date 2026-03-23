@@ -1,4 +1,5 @@
 import {
+  approvalClass,
   escapeHtml,
   formatDateTime,
   formatPercent,
@@ -17,6 +18,7 @@ export function renderProfileView(
   const approvalPercentage = Number(profile.privateMetrics?.score ?? 0);
   const totalReviews = profile.privateMetrics?.totalReviews ?? 0;
   const avatarActionLabel = profile.avatarUrl ? "Edit profile photo" : "Add profile photo";
+  const approvalToneClass = approvalClass(approvalPercentage);
 
   target.innerHTML = `
     <section class="card profile-card">
@@ -103,7 +105,7 @@ export function renderProfileView(
 
         <div class="metrics-grid">
           <article class="card metric-box">
-            <p class="metric-box-value"><strong>Approval: <span class="status-neutral">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
+            <p class="metric-box-value"><strong>Approval: <span class="${escapeHtml(approvalToneClass)}">${escapeHtml(formatPercent(approvalPercentage))}</span></strong></p>
             <p class="muted">Reviews received: ${escapeHtml(totalReviews)}</p>
           </article>
         </div>

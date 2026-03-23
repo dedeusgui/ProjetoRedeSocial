@@ -984,7 +984,10 @@ select:focus-visible {
 }
 
 .author-meta-text {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.84rem;
+  line-height: 1.2;
 }
 
 .author-avatar {
@@ -1538,6 +1541,15 @@ select:focus-visible {
   font-size: 0.8rem;
 }
 
+.post-header:has(.trend-chip) .post-author-summary {
+  align-items: flex-start;
+}
+
+.post-header:has(.trend-chip) .trend-chip {
+  align-self: flex-start;
+  margin-top: calc(1.1rem + 4px);
+}
+
 .feed-card-actions {
   display: flex;
   justify-content: space-between;
@@ -1933,6 +1945,11 @@ select:focus-visible {
   .post-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .post-header:has(.trend-chip) .trend-chip {
+    align-self: flex-start;
+    margin-top: 0;
   }
 
   .post-media-gallery {

@@ -1,4 +1,4 @@
-import { escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
+import { approvalClass, escapeHtml, formatDateTime, formatPercent } from "../../core/formatters.js";
 import {
   formatFollowTagLabel,
   normalizeFollowTagValue,
@@ -209,6 +209,7 @@ export function renderPostView(
     canOpenCollections: isPostOwner,
   });
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
+  const approvalToneClass = approvalClass(approvalPercentage);
 
   target.innerHTML = `
     <article class="card post-card">
@@ -218,7 +219,7 @@ export function renderPostView(
           avatarClassName: "author-avatar-sm",
           className: "post-author-summary",
         })}
-        <p class="trend-chip status-neutral">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+        <p class="trend-chip ${escapeHtml(approvalToneClass)}">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>

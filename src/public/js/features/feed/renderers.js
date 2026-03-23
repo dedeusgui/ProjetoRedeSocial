@@ -1,4 +1,5 @@
 import {
+  approvalClass,
   escapeHtml,
   formatDateTime,
   formatPercent,
@@ -113,6 +114,7 @@ export function createPostCard(
     (viewerId && String(viewerId) === String(post.author?.id ?? ""));
   const canEditPost = viewerId && String(viewerId) === String(post.author?.id ?? "");
   const approvalPercentage = post.moderationMetrics?.approvalPercentage ?? 0;
+  const approvalToneClass = approvalClass(approvalPercentage);
 
   article.innerHTML = `
     <header class="post-header">
@@ -121,7 +123,7 @@ export function createPostCard(
         avatarClassName: "author-avatar-sm",
         className: "post-author-summary",
       })}
-      <p class="trend-chip status-neutral">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+      <p class="trend-chip ${escapeHtml(approvalToneClass)}">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>

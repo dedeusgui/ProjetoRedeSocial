@@ -7,6 +7,7 @@ All notable changes to this project should be documented in this file.
 ### Fixed
 
 - Fixed the post detail gallery so it now keeps one consistent grid for every media count: a single image spans the full row in `16:9`, two and four images stay in square tiles, and a three-image gallery promotes the first image without switching to a separate JS-driven layout path.
+- Standardized visible `Approval` color behavior across feed, post detail, and profile so percentages now use the same low/medium/high semantics as reputation: `0-39` red, `40-69` neutral, and `70-100` green.
 
 ### Changed
 
