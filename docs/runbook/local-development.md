@@ -75,6 +75,18 @@ $env:ADMIN_EMAILS="admin@seed.local"
 npm run test:populate
 ```
 
+Convenience defaults for video/demo prep:
+
+- `npm run demo:seed`
+  - uses `mongodb://localhost:27017/thesocial_seed`
+  - uses `admin@seed.local`
+  - uses port `3101`
+  - keeps uploads under `uploads/seed-populate`
+- `npm run demo:start`
+  - starts the app against that same seeded demo dataset for manual browsing
+
+These demo scripts still respect pre-set environment overrides if you need a different demo database, port, upload root, or admin email.
+
 Behavior:
 
 - drops only the database referenced by `SEED_MONGO_URI`
@@ -87,6 +99,7 @@ Manual browsing after the run:
 
 - start the app again with the same `MONGO_URI`, `UPLOAD_ROOT`, `PORT`, and `ADMIN_EMAILS`
 - use the credentials printed by the runner summary
+- or run `npm run demo:start` when you used the default demo seed settings above
 
 ## Common Issues
 

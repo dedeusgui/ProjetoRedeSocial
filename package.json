@@ -9,7 +9,9 @@
     "build": "xcopy /E /I /Y src dist",
     "start": "node dist/server.js",
     "test:smoke": "node scripts/smoke-permissions.mjs",
-    "test:populate": "node scripts/test-populate-smoke.mjs"
+    "test:populate": "node scripts/test-populate-smoke.mjs",
+    "demo:seed": "node scripts/demo-seed.mjs",
+    "demo:start": "node scripts/demo-start.mjs"
   },
   "dependencies": {
     "cors": "^2.8.6",

@@ -33,7 +33,7 @@ const TAGS = Object.freeze([
   "javascript",
   "testing",
   "api-design",
-  "collections",
+  "curation",
   "moderation",
   "chronology",
   "ux",
@@ -392,7 +392,7 @@ async function buildSeedDataset({
   featuredAuthorPosts[1].title = "Featured Sequence Post";
   featuredAuthorPosts[1].content =
     "Featured seeded post used by the smoke run to verify questionnaire, comments, sequence context, and collection membership.";
-  featuredAuthorPosts[1].tags = ["seed-focus", "featured-topic", "testing"];
+  featuredAuthorPosts[1].tags = ["seed-focus", "featured", "testing"];
   featuredAuthorPosts[1].questionnaire = createQuestionnaire(1);
 
   let assignedQuestionnaires = featuredAuthorPosts[1].questionnaire ? 1 : 0;
@@ -462,7 +462,7 @@ async function buildSeedDataset({
     authorId: featuredAuthor._id,
     title: "Featured Seed Collection",
     description: "Collection used by the smoke runner to verify collection context on posts.",
-    tags: ["seed-focus", "featured-topic", "collections"],
+    tags: ["seed-focus", "featured", "curation"],
     itemIds: [featuredAuthorPosts[0]._id, featuredAuthorPosts[1]._id, featuredAuthorPosts[2]._id],
     createdAt: daysAgo(18, 12),
   });
@@ -736,7 +736,7 @@ async function runSmoke({
     body: {
       title: "Smoke Created Post",
       content: "Created during the smoke run to validate owner flows and uploads.",
-      tags: ["seed-focus", "smoke-created"],
+      tags: ["seed-focus", "smoke-demo"],
     },
   });
   assertSuccess(createPost, 201, "Criacao de post smoke deveria funcionar");
@@ -788,7 +788,7 @@ async function runSmoke({
     body: {
       title: "Smoke Collection",
       description: "Collection created during the smoke run.",
-      tags: ["seed-focus", "smoke-created"],
+      tags: ["seed-focus", "smoke-demo"],
     },
   });
   assertSuccess(createCollection, 201, "Criacao de colecao deveria funcionar");
@@ -1061,7 +1061,12 @@ async function main() {
       adminEmail,
     });
 
-    await app.locals.adminService.recalculateDerivedStats();
+    const accountDeletionService = app.locals.adminService?.accountDeletionService;
+    if (!accountDeletionService?.recalculateDerivedStats) {
+      throw new Error("Account deletion service is unavailable for seed stat recalculation.");
+    }
+
+    await accountDeletionService.recalculateDerivedStats();
     await app.locals.adminService.syncAdminUsers();
 
     const userCount = await User.countDocuments();
