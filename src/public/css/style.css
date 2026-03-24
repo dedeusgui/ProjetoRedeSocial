@@ -1205,27 +1205,48 @@ select:focus-visible {
   opacity: 0.6;
 }
 
-.post-modal-form,
+.post-modal-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
 .modal-disclosure,
 .modal-disclosure-copy,
-.modal-disclosure-panel,
+.modal-disclosure-panel {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.modal-header {
+  justify-content: space-between;
+}
+
 .modal-questionnaire-shell,
 .modal-questionnaire-section,
-.questionnaire-editor-card,
 .questionnaire-editor-copy,
 .questionnaire-editor-list,
 .questionnaire-editor-options,
 .questionnaire-preview,
 .questionnaire-preview-copy,
-.questionnaire-preview-card,
 .questionnaire-meta,
 .questionnaire-panel,
 .questionnaire-panel-copy,
-.questionnaire-panel-summary,
 .questionnaire-question-list,
-.questionnaire-editor-card-copy {
+.questionnaire-editor-card-copy,
+.questionnaire-panel-summary {
   display: grid;
   gap: var(--space-2);
+}
+
+.questionnaire-editor-card {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.questionnaire-preview-card,
+.questionnaire-question-card {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .questionnaire-editor-header,
@@ -1234,8 +1255,7 @@ select:focus-visible {
 .questionnaire-preview-header,
 .questionnaire-panel-header,
 .questionnaire-question-head,
-.questionnaire-panel-actions,
-.modal-header {
+.questionnaire-panel-actions {
   justify-content: space-between;
 }
 
@@ -1408,8 +1428,6 @@ select:focus-visible {
   border: 1px solid var(--line-0);
   border-radius: var(--radius-1);
   background: rgba(18, 25, 38, 0.82);
-  display: grid;
-  gap: var(--space-3);
 }
 
 .questionnaire-preview-prompt,
@@ -1480,8 +1498,6 @@ select:focus-visible {
 
 .questionnaire-question-card {
   padding: var(--space-4);
-  display: grid;
-  gap: var(--space-3);
 }
 
 .questionnaire-panel-summary {
@@ -1524,18 +1540,14 @@ select:focus-visible {
   border-color: rgba(143, 183, 160, 0.36);
 }
 
-.modal-questionnaire-shell,
-.modal-questionnaire-section,
-.questionnaire-editor-card,
-.questionnaire-editor-copy,
-.questionnaire-editor-list,
-.questionnaire-editor-options,
-.questionnaire-preview,
-.questionnaire-panel,
-.questionnaire-panel-copy,
-.questionnaire-question-list {
-  display: grid;
-  gap: var(--space-2);
+.questionnaire-title {
+  font-family: "Patrick Hand", "Space Grotesk", sans-serif;
+  line-height: 1.1;
+}
+
+.questionnaire-preview-summary,
+.questionnaire-panel-copy .muted {
+  max-width: 60ch;
 }
 
 .tag-list {
@@ -1601,21 +1613,6 @@ select:focus-visible {
   flex-wrap: wrap;
 }
 
-.post-context-strip,
-.collection-owner-meta,
-.collection-item-copy,
-.collection-item-text,
-.collection-detail-header,
-.collection-detail-copy,
-.collection-detail-meta,
-.collection-post-list,
-.sequence-list,
-.managed-content-grid,
-.collection-item-list {
-  display: grid;
-  gap: var(--space-2);
-}
-
 .post-context-strip {
   display: flex;
   gap: var(--space-2);
@@ -1654,49 +1651,30 @@ select:focus-visible {
 }
 
 .managed-content-grid,
-.collection-post-list {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-.collection-hero,
-.collection-view-shell,
-.collection-hero-copy,
-.collection-post-list,
-.collection-item-list,
-.sequence-list,
 .profile-content-panel,
 .profile-content-list {
   display: grid;
 }
 
+.managed-content-grid {
+  gap: var(--space-2);
+}
+
 .profile-content-panel,
-.collection-hero,
-.collection-hero-copy,
-.collection-item-list,
-.sequence-list,
 .profile-content-list {
   gap: var(--space-3);
 }
 
-.collection-view-shell {
-  gap: calc(var(--space-5) + var(--space-4));
+.managed-content-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.collection-post-list {
-  gap: var(--space-4);
-}
-
-.managed-post-card,
-.managed-collection-card,
-.collection-post-card,
-.sequence-item {
+.managed-post-card {
   display: grid;
   gap: var(--space-2);
 }
 
-.managed-content-card,
-.collection-post-card,
-.sequence-item {
+.managed-content-card {
   display: grid;
   gap: var(--space-2);
   padding: var(--space-3);
@@ -1705,9 +1683,74 @@ select:focus-visible {
   background: rgba(18, 25, 38, 0.82);
 }
 
-.profile-section-card,
+.profile-section-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.collection-owner-meta,
+.collection-detail-copy,
+.collection-detail-meta,
+.collection-feed-copy,
+.collection-item-body,
+.managed-collection-header,
+.managed-collection-header-copy,
+.managed-collection-select {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.collection-owner-meta {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.collection-detail-header {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.collection-hero,
+.collection-hero-copy,
+.collection-view-shell,
+.collection-item-list {
+  display: grid;
+}
+
+.collection-hero,
+.collection-hero-copy,
+.collection-item-list {
+  gap: var(--space-3);
+}
+
+.collection-view-shell {
+  gap: calc(var(--space-5) + var(--space-4));
+}
+
+.collection-post-list {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.managed-collection-card {
+  display: grid;
+  gap: var(--space-3);
+  border-color: var(--line-0);
+  background: rgba(18, 25, 38, 0.82);
+}
+
+.collection-post-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line-0);
+  border-radius: var(--radius-1);
+  background: rgba(18, 25, 38, 0.82);
+}
+
 .collection-panel,
-.sequence-panel,
 .collection-detail-card {
   display: grid;
   gap: var(--space-3);
@@ -1716,10 +1759,6 @@ select:focus-visible {
 .content-panel-header {
   justify-content: space-between;
   align-items: start;
-}
-
-.collection-owner-meta {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .collection-item-row {
@@ -1739,6 +1778,7 @@ select:focus-visible {
 }
 
 .collection-item-text {
+  display: grid;
   gap: 4px;
 }
 
@@ -1753,24 +1793,16 @@ select:focus-visible {
   align-items: center;
 }
 
-.collection-detail-header {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-}
-
 .collection-title {
   font-size: clamp(1.9rem, 1.55rem + 1.5vw, 2.8rem);
 }
 
-.collection-item-title,
-.questionnaire-title {
+.collection-item-title {
   font-family: "Patrick Hand", "Space Grotesk", sans-serif;
   line-height: 1.1;
 }
 
-.collection-description,
-.questionnaire-preview-summary,
-.questionnaire-panel-copy .muted {
+.collection-description {
   max-width: 60ch;
 }
 
@@ -1779,25 +1811,9 @@ select:focus-visible {
   letter-spacing: 0.03em;
 }
 
-.managed-collection-card,
 .collection-hero {
   border-color: var(--line-0);
   background: rgba(18, 25, 38, 0.82);
-}
-
-.collection-hero,
-.managed-collection-card,
-.collection-post-card {
-  gap: var(--space-3);
-}
-
-.managed-collection-header-copy,
-.collection-feed-copy,
-.collection-item-body,
-.managed-collection-header,
-.managed-collection-select {
-  display: grid;
-  gap: var(--space-2);
 }
 
 .collection-hero-header,
@@ -1877,6 +1893,21 @@ select:focus-visible {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+}
+
+.sequence-panel,
+.sequence-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sequence-item {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line-0);
+  border-radius: var(--radius-1);
+  background: rgba(18, 25, 38, 0.82);
 }
 
 .modal {

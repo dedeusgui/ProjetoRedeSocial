@@ -148,6 +148,9 @@ O principal problema nao e ausencia total de padrao. E drift arquitetural dentro
 7. **Recomendacao objetiva**  
    Reestruturar por familias reais de componente: base de questionnaire, base de collections, estados/variantes separados, evitando grupos gigantescos misturando papeis diferentes.
 
+**Status update (2026-03-24)**
+O problema deixou de depender do bloco tardio de overrides e foi reduzido com um refactor focado em `src/public/css/style.css`: questionnaire, collections e sequence passaram a ter blocos mais explicitos por familia, com menos agrupamentos cruzados para layout, spacing e surfaces. Ainda existe reutilizacao visual intencional entre alguns elementos, mas o acoplamento estrutural mais fragil foi removido.
+
 ### Media
 
 #### M1. A responsividade esta espalhada em dois blocos `@media (max-width: 640px)`

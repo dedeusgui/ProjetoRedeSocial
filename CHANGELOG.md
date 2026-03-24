@@ -2,6 +2,12 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-24
+
+### Fixed
+
+- Refactored the shared stylesheet so questionnaire, collection, and sequence surfaces now live in clearer family-specific sections instead of relying on large mixed selector groups for layout, spacing, and surface treatment.
+
 ## 2026-03-22
 
 ### Added
