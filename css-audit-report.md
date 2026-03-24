@@ -129,30 +129,6 @@ O principal problema nao e ausencia total de padrao. E drift arquitetural dentro
 7. **Recomendacao objetiva**  
    Separar semantica de contexto: manter `.muted` com significado estavel e criar tokens/variantes de modal em vez de reescrever o significado da classe.
 
-#### H4. Questionnaires e collections foram reagrupados varias vezes, criando acoplamento alto
-
-1. **Problema**  
-   Os mesmos componentes de questionnaire/collection aparecem em varios grupos enormes de seletores, com redefinicoes sucessivas de `display`, `gap`, `border`, `background` e `padding`.
-2. **O que esta acontecendo tecnicamente**  
-   O arquivo cria blocos agrupados para dezenas de seletores em `questionnaire-*`, `collection-*`, `sequence-*` e depois reaplica partes da mesma familia no trecho tardio.
-3. **Onde ocorre exatamente**  
-   - Arquivo: `src/public/css/style.css`
-   - Blocos relevantes: `1157-1187`, `1259-1490`, `1549-1635`, `2258-2418`, `2616-2631`
-   - Exemplos: `.questionnaire-editor-empty`, `.questionnaire-option-index`, `.collection-item-row`, `.sequence-item-current`, `.collection-post-list`
-4. **Por que isso e ruim**  
-   Aumenta acoplamento entre componentes distintos, dificulta mudancas localizadas e favorece regressao visual em cascata.
-5. **Severidade**  
-   Alta
-6. **Grau de confianca**  
-   Alto
-7. **Recomendacao objetiva**  
-   Reestruturar por familias reais de componente: base de questionnaire, base de collections, estados/variantes separados, evitando grupos gigantescos misturando papeis diferentes.
-
-**Status update (2026-03-24)**
-O problema deixou de depender do bloco tardio de overrides e foi reduzido com um refactor focado em `src/public/css/style.css`: questionnaire, collections e sequence passaram a ter blocos mais explicitos por familia, com menos agrupamentos cruzados para layout, spacing e surfaces. Ainda existe reutilizacao visual intencional entre alguns elementos, mas o acoplamento estrutural mais fragil foi removido.
-
-### Media
-
 #### M1. A responsividade esta espalhada em dois blocos `@media (max-width: 640px)`
 
 1. **Problema**  

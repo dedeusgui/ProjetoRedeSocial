@@ -8,6 +8,7 @@ All notable changes to this project should be documented in this file.
 
 - Refactored the shared stylesheet so questionnaire, collection, and sequence surfaces now live in clearer family-specific sections instead of relying on large mixed selector groups for layout, spacing, and surface treatment.
 - Refactored the feed header and discovery CSS around feed-specific hooks, removing the old deep `.app-header-feed-inner ...` overrides and consolidating the mobile behavior of search, segmented controls, and followed-tags management.
+- Promoted recurring shared stylesheet color literals into semantic tokens for buttons, chips, discovery controls, questionnaire states, collection surfaces, profile menus, and danger flows so repeated hard-coded values no longer drift between similar components.
 
 ## 2026-03-22
 
