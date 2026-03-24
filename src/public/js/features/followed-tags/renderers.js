@@ -23,7 +23,7 @@ function createFollowedTagChip(tag, { disabled = false } = {}) {
   const labelText = `#${formatFollowTagLabel(rawTag)}`;
 
   const item = document.createElement("li");
-  item.className = "tag-item tag-item-actionable followed-tag-chip";
+  item.className = "pill pill-chip tag-item tag-item-actionable followed-tag-chip";
   item.title = labelText;
 
   const label = document.createElement("button");
@@ -53,7 +53,7 @@ function createBannerTagChip(tag) {
   const labelText = formatFollowTagLabel(rawTag);
 
   const chip = document.createElement("span");
-  chip.className = "feed-follow-banner-chip";
+  chip.className = "pill pill-success feed-follow-banner-chip";
   chip.textContent = labelText;
   chip.title = `#${labelText}`;
   return chip;
@@ -61,7 +61,7 @@ function createBannerTagChip(tag) {
 
 function createBannerOverflowChip(remainingCount) {
   const chip = document.createElement("span");
-  chip.className = "feed-follow-banner-chip feed-follow-banner-chip-more";
+  chip.className = "pill pill-success-soft feed-follow-banner-chip feed-follow-banner-chip-more";
   chip.textContent = `+${remainingCount}`;
   chip.title = `${remainingCount} more followed tags`;
   return chip;

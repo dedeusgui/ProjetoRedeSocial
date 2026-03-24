@@ -20,7 +20,7 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `
-            <li class="tag-item tag-item-actionable">
+            <li class="pill pill-chip tag-item tag-item-actionable">
               <span class="tag-label">#${escapeHtml(label)}</span>
               ${
                 canManageTagFollows && followTag
@@ -50,7 +50,7 @@ function renderCollectionPost(post, index) {
     <article class="card post-card collection-post-card">
       <div class="collection-card-order">
         <p class="questionnaire-eyebrow">Collection post</p>
-        <span class="questionnaire-question-number">Step ${escapeHtml(String(index + 1))}</span>
+        <span class="pill pill-soft pill-patrick questionnaire-question-number">Step ${escapeHtml(String(index + 1))}</span>
       </div>
       <div class="collection-item-body">
         <p class="muted">${escapeHtml(formatDateTime(post.createdAt))}</p>
@@ -95,7 +95,7 @@ export function renderCollectionView(
           avatarClassName: "author-avatar-sm",
           className: "post-author-summary",
         })}
-        <span class="managed-collection-count">${escapeHtml(String(items.length))} post(s)</span>
+        <span class="pill pill-soft pill-roomy pill-patrick managed-collection-count">${escapeHtml(String(items.length))} post(s)</span>
       </header>
       <div class="collection-detail-copy">
         <p class="questionnaire-eyebrow">Curated collection</p>

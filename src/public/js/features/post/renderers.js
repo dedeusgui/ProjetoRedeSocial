@@ -52,7 +52,7 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `
-            <li class="tag-item tag-item-actionable">
+            <li class="pill pill-chip tag-item tag-item-actionable">
               <span class="tag-label">#${escapeHtml(label)}</span>
               ${
                 canManageTagFollows && followTag
@@ -160,7 +160,7 @@ function renderSequencePanel(sequenceItems = [], currentPostId = null) {
             (item, index) => `
               <article class="sequence-item ${String(item.id) === String(currentPostId) ? "sequence-item-current" : ""}">
                 <div class="row collection-post-header">
-                  <span class="questionnaire-question-number">${escapeHtml(String(index + 1))}</span>
+                  <span class="pill pill-soft pill-patrick questionnaire-question-number">${escapeHtml(String(index + 1))}</span>
                   <button
                     type="button"
                     class="button-ghost button-link-inline"
@@ -219,7 +219,7 @@ export function renderPostView(
           avatarClassName: "author-avatar-sm",
           className: "post-author-summary",
         })}
-        <p class="trend-chip ${escapeHtml(approvalToneClass)}">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+        <p class="pill pill-current trend-chip ${escapeHtml(approvalToneClass)}">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
       </header>
       <h2 class="post-title"></h2>
       <p class="post-content"></p>

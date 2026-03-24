@@ -41,7 +41,7 @@ function renderCollectionItemRow(item, index, itemCount) {
       <div class="collection-item-copy">
         <div class="collection-card-order">
           <p class="questionnaire-eyebrow">Collection post</p>
-          <span class="questionnaire-question-number">Step ${escapeHtml(String(index + 1))}</span>
+          <span class="pill pill-soft pill-patrick questionnaire-question-number">Step ${escapeHtml(String(index + 1))}</span>
         </div>
         <strong class="collection-item-title">${escapeHtml(item.title ?? "Untitled")}</strong>
         <span class="muted">${escapeHtml(formatDateTime(item.createdAt))}</span>
@@ -84,7 +84,7 @@ function renderCollectionTags(
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `
-            <li class="tag-item tag-item-actionable">
+            <li class="pill pill-chip tag-item tag-item-actionable">
               <span class="tag-label">#${escapeHtml(label)}</span>
               ${
                 canManageTagFollows && followTag
@@ -132,7 +132,7 @@ function renderCollectionCard(
           <p class="muted">${escapeHtml(collection.description ?? "")}</p>
         </div>
         <div class="collection-hero-meta">
-          <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? collectionItems.length ?? 0))} post(s)</span>
+          <span class="pill pill-soft pill-roomy pill-patrick managed-collection-count">${escapeHtml(String(collection.itemCount ?? collectionItems.length ?? 0))} post(s)</span>
         </div>
       </div>
       ${renderCollectionTags(collection.tags, { canManageTagFollows, followedTagSet })}

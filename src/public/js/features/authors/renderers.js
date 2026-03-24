@@ -37,9 +37,12 @@ export function renderReputationBadge(reputation = null, className = "") {
   const tier = reputation?.tier ?? "low";
   const label = reputation?.label ?? "Low";
   const toneClass = reputationTierClass(tier);
+  const badgeClassName = ["pill", "pill-current", "reputation-badge", toneClass, className]
+    .filter(Boolean)
+    .join(" ");
 
   return `
-    <span class="reputation-badge ${escapeHtml(toneClass)} ${escapeHtml(className)}">
+    <span class="${escapeHtml(badgeClassName)}">
       Reputation ${escapeHtml(label)}
     </span>
   `;

@@ -19,7 +19,7 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `
-            <li class="tag-item tag-item-actionable">
+            <li class="pill pill-chip tag-item tag-item-actionable">
               <span class="tag-label">#${escapeHtml(label)}</span>
               ${
                 canManageTagFollows && followTag
@@ -67,7 +67,7 @@ function createCollectionFeedCard(
         avatarClassName: "author-avatar-sm",
         className: "post-author-summary",
       })}
-      <span class="managed-collection-count">${escapeHtml(String(collection.itemCount ?? 0))} post(s)</span>
+      <span class="pill pill-soft pill-roomy pill-patrick managed-collection-count">${escapeHtml(String(collection.itemCount ?? 0))} post(s)</span>
     </header>
     <div class="collection-feed-copy">
       <p class="questionnaire-eyebrow">Curated collection</p>

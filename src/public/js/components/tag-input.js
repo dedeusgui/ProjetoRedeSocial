@@ -140,7 +140,7 @@ export function createTagInputController({
 
     items.forEach((item) => {
       const chip = document.createElement("span");
-      chip.className = "tag-input-chip";
+      chip.className = "pill pill-soft tag-input-chip";
 
       if (item.errorCodes.length > 0) {
         chip.classList.add("is-invalid");

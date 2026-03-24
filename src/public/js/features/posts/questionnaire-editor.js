@@ -252,7 +252,7 @@ export function createQuestionnaireEditor({ target } = {}) {
           <article class="questionnaire-editor-card">
             <div class="row questionnaire-editor-card-header">
               <div class="questionnaire-editor-card-copy">
-                <span class="questionnaire-question-number">Question ${escapeHtml(String(questionIndex + 1))}</span>
+                <span class="pill pill-soft pill-patrick questionnaire-question-number">Question ${escapeHtml(String(questionIndex + 1))}</span>
                 <p class="muted">Define the prompt, the options, and the correct answer.</p>
               </div>
               <button
@@ -332,9 +332,9 @@ export function createQuestionnaireEditor({ target } = {}) {
           </div>
         </div>
         <div class="questionnaire-editor-badges">
-          <span class="questionnaire-editor-badge">${escapeHtml(String(summary.questionCount))} question(s)</span>
-          <span class="questionnaire-editor-badge">${escapeHtml(String(summary.optionCount))} option(s)</span>
-          <span class="questionnaire-editor-badge">Up to ${MAX_QUESTIONS} questions</span>
+          <span class="pill pill-soft pill-patrick questionnaire-editor-badge">${escapeHtml(String(summary.questionCount))} question(s)</span>
+          <span class="pill pill-soft pill-patrick questionnaire-editor-badge">${escapeHtml(String(summary.optionCount))} option(s)</span>
+          <span class="pill pill-soft pill-patrick questionnaire-editor-badge">Up to ${MAX_QUESTIONS} questions</span>
         </div>
         <label>
           Questionnaire title

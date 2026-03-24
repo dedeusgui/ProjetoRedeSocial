@@ -30,14 +30,14 @@ export function renderQuestionnairePreview(questionnaire) {
           <p class="muted questionnaire-preview-summary">Self-check questions attached to this post.</p>
         </div>
         <div class="questionnaire-meta">
-          <span class="tag-item questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
-          <span class="tag-item questionnaire-count status-neutral">Preview</span>
+          <span class="pill pill-soft pill-patrick questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
+          <span class="pill pill-soft pill-patrick questionnaire-count status-neutral">Preview</span>
         </div>
       </div>
       <article class="questionnaire-preview-card">
         <div class="row questionnaire-question-head">
-          <span class="questionnaire-question-number">Question 1</span>
-          <span class="questionnaire-preview-chip">Preview</span>
+          <span class="pill pill-soft pill-patrick questionnaire-question-number">Question 1</span>
+          <span class="pill pill-soft pill-patrick questionnaire-preview-chip">Preview</span>
         </div>
         <p class="questionnaire-preview-prompt">${escapeHtml(firstQuestion.prompt ?? "")}</p>
         <ol class="questionnaire-preview-options">
@@ -90,11 +90,11 @@ export function renderQuestionnaireDetail(
           <p class="muted">${escapeHtml(summaryText)}</p>
         </div>
         <div class="questionnaire-meta">
-          <span class="tag-item questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
+          <span class="pill pill-soft pill-patrick questionnaire-count">${buildQuestionCountLabel(questions.length)}</span>
           ${
             isSubmitted
-              ? `<span class="tag-item questionnaire-count ${scorePercent >= 70 ? "status-positive" : "status-negative"}">${escapeHtml(String(scorePercent))}%</span>`
-              : '<span class="tag-item questionnaire-count status-neutral">Browser self-check</span>'
+              ? `<span class="pill pill-soft pill-patrick questionnaire-count ${scorePercent >= 70 ? "status-positive" : "status-negative"}">${escapeHtml(String(scorePercent))}%</span>`
+              : '<span class="pill pill-soft pill-patrick questionnaire-count status-neutral">Browser self-check</span>'
           }
         </div>
       </div>
@@ -117,10 +117,10 @@ export function renderQuestionnaireDetail(
               return `
                 <article class="questionnaire-question-card">
                   <div class="row questionnaire-question-head">
-                    <span class="questionnaire-question-number">Question ${escapeHtml(String(questionIndex + 1))}</span>
+                    <span class="pill pill-soft pill-patrick questionnaire-question-number">Question ${escapeHtml(String(questionIndex + 1))}</span>
                     ${
                       questionResult
-                        ? `<span class="questionnaire-result-chip ${questionResult.isCorrect ? "status-positive" : "status-negative"}">${
+                        ? `<span class="pill pill-current questionnaire-result-chip ${questionResult.isCorrect ? "status-positive" : "status-negative"}">${
                             questionResult.isCorrect ? "Correct" : "Incorrect"
                           }</span>`
                         : ""

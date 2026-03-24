@@ -67,7 +67,7 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
           const isFollowing = canManageTagFollows && followedTagSet.has(followTag);
 
           return `
-            <li class="tag-item tag-item-actionable">
+            <li class="pill pill-chip tag-item tag-item-actionable">
               <span class="tag-label">#${escapeHtml(label)}</span>
               ${
                 canManageTagFollows && followTag
@@ -123,7 +123,7 @@ export function createPostCard(
         avatarClassName: "author-avatar-sm",
         className: "post-author-summary",
       })}
-      <p class="trend-chip ${escapeHtml(approvalToneClass)}">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
+      <p class="pill pill-current trend-chip ${escapeHtml(approvalToneClass)}">Approval: ${escapeHtml(formatPercent(approvalPercentage))}</p>
     </header>
     <h2 class="post-title"></h2>
     <p class="post-content"></p>

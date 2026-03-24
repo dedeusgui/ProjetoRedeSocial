@@ -23,7 +23,7 @@ export function renderProfileView(
   target.innerHTML = `
     <section class="card profile-card">
       <div class="profile-topline">
-        <p class="profile-privacy-badge">Private profile</p>
+        <p class="pill pill-outline pill-roomy pill-uppercase profile-privacy-badge">Private profile</p>
       </div>
 
       <div class="profile-main">

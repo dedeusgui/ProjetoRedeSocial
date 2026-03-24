@@ -9,7 +9,7 @@ function renderSequenceContext(sequence, postId) {
 
   return `
     <div class="post-context-group" aria-label="Sequence context">
-      <span class="post-context-pill post-context-pill-static">${escapeHtml(stateLabel)}</span>
+      <span class="pill pill-soft pill-roomy post-context-pill post-context-pill-static">${escapeHtml(stateLabel)}</span>
       <button
         type="button"
         class="button-ghost button-link-inline post-context-link"
