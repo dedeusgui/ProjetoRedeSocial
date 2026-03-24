@@ -525,18 +525,24 @@ select:focus-visible {
   gap: var(--space-2);
 }
 
+.feed-discovery-top,
+.feed-discovery-controls,
+.follow-tags-toolbar {
+  gap: var(--space-2);
+}
+
 .app-header-feed {
   display: block;
 }
 
-.app-header-feed-inner {
+.feed-header-shell {
   display: grid;
   gap: var(--space-4);
   width: min(760px, 100%);
   margin: 0 auto;
 }
 
-.app-header-feed-top {
+.feed-header-top {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -544,20 +550,19 @@ select:focus-visible {
   width: 100%;
 }
 
-.app-header-feed-inner .header-copy {
+.feed-header-copy {
   justify-items: center;
   text-align: center;
   max-width: none;
 }
 
-.app-header-feed-inner .app-nav {
+.feed-header-nav {
   margin-left: 0;
   justify-content: center;
   width: 100%;
 }
 
-.app-header-feed-inner .feed-discovery-panel {
-  display: grid;
+.feed-header-discovery {
   justify-items: stretch;
   padding-top: var(--space-3);
   border-top: 1px solid var(--line-0);
@@ -565,24 +570,19 @@ select:focus-visible {
   max-width: none;
 }
 
-.feed-discovery-top {
-  grid-template-columns: minmax(0, 1.6fr) auto;
-  gap: var(--space-2);
-  align-items: end;
-}
-
-.app-header-feed-inner .feed-discovery-top {
+.feed-header-discovery-top {
   grid-template-columns: 1fr;
   justify-items: stretch;
   align-items: stretch;
   width: 100%;
 }
 
-.feed-discovery-controls {
+.feed-header-controls {
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-2);
   align-items: center;
   justify-items: stretch;
+  align-content: center;
+  width: 100%;
 }
 
 .feed-search {
@@ -591,16 +591,12 @@ select:focus-visible {
   margin-top: 0;
 }
 
-.app-header-feed-inner .feed-search {
+.feed-header-search {
   width: 100%;
   max-width: none;
 }
 
 .feed-search-field {
-  width: 100%;
-}
-
-.app-header-feed-inner .feed-search-field {
   width: 100%;
 }
 
@@ -610,7 +606,7 @@ select:focus-visible {
   flex-wrap: wrap;
 }
 
-.app-header-feed-inner .feed-search-actions {
+.feed-header-search-actions {
   justify-content: center;
 }
 
@@ -666,9 +662,12 @@ select:focus-visible {
 .feed-follow-toggle {
   display: flex;
   align-items: center;
+  gap: var(--space-2);
+}
+
+.feed-header-follow-toggle {
   justify-content: flex-end;
   justify-self: end;
-  gap: var(--space-2);
 }
 
 .feed-follow-banner-shell {
@@ -733,41 +732,28 @@ select:focus-visible {
   color: rgba(182, 218, 201, 0.66);
 }
 
-.app-header-feed-inner .feed-discovery-controls {
-  width: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
-  justify-items: stretch;
-  align-content: center;
-}
-
-.app-header-feed-inner .feed-follow-toggle {
-  justify-content: flex-end;
-}
-
 .follow-tags-toolbar {
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
   align-items: start;
 }
 
-.app-header-feed-inner .follow-tags-auth {
+.feed-header-follow-tags-auth {
   width: min(520px, 100%);
   margin: 0 auto;
   justify-items: stretch;
   gap: var(--space-2);
 }
 
-.app-header-feed-inner .follow-tags-guest {
+.feed-header-follow-tags-guest {
   width: min(520px, 100%);
   margin: 0 auto;
 }
 
-.app-header-feed-inner .follow-tags-guest,
-.app-header-feed-inner [data-follow-tag-status] {
+.feed-header-follow-tags-guest,
+.feed-header-follow-tags-status {
   text-align: left;
 }
 
-.app-header-feed-inner .follow-tags-toolbar {
+.feed-header-follow-tags-toolbar {
   width: 100%;
   max-width: none;
   grid-template-columns: 1fr;
@@ -2315,37 +2301,8 @@ select:focus-visible {
     flex-direction: column;
   }
 
-  .app-header-feed-inner {
+  .feed-header-shell {
     width: 100%;
-  }
-
-  .app-header-feed-top {
-    align-items: center;
-  }
-
-  .app-header-feed-inner .app-nav {
-    justify-content: center;
-  }
-
-  .app-header-feed-inner .feed-discovery-top {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    align-items: stretch;
-  }
-
-  .app-header-feed-inner .feed-discovery-controls {
-    justify-items: stretch;
-    align-content: center;
-    width: 100%;
-  }
-
-  .app-header-feed-inner .feed-follow-toggle {
-    justify-content: flex-end;
-  }
-
-  .app-header-feed-inner .follow-tags-toolbar {
-    grid-template-columns: 1fr;
-    justify-items: stretch;
   }
 
   .auth-grid {
@@ -2385,17 +2342,12 @@ select:focus-visible {
     min-width: 0;
   }
 
-  .feed-discovery-top {
-    grid-template-columns: 1fr;
-  }
-
-  .feed-discovery-controls {
+  .feed-header-controls {
     grid-template-columns: 1fr;
     justify-items: stretch;
-    gap: var(--space-2);
   }
 
-  .feed-follow-toggle {
+  .feed-header-follow-toggle {
     width: 100%;
     justify-content: flex-start;
     justify-self: start;
@@ -2410,8 +2362,7 @@ select:focus-visible {
     white-space: normal;
   }
 
-  .follow-tags-toolbar {
-    grid-template-columns: 1fr;
+  .feed-header-follow-tags-toolbar {
     align-items: stretch;
   }
 
@@ -2421,17 +2372,13 @@ select:focus-visible {
     max-width: none;
   }
 
-  .app-header-feed-inner .app-nav,
-  .app-header-feed-inner .feed-search-actions {
+  .feed-header-nav,
+  .feed-header-search-actions {
     justify-content: center;
   }
 
-  .app-header-feed-inner .feed-mode-toggle {
+  .feed-header-mode-toggle {
     width: 100%;
-  }
-
-  .app-header-feed-inner .feed-discovery-controls {
-    justify-items: stretch;
   }
 
   .profile-hero {
@@ -2517,20 +2464,8 @@ select:focus-visible {
 }
 
 @media (max-width: 425px) {
-  .feed-discovery-panel {
+  .feed-header-discovery {
     gap: var(--space-3);
-  }
-
-  .feed-discovery-controls,
-  .app-header-feed-inner .feed-discovery-controls {
-    grid-template-columns: 1fr;
-    justify-items: stretch;
-    gap: var(--space-2);
-  }
-
-  .feed-mode-toggle,
-  .app-header-feed-inner .feed-mode-toggle {
-    width: 100%;
   }
 
   .feed-mode-toggle button {
@@ -2538,9 +2473,7 @@ select:focus-visible {
     padding-inline: 12px;
   }
 
-  .feed-follow-toggle,
-  .app-header-feed-inner .feed-follow-toggle {
-    width: 100%;
+  .feed-header-follow-toggle {
     justify-content: space-between;
     justify-self: stretch;
   }
@@ -2553,8 +2486,7 @@ select:focus-visible {
     padding: 10px 12px;
   }
 
-  .follow-tags-toolbar,
-  .app-header-feed-inner .follow-tags-toolbar,
+  .feed-header-follow-tags-toolbar,
   .followed-tags-dropdown {
     width: 100%;
     justify-items: stretch;
