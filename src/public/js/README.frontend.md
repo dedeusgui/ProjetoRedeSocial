@@ -34,6 +34,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 ## Conventions
 - Use `data-*` selectors for DOM hooks.
 - For internal page-to-page actions, use `<button type="button" data-nav-href="...">` and shared navigation binding.
+- Use `modal-form-layout`, `modal-form-section`, and `modal-form-section-copy` as shared modal layout primitives; keep `danger-zone-card` semantic and let `.card` plus `danger-zone-*` own the visible danger styling.
 - Keep auth forms browser-friendly: use standard field names plus HTML autocomplete tokens such as `email`, `current-password`, and `new-password`; account-creation password confirmation should be checked locally before the register request, and the frontend must not try to read or repopulate saved passwords from JavaScript.
 - On `index.html`, treat a stored token as tentative: validate it with `api.users.meProfile()` before redirecting to the authenticated experience, and clear the local session if validation fails.
 - Always show user feedback for async actions: loading, success, or error.

@@ -1302,7 +1302,17 @@ select:focus-visible {
   opacity: 0.6;
 }
 
-.post-modal-form {
+.modal-form-layout {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.modal-form-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.modal-form-section-copy {
   display: grid;
   gap: var(--space-2);
 }

@@ -12,6 +12,7 @@ All notable changes to this project should be documented in this file.
 - Added an explicit shared `pill` primitive with semantic variants for chips, badges, questionnaire metadata, collection counts, privacy badges, followed-tag chips, and approval/reputation labels so the same visual family no longer depends on parallel one-off rules.
 - Replaced the owner collection-management negative-margin spacing hack with explicit control wrappers and grid gaps, so the `Open/Edit/Delete` area and the `Add a post` controls no longer depend on sibling-order compensation.
 - Removed unused selectors from the shared stylesheet so dead frontend hooks no longer add noise to collection, moderation, profile, and post CSS sections.
+- Added explicit shared modal-form layout primitives in the stylesheet and docs so modal section wrappers now have a stable CSS contract, while `danger-zone-card` stays a semantic wrapper over the existing danger composition.
 
 ## 2026-03-22
 
