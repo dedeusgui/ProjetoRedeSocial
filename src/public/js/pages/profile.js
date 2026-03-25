@@ -1,5 +1,9 @@
 ﻿import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import {
+  applyDestructiveActionUi,
+  bindManagedDialog,
+} from "../components/destructive-confirmation.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import { resolveAuthApiMessage } from "../core/http-state.js";
@@ -28,6 +32,8 @@ const elements = {
   adminUsersRefresh: document.querySelector("[data-admin-users-refresh]"),
   adminDeleteUserModal: document.querySelector("[data-admin-delete-user-modal]"),
   adminDeleteUserForm: document.querySelector("[data-admin-delete-user-form]"),
+  adminDeleteUserTitle: document.querySelector("[data-admin-delete-user-title]"),
+  adminDeleteUserDescription: document.querySelector("[data-admin-delete-user-description]"),
   adminDeleteUserSummary: document.querySelector("[data-admin-delete-user-summary]"),
   adminDeleteImpactSection: document.querySelector("[data-admin-delete-impact-section]"),
   adminDeleteImpactLead: document.querySelector("[data-admin-delete-impact-lead]"),
@@ -43,6 +49,8 @@ const elements = {
   openDeleteAccountModalButton: document.querySelector("[data-open-delete-account-modal]"),
   deleteAccountModal: document.querySelector("[data-delete-account-modal]"),
   deleteAccountForm: document.querySelector("[data-delete-account-form]"),
+  deleteAccountTitle: document.querySelector("[data-delete-account-title]"),
+  deleteAccountDescription: document.querySelector("[data-delete-account-description]"),
   deleteAccountUsername: document.querySelector("[data-delete-account-username]"),
   deleteAccountConfirmationInput: document.querySelector("[data-delete-account-confirmation]"),
   deleteAccountCancelButton: document.querySelector("[data-delete-account-cancel]"),
@@ -205,6 +213,14 @@ function renderAdminDeleteUserState() {
 }
 
 function updateAdminDeleteUserModalUi() {
+  const content = applyDestructiveActionUi({
+    actionKey: "admin.user.delete",
+    titleTarget: elements.adminDeleteUserTitle,
+    descriptionTarget: elements.adminDeleteUserDescription,
+    cancelButton: elements.adminDeleteUserCancelButton,
+    confirmButton: elements.adminDeleteUserConfirmButton,
+    isBusy: state.isDeletingUser,
+  });
   const requiresConfirmation = requiresAdminDeleteUsernameConfirmation();
   const expectedConfirmation = getAdminDeleteConfirmationValue();
   const confirmationValue = elements.adminDeleteConfirmationInput?.value ?? "";
@@ -240,8 +256,8 @@ function updateAdminDeleteUserModalUi() {
   if (elements.adminDeleteUserConfirmButton) {
     elements.adminDeleteUserConfirmButton.disabled = !canConfirmDeletion;
     elements.adminDeleteUserConfirmButton.textContent = state.isDeletingUser
-      ? "Deleting..."
-      : "Delete user";
+      ? content.busyLabel
+      : content.confirmLabel;
   }
 }
 
@@ -306,6 +322,14 @@ function syncDeleteAccountAvailability() {
 }
 
 function updateDeleteAccountModalUi() {
+  const content = applyDestructiveActionUi({
+    actionKey: "account.delete",
+    titleTarget: elements.deleteAccountTitle,
+    descriptionTarget: elements.deleteAccountDescription,
+    cancelButton: elements.deleteAccountCancelButton,
+    confirmButton: elements.deleteAccountSubmitButton,
+    isBusy: state.isDeletingAccount,
+  });
   const confirmationValue = elements.deleteAccountConfirmationInput?.value ?? "";
   const canConfirmDeletion =
     canDeleteOwnAccount() &&
@@ -322,6 +346,9 @@ function updateDeleteAccountModalUi() {
 
   if (elements.deleteAccountSubmitButton) {
     elements.deleteAccountSubmitButton.disabled = !canConfirmDeletion;
+    elements.deleteAccountSubmitButton.textContent = state.isDeletingAccount
+      ? content.busyLabel
+      : content.confirmLabel;
   }
 }
 
@@ -757,23 +784,14 @@ function bindAdminEvents() {
 
   elements.adminDeleteUserForm?.addEventListener("submit", deleteManagedUser);
 
-  if (elements.adminDeleteUserModal) {
-    elements.adminDeleteUserModal.addEventListener("click", (event) => {
-      if (event.target === elements.adminDeleteUserModal && !state.isDeletingUser) {
-        closeAdminDeleteUserModal();
-      }
-    });
-
-    elements.adminDeleteUserModal.addEventListener("cancel", (event) => {
-      if (state.isDeletingUser) {
-        event.preventDefault();
-      }
-    });
-
-    elements.adminDeleteUserModal.addEventListener("close", () => {
-      resetAdminDeleteUserModalState();
-    });
-  }
+  bindManagedDialog({
+    dialog: elements.adminDeleteUserModal,
+    requestClose: () => {
+      closeAdminDeleteUserModal();
+    },
+    canClose: () => !state.isDeletingUser,
+    onClosed: resetAdminDeleteUserModalState,
+  });
 }
 
 function bindDeleteAccountEvents() {
@@ -787,23 +805,12 @@ function bindDeleteAccountEvents() {
 
   elements.deleteAccountForm?.addEventListener("submit", deleteOwnAccount);
 
-  if (elements.deleteAccountModal) {
-    elements.deleteAccountModal.addEventListener("click", (event) => {
-      if (event.target === elements.deleteAccountModal && !state.isDeletingAccount) {
-        closeDeleteAccountModal();
-      }
-    });
-
-    elements.deleteAccountModal.addEventListener("cancel", (event) => {
-      if (state.isDeletingAccount) {
-        event.preventDefault();
-      }
-    });
-
-    elements.deleteAccountModal.addEventListener("close", () => {
-      resetDeleteAccountModalState();
-    });
-  }
+  bindManagedDialog({
+    dialog: elements.deleteAccountModal,
+    requestClose: closeDeleteAccountModal,
+    canClose: () => !state.isDeletingAccount,
+    onClosed: resetDeleteAccountModalState,
+  });
 }
 
 function bindProfileEvents() {

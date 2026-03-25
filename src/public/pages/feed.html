@@ -191,6 +191,36 @@
       </section>
     </dialog>
 
+    <dialog class="modal modal-compact" data-delete-post-modal>
+      <section class="card modal-card danger-modal-card danger-modal-card-compact">
+        <div class="danger-modal-header">
+          <div class="danger-modal-heading">
+            <span class="danger-modal-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3.5 21 20.5H3L12 3.5Zm0 5.4v5.5m0 2.85v.25" />
+              </svg>
+            </span>
+            <div class="danger-modal-heading-copy">
+              <h2 class="ink-underline" data-delete-post-title>Delete post?</h2>
+              <p class="muted" data-delete-post-description></p>
+            </div>
+          </div>
+        </div>
+        <section class="modal-form-section danger-modal-section">
+          <p class="muted danger-zone-note" data-delete-post-note></p>
+        </section>
+        <div class="row modal-submit-row danger-modal-actions">
+          <button type="button" class="button-ghost" data-delete-post-cancel>
+            Cancel
+          </button>
+          <button type="button" class="button-reject" data-delete-post-confirm>
+            Delete post
+          </button>
+        </div>
+        <p class="muted status-line" data-delete-post-status></p>
+      </section>
+    </dialog>
+
     <script type="module" src="../js/pages/feed.js"></script>
   </body>
 </html>

@@ -1,5 +1,6 @@
 ﻿import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import { createDestructiveModalController } from "../components/destructive-confirmation.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import {
@@ -26,7 +27,6 @@ const state = {
   commentsOpen: false,
   isReviewSubmitting: false,
   isDeletingPost: false,
-  isDeletingComment: false,
   isManagingTags: false,
   questionnaireSignature: null,
   questionnaireSession: {
@@ -37,6 +37,11 @@ const state = {
     editingCommentId: null,
     draft: "",
     isSaving: false,
+  },
+  commentDelete: {
+    pendingCommentId: null,
+    isDeleting: false,
+    errorMessage: "",
   },
 };
 
@@ -62,6 +67,13 @@ const elements = {
   selectedPostMedia: document.querySelector("[data-selected-post-media]"),
   existingPostMedia: document.querySelector("[data-existing-post-media]"),
   questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
+  deletePostModal: document.querySelector("[data-delete-post-modal]"),
+  deletePostTitle: document.querySelector("[data-delete-post-title]"),
+  deletePostDescription: document.querySelector("[data-delete-post-description]"),
+  deletePostNote: document.querySelector("[data-delete-post-note]"),
+  deletePostCancelButton: document.querySelector("[data-delete-post-cancel]"),
+  deletePostConfirmButton: document.querySelector("[data-delete-post-confirm]"),
+  deletePostStatus: document.querySelector("[data-delete-post-status]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -154,6 +166,12 @@ function resetCommentEditState() {
   state.commentEdit.editingCommentId = null;
   state.commentEdit.draft = "";
   state.commentEdit.isSaving = false;
+}
+
+function resetCommentDeleteState() {
+  state.commentDelete.pendingCommentId = null;
+  state.commentDelete.isDeleting = false;
+  state.commentDelete.errorMessage = "";
 }
 
 function buildQuestionnaireSignature(questionnaire) {
@@ -254,6 +272,7 @@ function renderCurrentPost() {
     followedTagSet: new Set(state.followedTags),
     questionnaireSession: state.questionnaireSession,
     isPostOwner: canEditPost,
+    commentDelete: state.commentDelete,
   });
 
   refreshReviewActions();
@@ -274,6 +293,20 @@ function focusCommentEditInput(commentId) {
   input.focus();
   const valueLength = String(input.value ?? "").length;
   input.setSelectionRange(valueLength, valueLength);
+}
+
+function focusCommentDeleteButton(commentId) {
+  const button = elements.view?.querySelector(
+    `[data-delete-comment-id="${String(commentId)}"]`,
+  );
+  button?.focus();
+}
+
+function focusCommentDeleteCancelButton(commentId) {
+  const button = elements.view?.querySelector(
+    `[data-cancel-comment-delete-id="${String(commentId)}"]`,
+  );
+  button?.focus();
 }
 
 function refreshReviewActions({ preserveStatus = false } = {}) {
@@ -303,6 +336,7 @@ async function loadPost() {
     state.questionnaireSignature = null;
     resetQuestionnaireSession();
     resetCommentEditState();
+    resetCommentDeleteState();
     renderMissingPostState("Post ID is missing from the URL.");
     statusFlash.show("Could not open the post.", "error");
     return;
@@ -331,6 +365,7 @@ async function loadPost() {
     state.postData = post;
     state.postAuthorId = post.author?.id ?? null;
     resetCommentEditState();
+    resetCommentDeleteState();
     renderCurrentPost();
     renderSessionState();
     statusFlash.clear();
@@ -340,6 +375,7 @@ async function loadPost() {
     state.questionnaireSignature = null;
     resetQuestionnaireSession();
     resetCommentEditState();
+    resetCommentDeleteState();
     renderMissingPostState("This post cannot be displayed right now.");
     statusFlash.show(resolveMessage(error), "error");
   }
@@ -485,7 +521,7 @@ async function handleReview(decision) {
   }
 }
 
-async function handleDeletePost() {
+function handleDeletePost() {
   if (!state.postId || state.isDeletingPost) {
     return;
   }
@@ -496,16 +532,14 @@ async function handleDeletePost() {
     return;
   }
 
-  state.isDeletingPost = true;
-  statusFlash.show("Deleting post...", "info");
-  try {
-    await api.posts.delete(state.postId);
-    window.location.href = "./feed.html";
-  } catch (error) {
-    statusFlash.show(resolveDeleteMessage(error), "error");
-  } finally {
-    state.isDeletingPost = false;
-  }
+  deletePostController.open({
+    actionKey: "post.delete",
+    context: {
+      postId: String(state.postId),
+      resolveErrorMessage: resolveDeleteMessage,
+    },
+    restoreFocusTo: elements.view?.querySelector("[data-delete-post-id]") ?? null,
+  });
 }
 
 async function submitPostUpdate(postId, payload) {
@@ -560,6 +594,31 @@ const postModalController = createPostModalController({
           : "Post updated.",
         mediaError ? "error" : "success",
       );
+    }
+  },
+});
+
+const deletePostController = createDestructiveModalController({
+  dialog: elements.deletePostModal,
+  titleTarget: elements.deletePostTitle,
+  descriptionTarget: elements.deletePostDescription,
+  noteTarget: elements.deletePostNote,
+  cancelButton: elements.deletePostCancelButton,
+  confirmButton: elements.deletePostConfirmButton,
+  statusTarget: elements.deletePostStatus,
+  async onConfirm({ context }) {
+    const postId = String(context?.postId ?? "").trim();
+    if (!postId || state.isDeletingPost) {
+      return;
+    }
+
+    state.isDeletingPost = true;
+
+    try {
+      await api.posts.delete(postId);
+      window.location.href = "./feed.html";
+    } finally {
+      state.isDeletingPost = false;
     }
   },
 });
@@ -641,6 +700,7 @@ function startCommentEdit(commentId) {
     return;
   }
 
+  resetCommentDeleteState();
   state.commentEdit.editingCommentId = String(commentId);
   state.commentEdit.draft = String(comment.content ?? "");
   state.commentEdit.isSaving = false;
@@ -709,7 +769,7 @@ async function saveCommentEdit(commentId) {
 }
 
 async function handleDeleteComment(commentId) {
-  if (!commentId || state.isDeletingComment) {
+  if (!commentId || state.commentDelete.isDeleting) {
     return;
   }
 
@@ -724,8 +784,52 @@ async function handleDeleteComment(commentId) {
     return;
   }
 
-  state.isDeletingComment = true;
-  statusFlash.show("Deleting comment...", "info");
+  state.commentDelete.pendingCommentId = String(commentId);
+  state.commentDelete.isDeleting = false;
+  state.commentDelete.errorMessage = "";
+  renderCurrentPost();
+  window.requestAnimationFrame(() => {
+    focusCommentDeleteCancelButton(commentId);
+  });
+}
+
+function cancelCommentDelete(commentId) {
+  if (String(state.commentDelete.pendingCommentId ?? "") !== String(commentId ?? "")) {
+    return;
+  }
+
+  resetCommentDeleteState();
+  renderCurrentPost();
+  window.requestAnimationFrame(() => {
+    focusCommentDeleteButton(commentId);
+  });
+}
+
+async function confirmCommentDelete(commentId) {
+  if (
+    !commentId ||
+    state.commentDelete.isDeleting ||
+    String(state.commentDelete.pendingCommentId ?? "") !== String(commentId)
+  ) {
+    return;
+  }
+
+  const comment = (state.postData?.comments ?? []).find(
+    (item) => String(item.id) === String(commentId),
+  );
+  const isOwner = String(comment?.author?.id ?? "") === String(state.viewerId ?? "");
+  const isPrivileged = ["moderator", "admin"].includes(state.viewerRole ?? "");
+
+  if (!hasSession() || (!isOwner && !isPrivileged)) {
+    state.commentDelete.errorMessage = "You do not have permission to delete this comment.";
+    renderCurrentPost();
+    return;
+  }
+
+  state.commentDelete.isDeleting = true;
+  state.commentDelete.errorMessage = "";
+  renderCurrentPost();
+
   try {
     await api.comments.delete(commentId);
     state.postData = {
@@ -737,12 +841,13 @@ async function handleDeleteComment(commentId) {
     if (String(state.commentEdit.editingCommentId ?? "") === String(commentId)) {
       resetCommentEditState();
     }
+    resetCommentDeleteState();
     renderCurrentPost();
     statusFlash.show("Comment deleted.", "success");
   } catch (error) {
-    statusFlash.show(resolveDeleteMessage(error), "error");
-  } finally {
-    state.isDeletingComment = false;
+    state.commentDelete.isDeleting = false;
+    state.commentDelete.errorMessage = resolveDeleteMessage(error);
+    renderCurrentPost();
   }
 }
 
@@ -805,6 +910,24 @@ function bindEvents() {
         const commentId = String(deleteCommentButton.dataset.deleteCommentId ?? "").trim();
         if (commentId) {
           handleDeleteComment(commentId);
+        }
+        return;
+      }
+
+      const cancelCommentDeleteButton = event.target.closest("[data-cancel-comment-delete-id]");
+      if (cancelCommentDeleteButton && elements.view.contains(cancelCommentDeleteButton)) {
+        const commentId = String(cancelCommentDeleteButton.dataset.cancelCommentDeleteId ?? "").trim();
+        if (commentId) {
+          cancelCommentDelete(commentId);
+        }
+        return;
+      }
+
+      const confirmCommentDeleteButton = event.target.closest("[data-confirm-comment-delete-id]");
+      if (confirmCommentDeleteButton && elements.view.contains(confirmCommentDeleteButton)) {
+        const commentId = String(confirmCommentDeleteButton.dataset.confirmCommentDeleteId ?? "").trim();
+        if (commentId) {
+          void confirmCommentDelete(commentId);
         }
         return;
       }

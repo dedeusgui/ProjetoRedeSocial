@@ -2,723 +2,425 @@
 
 ## 1. Resumo executivo
 
-Visao geral da qualidade atual:
-- O projeto continua acima da media para o escopo academico: documentacao forte, backend modular coerente, contrato HTTP consistente, frontend organizado por pagina/orquestrador/renderer e design visual relativamente estavel.
-- A revisao deste relatorio mostrou que o maior risco atual nao e "layout quebrado geral" nem "arquitetura sem direcao". O maior risco direto ao usuario esta nas acoes destrutivas sem confirmacao. O maior risco estrutural esta no frontend estatico depender de contratos implicitos entre HTML, `data-*` hooks e orquestradores JS sem blindagem suficiente contra drift.
+Estado geral validado:
+- O projeto segue acima da media para o escopo academico: backend modular coerente, docs tecnicas fortes, contrato HTTP consistente, frontend organizado por pagina/orquestrador/renderers e boa disciplina recente de changelog.
+- Nao encontrei achados criticos no backend ou no contrato publico durante a revisao de docs, rotas montadas em `src/server.js` e inventario de `src/modules/*/routes/*.js`.
+- O relatorio anterior ficou parcialmente desatualizado. Algumas fragilidades que eram reais ja foram corrigidas e hoje precisam sair da lista principal para nao virar falso positivo.
 
-Principais riscos:
-- deletes permanentes de usuario, post e colecao continuam sem etapa intermediaria de seguranca
-- alguns fluxos importantes ainda dependem de `status-line`, mas nao refletem estado ocupado no proprio controle
-- paginas publicas podem continuar parecendo autenticadas quando o token local ja nao corresponde a uma sessao valida
-- UI compartilhada depende de markup repetido e seletores tolerantes demais, o que aumenta regressao silenciosa
+Maiores riscos atuais:
+- acoes destrutivas ainda fragmentadas: colecoes e contas ja tem confirmacao forte, mas posts e comentarios ainda podem ser apagados imediatamente
+- estado de autenticacao ainda e dirigido demais por `token presente` em varias superficies, o que deixa paginas publicas e administrativas parecerem autenticadas mesmo quando a sessao real ja falhou
+- o frontend continua dependendo de contratos implicitos entre HTML estatico, hooks `data-*` e controladores compartilhados, especialmente no modal de post
+- a base ja tem testes e smoke scripts uteis, mas a validacao automatizada rapida ainda e estreita para o tamanho atual do produto
 
-Padroes positivos encontrados:
-- tokens visuais consistentes em `src/public/css/style.css`
-- bons renderers reutilizaveis em `features/*`
-- envelope HTTP `{ ok, data/error }` bem documentado e respeitado
-- docs deixam varias decisoes de produto explicitas, o que evita falso positivo
-- existe bom exemplo interno de busy-state e disable de controles em `features/posts/post-modal.js`
-
-Areas mais frageis:
-- protecao de acoes destrutivas
-- coerencia de estado autenticado em paginas publicas
-- uniformidade de pending/busy-state
-- superficies compartilhadas com markup duplicado
+Padroes positivos confirmados:
+- docs em `docs/` continuam sendo a fonte de verdade mais confiavel do projeto
+- arquitetura `routes/controllers/services/repositories` esta aplicada de forma consistente
+- o contrato `{ ok, data/error }` esta documentado e alinhado com a estrutura do backend
+- o projeto ganhou endurecimentos importantes desde a auditoria anterior: confirmacao de senha no cadastro, modal de delete de colecao, modal de delete administrativo com preview, limite de comentario espelhado no frontend e correcao do CTA `Add to collection`
 
 Observacao metodologica:
-- Esta versao nao e uma auditoria cega refeita do zero.
-- Usei o `audit-report.md` anterior como base, reli os achados que estavam superficiais, ambiguos ou desatualizados e revalidei os arquivos-fonte mais relevantes.
-- Nao rodei browser automation nem `npm run test:smoke`; a analise continua baseada em leitura contextual de codigo e docs.
+- Esta versao foi refeita com base no estado atual do repositorio.
+- O relatorio antigo foi usado apenas como referencia para verificar o que ainda era verdadeiro e o que ja ficou para tras.
+- Rodei a suite rapida com `node --test --test-isolation=none tests/*.test.js`: 13 testes, 13 aprovados.
+- Nao rodei os smoke scripts dependentes de app + Mongo (`test:smoke` e `test:populate`) nesta revisao; eles foram lidos e considerados como parte do diagnostico de cobertura, nao como execucao validada.
 
-## 2. Entendimento do projeto
+## 2. Entendimento atual do projeto
 
-Objetivo do sistema:
-- Rede social academica/full-stack focada em compartilhamento de conhecimento, com feed cronologico, posts, comentarios, sequencias, colecoes e moderacao simples.
+Escopo funcional confirmado no estado atual:
+- autenticacao JWT
+- perfil autenticado com metricas privadas
+- posts com imagens, sequenciamento e questionarios opcionais
+- comentarios
+- feed cronologico publico e feed cronologico por tags seguidas
+- colecoes publicas com CRUD do dono em tela dedicada
+- avatar
+- moderacao binaria e reputacao publica derivada
+- delecao compartilhada de conta com limpeza de dados relacionados
+- painel administrativo com elegibilidade de moderador e delete de usuario com preview de impacto
 
-Padroes identificados:
-- Backend em monolito modular com `routes/controllers/services/repositories`.
-- Frontend estatico servido pelo Express, com HTML por pagina, orquestradores em `src/public/js/pages/*.js`, renderers em `src/public/js/features/*`, fachada HTTP em `src/public/js/api.js` e sessao local em `src/public/js/core/session.js`.
-- UI dark-first com tipografia `Space Grotesk` + `Patrick Hand`, cartoes, chips, bordas suaves e feedback textual via `status-line`.
+Arquitetura validada:
+- backend Node.js + Express 5 + MongoDB/Mongoose
+- composicao central em `src/server.js`
+- modulos ativos: `auth`, `users`, `posts`, `comments`, `feed`, `collections`, `admin`, `moderation`
+- frontend estatico servido de `src/public`, com scripts em `pages/`, renderers em `features/`, helpers compartilhados em `core/` e `components/`
 
-Decisoes intencionais percebidas:
-- feed cronologico sem ranking
-- ausencia de perfil publico clicavel para autores
-- questionarios corrigidos localmente no browser em v1
-- usuarios autenticados poderem avaliar os proprios posts
-- modo `Followed tags` de colecoes considerar as tags da colecao, nao tags dos posts internos
-- projeto nao declara light theme
+Leitura de maturidade atual:
+- o backend esta mais maduro do que o README principal sugere
+- o frontend melhorou em varios fluxos desde meados de marco, mas ainda carrega divida estrutural tipica de HTML estatico com markup compartilhado repetido
+- a documentacao tecnica esta mais atual do que a documentacao publica de apresentacao
 
-Limitacoes ou escopos assumidos:
-- parte da simplicidade de UX e intencional para manter o projeto didatico
-- nem toda falta de feature foi tratada como bug
-- a arquitetura de frontend aceita HTML estatico, entao a auditoria considerou o custo/beneficio dentro desse contexto, nao contra um SPA framework idealizado
+## 3. Metodologia, fontes e criterio de classificacao
 
-Observacoes para evitar falso positivo:
-- O campo `Confirm password` existe no `index.html` atual com os hooks corretos. O problema anterior de "campo ausente" foi reclassificado: hoje o problema confirmado e o contrato fail-open entre markup e JS, nao a ausencia atual do campo.
-- O problema de sessao invalida em paginas publicas nao e universal. `index.js` e `collections.js` lidam melhor com 401/`UNAUTHENTICATED`; o drift aparece de forma parcial e localizada em `feed.js`, `post.js`, `collection.js` e no navbar.
+Fontes auditadas:
+- `AGENTS.md`
+- `docs/README.md`
+- `docs/architecture/system-overview.md`
+- `docs/architecture/backend-modules.md`
+- `docs/architecture/frontend-overview.md`
+- `docs/api/http-contract.md`
+- `docs/api/endpoints.md`
+- `docs/workflows/feature-process.md`
+- `docs/workflows/bugfix-process.md`
+- `README.md`
+- `CHANGELOG.md`
+- `src/server.js`
+- `src/modules/**/*`
+- `src/public/pages/**/*`
+- `src/public/js/**/*`
+- `tests/*`
+- `scripts/smoke-permissions.mjs`
+- `scripts/test-populate-smoke.mjs`
 
-## 3. Mapa de paginas auditadas
+Criterio usado:
+- so entram como achado principal problemas confirmados no codigo atual, na documentacao atual ou na relacao entre ambas
+- problemas corrigidos desde a auditoria anterior ficam em secao de reclassificacao, nao em findings ativos
+- decisoes intencionais documentadas nao foram tratadas como bug
 
-| Pagina | Arquivos associados | Status geral | Principais problemas encontrados |
-|---|---|---|---|
-| `index.html` | `src/public/js/pages/index.js`, `src/public/js/components/flash.js`, `src/public/js/api.js`, `src/public/css/style.css` | Bom com riscos localizados | status de cadastro mal ancorado, sem busy-state, contrato HTML/JS fail-open |
-| `feed.html` | `src/public/js/pages/feed.js`, `src/public/js/features/feed/renderers.js`, `src/public/js/features/followed-tags/renderers.js`, `src/public/js/features/posts/post-modal.js` | Atencao | delete sem confirmacao, sessao aparentemente valida com token invalido, chips touch pequenos, modal compartilhado duplicado |
-| `post.html` | `src/public/js/pages/post.js`, `src/public/js/features/post/renderers.js`, `src/public/js/features/questionnaire/renderers.js`, `src/public/js/features/posts/post-modal.js` | Atencao | delete sem confirmacao, limite de comentario so no backend, sessao aparentemente valida com token invalido, chips touch pequenos, modal duplicado |
-| `profile.html` | `src/public/js/pages/profile.js`, `src/public/js/features/profile/renderers.js`, `src/public/js/features/profile/content-renderers.js`, `src/public/js/features/admin/renderers.js` | Fragilidade localizada | delete administrativo permanente sem confirmacao, modal de post duplicado |
-| `collections.html` | `src/public/js/pages/collections.js`, `src/public/js/features/profile/content-renderers.js`, `src/public/css/style.css` | Atencao | `Add to collection` silencioso sem selecao, delete sem confirmacao, busy-state insuficiente em acoes da tela |
-| `collection.html` | `src/public/js/pages/collection.js`, `src/public/js/features/collections/renderers.js` | Bom com ressalva | navbar e CTA de sessao dependem de token local, nao de sessao validada |
-| `admin/reviews.html` | `src/public/js/pages/admin-reviews.js`, `src/public/js/features/admin/renderers.js`, `src/public/css/style.css` | Bom com debito estrutural | renderer inline duplicado fora de `features/admin`, risco de drift com outras views administrativas |
+Escala de severidade:
+- `Critica`: risco direto de seguranca, perda irreversivel grave, quebra ampla de contrato ou falha estrutural central
+- `Alta`: impacto real relevante ao usuario ou ao produto, com alta chance de incidente funcional ou regressao importante
+- `Media`: problema real, fragilidade de manutencao ou cobertura insuficiente com impacto frequente, mas contornavel
+- `Baixa`: inconsistencia localizada, drift documental/publico ou debito de UX/robustez com impacto menor
+
+Escala de necessidade de resolucao:
+- `Imediata`
+- `Proxima sprint`
+- `Planejar`
+- `Oportunista`
 
 ## 4. Achados por severidade
 
 ### Alta
 
-#### F-02 - Acoes destrutivas permanentes sao executadas sem confirmacao intermediaria
+#### A-01 - Posts e comentarios ainda podem ser excluidos sem confirmacao intermediaria
 
 Tipo:
 - bug funcional/UX real
+- consistencia de safety incompleta
+
+Severidade:
+- alta
+
+Necessidade de resolucao:
+- imediata
+
+Confianca:
+- alta
 
 1. Problema
-   Deletes de usuario por admin, post e colecao ainda acontecem imediatamente apos o clique. Para o usuario, isso transforma um misclick em perda definitiva de conteudo ou conta.
-2. Causa estrutural provavel
-   O projeto endureceu o fluxo de autoexclusao do proprio usuario, mas nao consolidou uma politica unica para acoes destrutivas. Cada pagina chama o endpoint de delete diretamente dentro do handler.
-3. Onde ocorre exatamente
-   - `src/public/js/pages/profile.js:334-342`
-   - `src/public/js/pages/feed.js:716-742`
-   - `src/public/js/pages/post.js:445-460`
-   - `src/public/js/pages/collections.js:202-213`
-4. Em que condicao ocorre
-   - desktop e mobile
-   - clique por mouse ou touch
-   - tambem vale para teclado quando o botao recebe foco e `Enter`/`Space` e acionado
-5. Qual o impacto real
-   - usabilidade: perda irreversivel por acionamento acidental
-   - confianca: o sistema nao sinaliza a gravidade da acao
-   - consistencia: a danger zone do proprio usuario usa protecao forte, enquanto deletes igualmente permanentes fora dela nao usam
-6. Severidade
-   - alta
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `profile.js:342` chama `api.admin.deleteUser(userId)` diretamente
-   - `feed.js:740`, `post.js:459` e `collections.js:211` disparam delete sem etapa intermediaria
-9. Recomendacao objetiva de correcao
-   - minima: antes de cada request destrutivo, exigir `window.confirm()` com texto especifico do recurso
-   - estrutural: criar um helper unico de confirmacao destrutiva usado por `profile.js`, `feed.js`, `post.js` e `collections.js`, com copy padronizada e opcao futura de modal proprio
+   Posts no feed, posts no detalhe e comentarios no detalhe ainda podem ser apagados imediatamente apos o clique. Nao ha confirmacao intermediaria nem protecao verbal equivalente ao que o projeto ja implementou para delete de colecao, delete administrativo e autoexclusao.
+2. Onde e evidencia
+   - `src/public/js/features/feed/renderers.js:144` expoe botao `Delete` para post no feed
+   - `src/public/js/pages/feed.js:740-742` chama `api.posts.delete(postId)` diretamente
+   - `src/public/js/features/post/renderers.js:138` expoe botao `Delete` para comentario
+   - `src/public/js/features/post/renderers.js:242` expoe botao `Delete post` no detalhe
+   - `src/public/js/pages/post.js:500-502` chama `api.posts.delete(state.postId)` diretamente
+   - `src/public/js/pages/post.js:728-730` chama `api.comments.delete(commentId)` diretamente
+3. Em que situacao ocorre
+   - autor do post
+   - moderador ou admin apagando post alheio
+   - autor do comentario
+   - moderador ou admin apagando comentario alheio
+   - mouse, touch ou teclado
+4. Como o problema se manifesta
+   O clique dispara a request destrutiva sem uma segunda etapa de intencao explicita. O feedback visual atual e apenas `Deleting...`, quando a remocao ja esta em curso.
+5. Causa-raiz
+   A politica de acoes destrutivas foi endurecida por fluxo, nao por regra compartilhada. O projeto criou modais seguros para colecao e conta, mas os handlers antigos de post/comentario continuaram chamando o endpoint direto.
+6. Por que isso ainda acontece
+   Nao existe helper unificado de confirmacao destrutiva nem uma politica transversal aplicada a todos os deletes. Cada pagina decide sozinha como apagar.
+7. Impacto real
+   - perda de conteudo por misclick
+   - experiencia inconsistente: o sistema trata delecao de colecao/conta como perigosa, mas post/comentario como acao comum
+   - maior risco em mobile e em moderacao, onde o operador faz mais cliques destrutivos em sequencia
+8. Diagnostico
+   O problema ja nao e ausencia total de protecao destrutiva no projeto. O problema atual e fragmentacao de padrao. Isso torna o sistema enganoso: parte da UI ensina o usuario a esperar confirmacao, parte nao.
+9. Recomendacao objetiva
+   - minima: exigir confirmacao nativa antes de `api.posts.delete(...)` e `api.comments.delete(...)`
+   - estrutural: criar um helper unico de confirmacao destrutiva para post, comentario, colecao e conta, com copy, busy-state e variante de risco padronizados
+
+#### A-02 - Varias paginas continuam tratando `token local` como sessao valida demais
+
+Tipo:
+- inconsistencia de autenticacao/UX
+- falha parcial de resiliencia de sessao
+
+Severidade:
+- alta
+
+Necessidade de resolucao:
+- proxima sprint
+
+Confianca:
+- alta
+
+1. Problema
+   Em varias superficies, a UI autenticada ainda depende principalmente de `hasSession()` e, portanto, da mera existencia do token local. Quando a sessao real falha no backend, a interface nem sempre limpa a sessao, esconde controles protegidos ou redireciona.
+2. Onde e evidencia
+   - `src/public/js/components/navbar.js:12` calcula estado autenticado so por `hasSession()`
+   - `src/public/js/core/session.js:3` define sessao como `Boolean(auth.getToken())`
+   - `src/public/js/pages/feed.js:571-585` usa `Promise.allSettled([api.users.meProfile(), api.users.listFollowedTags()])`; se o perfil falha, apenas zera `viewerRole/viewerId`, sem `clearSession()`
+   - `src/public/js/pages/feed.js:896` chama `navbar.refresh()` antes da sincronizacao de contexto
+   - `src/public/js/pages/post.js:357-371` repete o mesmo padrao de `Promise.allSettled(...)` sem limpar sessao
+   - `src/public/js/pages/collection.js:109-123` repete o mesmo padrao sem limpar sessao
+   - `src/public/js/pages/admin-reviews.js:143-164` confia em `hasSession()` e, em caso de falha/403, apenas mostra erro
+   - por contraste, `src/public/js/pages/profile.js:357-365` e `src/public/js/pages/collections.js:84-92` ja tem `handleAuthFailure()` com `clearSession()` + redirect
+3. Em que situacao ocorre
+   - token expirado
+   - conta deletada ou invalida
+   - JWT assinado com segredo antigo
+   - usuario abre `feed.html`, `post.html`, `collection.html` ou `admin/reviews.html` com token stale no navegador
+4. Como o problema se manifesta
+   - navbar e controles protegidos podem aparecer como se a sessao ainda existisse
+   - botoes de seguir tag, revisar post, navegar como admin ou abrir modais continuam visiveis em contexto parcialmente autenticado
+   - a pagina falha depois, na API, com mensagens de auth ou estado "meio logado"
+5. Causa-raiz
+   O projeto resolveu corretamente a validacao de sessao na home (`index.html`), mas ainda nao propagou o mesmo modelo de "sessao tentativa ate revalidacao" para o restante das telas.
+6. Por que isso ainda acontece
+   A regra de auth state esta espalhada:
+   - navbar usa apenas token local
+   - algumas paginas tem `handleAuthFailure`
+   - outras tratam 401 como um erro qualquer e nao como encerramento de sessao
+7. Impacto real
+   - UX enganosa e repeticao de erros 401
+   - telas publicas parecem autenticadas sem que a sessao realmente exista
+   - superficie administrativa pode parecer acessivel ate a API negar
+   - aumenta suporte manual e dificulta depuracao de bugs relatados como "estou logado, mas nada funciona"
+8. Diagnostico
+   O backend continua seguro porque a API rejeita o token invalido. O problema esta no frontend, que ainda nao tem uma politica unica de invalidacao/reauth. E um bug de coerencia de sessao, nao uma quebra de autorizacao do servidor.
+9. Recomendacao objetiva
+   - minima: tratar 401/`UNAUTHENTICATED` como encerramento de sessao em `feed.js`, `post.js`, `collection.js` e `admin-reviews.js`
+   - estrutural: centralizar uma camada de `syncSession()`/`handleAuthFailure()` compartilhada e mudar a navbar para estado "tentativo" ate a revalidacao do perfil concluir
 
 ### Media
 
-#### F-01 - O frontend depende de contratos implicitos entre HTML estatico, `data-*` hooks e JS, e falha de forma silenciosa quando o markup deriva
+#### M-01 - O modal compartilhado de post ainda depende de markup duplicado e contratos de DOM implicitos
 
 Tipo:
-- inconsistencia entre camadas
-- debito arquitetural/manutencao com risco real de regressao
+- debito arquitetural de frontend
+- risco de regressao silenciosa
+
+Severidade:
+- media
+
+Necessidade de resolucao:
+- proxima sprint
+
+Confianca:
+- alta
 
 1. Problema
-   Partes criticas do frontend assumem hooks de markup especificos, mas os orquestradores continuam funcionando mesmo quando esses hooks somem ou ficam incompletos. Isso transforma drift de HTML em degradacao silenciosa de comportamento, nao em falha visivel no boot.
-2. Causa estrutural provavel
-   HTML estatico por pagina + seletores `data-*` como contrato informal + ausencia de assertivas de elementos obrigatorios + duplicacao de markup compartilhado.
-3. Onde ocorre exatamente
-   - `src/public/js/pages/index.js:86-101`
-   - `src/public/pages/index.html:100-112`
-   - `src/public/js/features/posts/post-modal.js:34-38`
-   - `src/public/js/features/posts/post-modal.js:315-333`
-   - `src/public/pages/feed.html:109-190`
-   - `src/public/pages/post.html:41-122`
-   - `src/public/pages/profile.html:70-139`
-   - `src/public/js/pages/admin-reviews.js:55-92`
-4. Em que condicao ocorre
-   - quando um ajuste de HTML renomeia/remove um hook `data-*`
-   - quando o modal compartilhado ganha um novo campo/controle e uma das paginas nao replica o markup completo
-   - quando um renderer compartilhado muda, mas outra tela continua usando versao inline antiga
-5. Qual o impacto real
-   - regressao silenciosa: a pagina pode "funcionar" parcialmente sem denunciar que perdeu uma capacidade
-   - manutencao: cada evolucao de UI exige lembrar de varios pontos manuais
-   - QA: bugs podem escapar porque o script nao quebra; ele apenas deixa de aplicar uma parte do comportamento
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - o `index.html` atual tem `data-register-password-confirmation-input` em `index.html:108`, mas `index.js:91-92` retornaria `true` se esse hook desaparecesse, ou seja, a validacao falha em aberto
-   - `post-modal.js` consulta varios hooks opcionais (`questionnaireShell`, `questionnaireToggle`, `questionnairePanel`, `mediaSummary`) e protege quase todos com `if (...)`, permitindo perda parcial de funcionalidade sem erro de inicializacao
-   - o mesmo modal vive em tres HTMLs diferentes, entao o contrato de hooks precisa ser repetido manualmente
-   - `admin-reviews.js` ainda define `renderUserCards()` inline mesmo havendo `features/admin/renderers.js`
-9. Recomendacao objetiva de correcao
-   - minima: adicionar um `assertRequiredElements()` por pagina para hooks criticos e um checklist de hooks obrigatorios do modal compartilhado
-   - estrutural: centralizar o modal de post em uma unica fonte de markup/template e mover renderizacao administrativa residual para `features/admin/`
+   O controlador compartilhado do modal de post evoluiu bastante, mas a fonte de markup continua duplicada em tres HTMLs e o proprio controller aceita varios hooks opcionais. Isso deixa o frontend vulneravel a drift parcial: uma pagina pode perder um controle sem falhar de forma clara no boot.
+2. Onde e evidencia
+   - o markup do modal esta repetido em:
+     - `src/public/pages/feed.html:101-187`
+     - `src/public/pages/post.html:45-127`
+     - `src/public/pages/profile.html:108-187`
+   - `src/public/js/features/posts/post-modal.js:41-45` busca hooks opcionais como `questionnaireShell`, `questionnaireToggle`, `questionnairePanel` e `mediaSummary`
+   - `src/public/js/features/posts/post-modal.js:52-85` e `:260-289` seguem operando mesmo quando parte desses hooks nao existe
+   - `src/public/js/pages/admin-reviews.js:55-125` ainda define `renderUserCards()` inline, apesar de ja existir `src/public/js/features/admin/renderers.js`
+3. Em que situacao ocorre
+   - quando o modal compartilhado ganha um novo elemento e uma das paginas nao replica o HTML inteiro
+   - quando um hook `data-*` muda de nome em apenas uma superficie
+   - quando a view administrativa evolui e a pagina inline esquece de acompanhar o renderer compartilhado
+4. Como o problema se manifesta
+   Em vez de um erro claro de inicializacao, a tela pode continuar abrindo com funcionalidade parcial: helper text ausente, estado de questionario quebrado, resumo de imagens faltando, renderer administrativo divergente, etc.
+5. Causa-raiz
+   O projeto compartilha comportamento, mas nao compartilha a fonte de markup. O contrato entre HTML e JS existe, mas ainda e informal.
+6. Por que isso ainda acontece
+   O frontend foi estruturado corretamente em `pages/` e `features/`, mas ainda nao deu o passo seguinte de formalizar o markup compartilhado mais sensivel.
+7. Impacto real
+   - regressao silenciosa
+   - manutencao mais cara
+   - maior risco sempre que o modal de post ou as views administrativas forem refinados
+8. Diagnostico
+   Nao e um bug isolado de uma tela. E um risco estrutural do frontend estatico atual. O projeto ja amadureceu o suficiente para esse problema pesar mais do que no inicio.
+9. Recomendacao objetiva
+   - minima: adicionar `assertRequiredElements()` para hooks obrigatorios do modal e eliminar renderers inline restantes
+   - estrutural: centralizar o markup do modal de post em template/shared renderer unico e consolidar a renderizacao administrativa em `features/admin/`
 
-#### F-03 - O CTA `Add to collection` fica habilitado sem item selecionado e falha em silencio
+#### M-02 - A base ja tem testes uteis, mas a validacao automatizada rapida ainda e estreita para o tamanho atual do produto
 
 Tipo:
-- bug funcional/UX real
+- risco de regressao
+- cobertura automatizada insuficiente para o escopo atual
+
+Severidade:
+- media
+
+Necessidade de resolucao:
+- planejar
+
+Confianca:
+- alta
 
 1. Problema
-   O botao `Add to collection` parece disponivel mesmo quando o `<select>` ainda esta em `Choose a post`. Ao clicar, nada acontece e nenhum feedback e mostrado.
-2. Causa estrutural provavel
-   O estado do botao e derivado da existencia de posts adicionaveis, nao da selecao atual do usuario. O handler depois apenas sai sem mensagem quando `postId` esta vazio.
-3. Onde ocorre exatamente
-   - `src/public/js/features/profile/content-renderers.js:102-119`
-   - `src/public/js/pages/collections.js:346-353`
-4. Em que condicao ocorre
-   - sempre que a colecao tenha ao menos um post adicionavel, mas o usuario ainda nao tenha escolhido nenhum item no select
-5. Qual o impacto real
-   - UX: o CTA promete uma acao valida que na pratica nao roda
-   - clareza: para o usuario parece travamento ou clique perdido
-   - manutencao: o renderer e o handler usam criterios diferentes de "pronto para enviar"
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `content-renderers.js:117` so desabilita o botao quando `addablePosts.length === 0`
-   - `collections.js:350-353` so chama `addPostToCollection()` se `postId` existir; caso contrario retorna sem feedback
-9. Recomendacao objetiva de correcao
-   - minima: deixar o botao desabilitado enquanto `select.value === ""` e reabilitar no `change`
-   - estrutural: encapsular o bloco select + CTA como componente renderer que receba o estado derivado e aplique validacao visual e fallback de mensagem
-
-#### F-04 - O limite de 2000 caracteres dos comentarios existe no backend, mas nao e refletido na UI de criar/editar
-
-Tipo:
-- bug funcional/UX real
-- inconsistencia entre camadas
-
-1. Problema
-   O backend rejeita comentarios acima de 2000 caracteres, mas o frontend nao comunica esse limite no composer nem na edicao inline.
-2. Causa estrutural provavel
-   A regra foi implementada corretamente no servico do backend, mas nao foi propagada para os textareas do frontend nem para um token/constante compartilhada de validacao.
-3. Onde ocorre exatamente
-   - `src/modules/comments/services/CommentService.js:14-21`
-   - `src/modules/comments/services/CommentService.js:63-70`
-   - `src/public/pages/post.html:31-34`
-   - `src/public/js/features/post/renderers.js:93-98`
-4. Em que condicao ocorre
-   - criacao de comentario longo
-   - edicao de comentario longo
-   - desktop e mobile
-5. Qual o impacto real
-   - UX: o usuario descobre tarde demais que digitou algo invalido
-   - round-trip desnecessario: erro poderia ser evitado antes do request
-   - risco de drift: a regra de dominio fica escondida so no backend
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `CommentService.js` valida o maximo de 2000 caracteres tanto na criacao quanto na edicao
-   - o textarea de composicao em `post.html` e o textarea de edicao renderizado em `features/post/renderers.js` nao exibem `maxlength`
-9. Recomendacao objetiva de correcao
-   - minima: aplicar `maxlength="2000"` nos dois textareas e mostrar texto de ajuda simples
-   - estrutural: criar uma constante de validacao de comentario consumida por backend e frontend, ou ao menos um modulo frontend unico para limites de formulario
-
-#### F-05 - O projeto tem estado assincrono, mas parte dele nao chega ao DOM como busy-state confiavel
-
-Tipo:
-- bug funcional/UX real
-- inconsistencia de padrao entre telas
-
-1. Problema
-   Em varias telas, o request em andamento e representado so por texto de status, enquanto o proprio controle que iniciou a acao continua visualmente clicavel ou sem indicacao forte de ocupado.
-2. Causa estrutural provavel
-   O estado existe em memoria (`isManagingCollections`, ausencia de `isSubmitting` em alguns fluxos, etc.), mas nao ha helper unico para sincronizar `disabled`, label do botao e campos relacionados. Cada pagina implementa um pedaco diferente.
-3. Onde ocorre exatamente
-   - `src/public/js/pages/index.js:104-159`
-   - `src/public/js/pages/collections.js:161-305`
-   - `src/public/js/features/profile/content-renderers.js:91-119`
-   - `src/public/js/pages/post.js:384-415`
-   - contraste positivo:
-     - `src/public/js/features/posts/post-modal.js:315-333`
-     - `src/public/js/features/posts/post-modal.js:445-526`
-     - `src/public/js/pages/post.js:243-258`
-     - `src/public/js/pages/feed.js:681-705`
-4. Em que condicao ocorre
-   - rede lenta
-   - duplo clique
-   - `Enter` repetido em formulario
-   - tentativas de interagir em colecoes enquanto uma operacao ainda esta em progresso
-5. Qual o impacto real
-   - UX: pouco feedback no proprio ponto de interacao
-   - risco de repeticao: login, cadastro e comentario nao marcam envio em andamento
-   - inconsistencia: algumas partes do sistema se comportam de forma madura, outras ainda parecem "clicaveis mas travadas"
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `index.js` nao mantem `isSubmitting` nem altera `disabled`/label dos submits de login e cadastro
-   - `collections.js` usa `state.isManagingCollections` como guarda logica, mas `content-renderers.js` continua emitindo botoes ativos sem awareness de busy-state; o usuario ve controles habilitados que passam a nao responder
-   - `post.js:408-415` envia comentario sem desabilitar o textarea e o submit durante o request
-   - o projeto ja tem referencia melhor em `post-modal.js`, onde `isSubmitting` e refletido nos controles
-9. Recomendacao objetiva de correcao
-   - minima: criar um helper pequeno de `setBusyState({ button, inputs, busyLabel })` e aplica-lo em `index.js`, `post.js` e `collections.js`
-   - estrutural: padronizar um contrato de busy-state para formularios e acoes de lista, com renderer recebendo `disabled/busy` e nao so o orquestrador mantendo flags internas
-
-#### F-06 - Em paginas publicas relevantes, `token presente` ainda pode renderizar uma UI aparentemente autenticada
-
-Tipo:
-- bug funcional real
-- inconsistencia de estado entre cliente e API
-
-1. Problema
-   Quando o token local esta expirado, invalido ou adulterado, algumas paginas publicas ainda renderizam navbar, follow controls, review controls e composer como se a sessao estivesse valida. O erro so aparece depois, na tentativa de uso.
-2. Causa estrutural provavel
-   O navbar usa apenas `hasSession()` para decidir visibilidade. Alem disso, `feed.js` e `post.js` validam perfil/tags com `Promise.allSettled()`, mas ao falhar nao limpam sessao nem ressincronizam a UI inteira para estado anonimo.
-3. Onde ocorre exatamente
-   - `src/public/js/components/navbar.js:6-32`
-   - `src/public/js/pages/feed.js:292-354`
-   - `src/public/js/pages/feed.js:558-589`
-   - `src/public/js/pages/post.js:145-178`
-   - `src/public/js/pages/post.js:200-220`
-   - `src/public/js/pages/post.js:312-339`
-   - `src/public/js/pages/collection.js:66-69`
-   - contraexemplos positivos:
-     - `src/public/js/pages/index.js:43-59`
-     - `src/public/js/pages/collections.js:63-71`
-4. Em que condicao ocorre
-   - token expirado
-   - token invalido/tamperado
-   - aba reaberta depois de tempo longo
-   - refresh em pagina publica com sessao local desatualizada
-5. Qual o impacto real
-   - consistencia funcional: a UI diz "logado", a API diz "nao autenticado"
-   - UX: o usuario so descobre o problema depois de tentar comentar, avaliar ou seguir tag
-   - regressao: cada pagina publica decide sessao invalida de um jeito, entao o bug reaparece com facilidade
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `navbar.js:12-29` usa apenas `hasSession()` para esconder/mostrar links
-   - `feed.js:573-588` zera `viewerRole/viewerId` quando `meProfile()` falha, mas nao limpa token nem chama uma politica central de sessao invalida
-   - `post.js:210-219` continua renderizando `canReviewPosts: hasSession()` e `canManageTagFollows: hasSession()`, o que pode manter controles protegidos visiveis mesmo sem sessao valida
-   - `collection.js:68` apenas executa `navbar.refresh()`, sem validacao
-9. Recomendacao objetiva de correcao
-   - minima: ao receber 401/`UNAUTHENTICATED` em `feed.js`, `post.js` e `collection.js`, chamar `clearSession()`, `navbar.refresh()` e re-renderizar controles auth-gated
-   - estrutural: centralizar invalidacao de sessao na camada `api.request()` ou em um `bootstrapPublicSession()` reutilizado por paginas publicas
-
-#### F-08 - Os chips de follow/unfollow estao abaixo do alvo minimo confortavel para touch e repetem o problema em varias superficies
-
-Tipo:
-- bug de ergonomia/acessibilidade real
-
-1. Problema
-   O componente `.tag-follow-button` e muito compacto para interacao touch confortavel. O problema nao aparece em um lugar so; ele se repete no feed, no detalhe do post, no feed de colecoes e no dropdown de tags seguidas.
-2. Causa estrutural provavel
-   O componente de chip foi desenhado para densidade visual, mas sem token de tamanho minimo interativo. Como ele e reutilizado em varias renderizacoes, a deficiencia tambem e propagada em varios contextos.
-3. Onde ocorre exatamente
-   - `src/public/css/style.css:1379-1382`
-   - `src/public/js/features/feed/renderers.js:49-85`
-   - `src/public/js/features/post/renderers.js:36-72`
-   - `src/public/js/features/collections/feed-renderers.js:8-45`
-   - `src/public/js/features/followed-tags/renderers.js:21-47`
-4. Em que condicao ocorre
-   - principalmente `mobile S`, `mobile M` e `mobile L`
-   - listas densas de tags
-   - dropdown de tags seguidas, onde label clicavel e botao de unfollow ficam lado a lado
-5. Qual o impacto real
-   - acessibilidade motora: alvo pequeno aumenta mis-tap
-   - UX mobile: seguir/desseguir tag vira acao menos confiavel justamente em superficies de alta repeticao
-   - consistencia: o resto do sistema usa botoes mais confortaveis; o chip foge do padrao
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `style.css:1379-1382` aplica `padding: 4px 8px` e `font-size: 0.8rem` sem `min-height`
-   - o mesmo componente e reutilizado em pelo menos quatro superfices diferentes
-   - em `followed-tags/renderers.js`, o botao pequeno fica imediatamente ao lado de outro botao (`followed-tag-chip-label-button`), o que aumenta ambiguidade de toque
-9. Recomendacao objetiva de correcao
-   - minima: no breakpoint mobile, dar `min-height: 44px`, padding vertical maior e mais espacamento lateral aos chips interativos
-   - estrutural: criar uma variante de chip interativo com token proprio de tamanho minimo para touch e usa-la em todos os renderers de tags
-
-#### F-09 - Ha risco de drift funcional/manutencao em UI compartilhada, e ele ja atravessa HTML, renderers e orquestradores
-
-Tipo:
-- debito arquitetural/manutencao
-- risco confirmado de regressao silenciosa
-
-1. Problema
-   O modal de post esta replicado em tres HTMLs e o dominio administrativo ainda tem renderizacao duplicada fora da camada `features`. Isso ja nao e so "codigo repetido": combinado com seletores opcionais, o arranjo facilita divergencia funcional sem erro evidente.
-2. Causa estrutural provavel
-   O projeto compartilhou comportamento via JS (`createPostModalController`), mas deixou o markup fonte do modal distribuido por pagina. Ao mesmo tempo, nem toda UI administrativa foi consolidada em `features/admin/`.
-3. Onde ocorre exatamente
-   - `src/public/pages/feed.html:109-190`
-   - `src/public/pages/post.html:41-122`
-   - `src/public/pages/profile.html:70-139`
-   - `src/public/js/features/posts/post-modal.js:34-38`
-   - `src/public/js/features/posts/post-modal.js:315-333`
-   - `src/public/js/pages/admin-reviews.js:55-92`
-   - `src/public/js/features/admin/renderers.js:3-30`
-4. Em que condicao ocorre
-   - qualquer evolucao no modal de post: novos campos, novos hooks, nova copy, novos estados
-   - qualquer ajuste de UI nos cards administrativos
-5. Qual o impacto real
-   - manutencao: correcoes e evolucoes exigem sincronizar varias fontes manuais
-   - regressao silenciosa: se uma pagina esquecer um hook do modal, o controller tende a degradar sem quebrar o boot
-   - arquitetura: `pages/*.js` volta a acumular responsabilidade de renderer, contrariando o padrao mais saudavel ja adotado no resto do projeto
-6. Severidade
-   - media
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - o mesmo bloco de modal com os mesmos `data-post-*` aparece em `feed.html`, `post.html` e `profile.html`
-   - `post-modal.js` depende desses hooks para recursos como questionario, midia e previous-post select
-   - `admin-reviews.js` ainda tem `renderUserCards()` inline, enquanto `features/admin/renderers.js` ja existe e e usado em `profile.js`
-9. Recomendacao objetiva de correcao
-   - minima: criar checklist/teste de hooks obrigatorios do modal e mover `renderUserCards()` para `features/admin/`
-   - estrutural: unificar o markup do modal em uma fonte unica e manter `pages/*.js` apenas como orquestradores
+   O projeto nao esta sem testes, mas a cobertura automatizada rapida ainda se concentra em helpers e utilitarios compartilhados. O produto hoje inclui auth, papeis, deletes destrutivos, colecoes, questionarios, uploads, perfil, avatar e fluxos administrativos, sem uma suite rapida proporcional a esse escopo.
+2. Onde e evidencia
+   - `tests/approval-status.test.js` cobre paleta de status/reputacao
+   - `tests/content-tags.test.js` cobre alinhamento frontend/backend de tags
+   - `tests/post-media-selection.test.js` cobre acumulacao de imagens no modal
+   - `package.json:7-14` nao expoe um `npm test` padrao; os scripts sao `test:smoke`, `test:populate`, `demo:*`
+   - `scripts/smoke-permissions.mjs` cobre permissoes basicas de auth/post/comment/followed tags
+   - `scripts/test-populate-smoke.mjs` e mais amplo, mas depende de app + Mongo + seed controlado
+3. Em que situacao ocorre
+   - regressao em service/controller/repository
+   - mudancas em auth/roles/delete/account cleanup
+   - drift entre contrato de endpoint e implementacao
+4. Como o problema se manifesta
+   O projeto depende relativamente mais de leitura manual, smoke local e disciplina do changelog/docs para manter confiabilidade. Isso funciona, mas escala pior conforme o escopo cresce.
+5. Causa-raiz
+   A estrategia de validacao cresceu por acumulacao de scripts uteis e docs de runbook, mas sem um degrau intermediario de testes automatizados rapidos e padronizados para o fluxo cotidiano.
+6. Por que isso ainda acontece
+   O repositorio priorizou primeiro produto, documentacao e smoke realista. A camada de testes de service/route/contract ainda nao acompanhou o mesmo ritmo.
+7. Impacto real
+   - regressao funcional pode escapar ate smoke manual
+   - contribuidores novos nao encontram um caminho obvio tipo `npm test`
+   - fluxos centrais do backend ficam menos blindados do que o frontend compartilhado
+8. Diagnostico
+   O ponto fraco aqui nao e "testes quebrados". Pelo contrario: a suite rapida passou inteira quando executada com `node --test --test-isolation=none`. O problema e cobertura e ergonomia de execucao, nao qualidade zero de teste.
+9. Recomendacao objetiva
+   - minima: adicionar `npm test` como agregador da suite rapida atual e documentar quando usar smoke
+   - estrutural: expandir testes de service/route para auth, posts, comments, collections, account deletion e auth failure handling
 
 ### Baixa
 
-#### F-07 - O feedback do cadastro continua ancorado na area visual do login
+#### B-01 - O README principal ficou materialmente atras do escopo real do produto
+
+Tipo:
+- drift de documentacao publica
+- risco de onboarding/portfolio
+
+Severidade:
+- baixa
+
+Necessidade de resolucao:
+- planejar
+
+Confianca:
+- alta
+
+1. Problema
+   O `README.md` principal ainda descreve uma versao menor do sistema. Ele continua util como apresentacao curta, mas ja nao comunica varias capacidades relevantes que existem hoje.
+2. Onde e evidencia
+   - `README.md:39-49` lista funcionalidades principais sem citar colecoes, tags seguidas, avatar, uploads de imagem, questionarios, account deletion ou feed de colecoes
+   - `README.md:215-223` lista paginas disponiveis sem citar `collections.html` nem `collection.html`
+   - por contraste, esses recursos estao refletidos em `docs/architecture/*`, `docs/api/*`, `src/modules/*` e `src/public/pages/*`
+3. Em que situacao ocorre
+   - primeira leitura do repositorio no GitHub
+   - avaliacao academica/portfolio sem entrar em `docs/`
+4. Como o problema se manifesta
+   O leitor entende um produto menor e mais simples do que o repositorio realmente entrega.
+5. Causa-raiz
+   A documentacao tecnica evoluiu junto do codigo. O README principal parou em um snapshot mais antigo do escopo.
+6. Por que isso importa
+   Neste projeto, o README tambem funciona como vitrine publica. Drift ali nao quebra runtime, mas enfraquece apresentacao e onboarding.
+7. Impacto real
+   - leitura inicial subestima o projeto
+   - risco de avaliador achar que docs e codigo estao desalinhados
+8. Diagnostico
+   Nao e um problema de produto nem de API. E um problema de representacao publica do estado atual.
+9. Recomendacao objetiva
+   - minima: atualizar lista de funcionalidades e paginas
+   - estrutural: tratar o README principal como resumo de alto nivel sincronizado com `docs/README.md`
+
+#### B-02 - A tela inicial ainda concentra feedback de login e cadastro em um unico ponto visual e sem busy-state
 
 Tipo:
 - bug de UX localizado
+- padrao async incompleto
+
+Severidade:
+- baixa
+
+Necessidade de resolucao:
+- oportunista
+
+Confianca:
+- alta
 
 1. Problema
-   O cadastro usa o mesmo `data-auth-status` do login, que fica fisicamente abaixo do card de sign-in. Em desktop com cards lado a lado, a mensagem do cadastro aparece longe do formulario que a gerou.
-2. Causa estrutural provavel
-   Reuso de um unico `createFlash()` para dois formularios diferentes.
-3. Onde ocorre exatamente
-   - `src/public/pages/index.html:58`
-   - `src/public/js/pages/index.js:16`
-   - `src/public/js/pages/index.js:23`
-   - `src/public/js/pages/index.js:104-159`
-4. Em que condicao ocorre
-   - erro de validacao local no cadastro
-   - erro de API no cadastro
-   - desktop com layout em duas colunas
-5. Qual o impacto real
-   - UX: a associacao entre acao e feedback fica fraca
-   - onboarding: a tela inicial parece menos confiavel do que precisa
-6. Severidade
-   - baixa
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - ha apenas um `data-auth-status` no HTML
-   - `index.js` usa `authFlash` tanto em `handleLogin()` quanto em `handleRegister()`
-9. Recomendacao objetiva de correcao
-   - minima: adicionar `data-register-status` abaixo do formulario de cadastro e criar um segundo flash
-   - estrutural: encapsular login e cadastro com um helper comum de formulario que receba seu proprio target de status
-
-#### F-10 - O feedback de moderacao ainda esta fora do sistema central de copy e em idioma divergente
-
-Tipo:
-- acabamento/copy/polimento
-
-1. Problema
-   O sucesso de moderacao usa string em portugues e fora do modulo central de textos, enquanto o restante do frontend segue majoritariamente em ingles e ja possui `UI_TEXT`.
-2. Causa estrutural provavel
-   Implementacao pontual nao migrada para o sistema central de copy.
-3. Onde ocorre exatamente
-   - `src/public/js/features/moderation/renderers.js:1-2`
-   - `src/public/js/core/ui-text.js:1-45`
-4. Em que condicao ocorre
-   - apos salvar uma review em feed ou post
-5. Qual o impacto real
-   - acabamento: quebra de consistencia de linguagem
-   - manutencao: copy espalhada fora do ponto central
-6. Severidade
-   - baixa
-7. Grau de confianca
-   - alto
-8. Evidencia
-   - `reviewSavedMessage()` retorna `Avaliacao salva.` / `Avaliacao registrada.`
-   - `UI_TEXT` ja centraliza parte importante da copy do frontend
-9. Recomendacao objetiva de correcao
-   - minima: mover `reviewSavedMessage()` para `core/ui-text.js` e alinhar idioma
-   - estrutural: concentrar mensagens de interface novas em `UI_TEXT` como regra de contribuicao
-
-## 5. Achados por pagina
-
-### `index.html`
-
-Contexto da pagina:
-- entrada publica para login e criacao de conta
-- a pagina atual ja valida token salvo antes de redirecionar ao feed e ja possui campo de confirmacao de senha
-
-Problemas encontrados:
-- F-01: o orquestrador e tolerante a hooks ausentes e nao falha de forma explicita se o markup derivar
-- F-05: login e cadastro nao desabilitam submit nem sinalizam pending state no proprio controle
-- F-07: feedback do cadastro aparece na regiao visual do login
-
-Causa predominante:
-- formularios com JS simples e sem helper compartilhado de busy-state
-- contrato HTML/JS baseado em seletor informal
-
-Condicao em que ocorre:
-- cadastro/login sob rede lenta
-- desktop em duas colunas
-- futuras edicoes de markup
-
-Impacto:
-- onboarding menos confiavel do que deveria
-- risco de regressao silenciosa em hooks
-
-Recomendacao:
-- separar o `status-line` do cadastro
-- adicionar helper de busy-state no submit
-- criar assertiva minima de hooks obrigatorios do onboarding
-
-### `feed.html`
-
-Contexto da pagina:
-- superficie principal de descoberta publica/autenticada, com busca, alternancia posts/collections, tags seguidas e modal de publicacao
-
-Problemas encontrados:
-- F-02: delete de post imediato e permanente
-- F-06: UI protegida pode parecer autenticada com token invalido
-- F-08: follow/unfollow pequeno para touch
-- F-09: modal compartilhado replicado em markup
-- F-10: copy de moderacao fora do sistema central
-
-Causa predominante:
-- session gating por `hasSession()`
-- markup compartilhado repetido
-- ausencia de politica unica para acoes destrutivas
-
-Condicao em que ocorre:
-- token expirado
-- mobile com listas densas de tags
-- manutencao futura do modal
-
-Impacto:
-- confianca de sessao baixa
-- regressao silenciosa em UI compartilhada
-- ergonomia pior no mobile
-
-Recomendacao:
-- limpar sessao e re-renderizar navbar/controles ao detectar 401
-- confirmar delete antes do request
-- aumentar alvo touch dos chips
-- deduplicar ou blindar o modal
-
-### `post.html`
-
-Contexto da pagina:
-- detalhe do post com comentarios, review, questionario, colecoes relacionadas e edicao do proprio post
-
-Problemas encontrados:
-- F-02: delete de post imediato
-- F-04: composer e edicao de comentario sem refletir limite de 2000 caracteres
-- F-05: comentario novo sem busy-state dedicado
-- F-06: token invalido ainda pode manter comentarios/review/follow aparentando disponibilidade
-- F-08: chips pequenos para touch
-- F-09: modal duplicado
-- F-10: copy de moderacao fora do sistema central
-
-Causa predominante:
-- mistura de bons exemplos de estado (`review`, `commentEdit`) com outros fluxos ainda sem o mesmo nivel de blindagem
-
-Condicao em que ocorre:
-- token expirado
-- comentario longo
-- rede lenta durante envio de comentario
-
-Impacto:
-- inconsistencia de estado
-- erro evitavel so descoberto apos request
-- risco de drift no modal
-
-Recomendacao:
-- aplicar `maxlength` e contador
-- desabilitar composer durante submit
-- alinhar sessao invalida com politica central
-
-### `profile.html`
-
-Contexto da pagina:
-- perfil privado com avatar, posts do usuario, metricas e ferramentas administrativas
-
-Problemas encontrados:
-- F-02: delete de usuario por admin acontece sem confirmacao
-- F-09: modal compartilhado de post duplicado
-
-Causa predominante:
-- ausencia de helper de confirmacao destrutiva
-- compartilhamento parcial do modal so pelo JS
-
-Condicao em que ocorre:
-- uso administrativo
-- evolucao futura do modal
-
-Impacto:
-- perda irreversivel por clique acidental
-- manutencao mais cara do modal
-
-Recomendacao:
-- confirmar delete administrativo
-- usar a mesma estrategia de blindagem/deduplicacao do modal das outras paginas
-
-### `collections.html`
-
-Contexto da pagina:
-- gestao autenticada de colecoes do proprio usuario, com criar/editar/deletar e ordenar itens
-
-Problemas encontrados:
-- F-02: delete de colecao imediato
-- F-03: `Add to collection` falha em silencio sem selecao
-- F-05: flag de busy-state existe, mas nao chega aos controles da lista/modal com a clareza necessaria
-
-Causa predominante:
-- renderer e handler usam criterios diferentes de prontidao
-- guardas logicas existem, mas sem espelhamento forte no DOM
-
-Condicao em que ocorre:
-- rede lenta
-- clique repetido
-- select ainda em valor vazio
-
-Impacto:
-- falha silenciosa
-- sensacao de interface travada
-- delete perigoso
-
-Recomendacao:
-- tornar o botao dependente da selecao atual
-- refletir `isManagingCollections` em `disabled`/label dos controles
-- adicionar confirmacao de delete
-
-### `collection.html`
-
-Contexto da pagina:
-- leitura publica de uma colecao com itens ordenados
-
-Problemas encontrados:
-- F-06: navbar/auth UI e renderizada pela presenca do token local, nao pela validacao da sessao
-
-Causa predominante:
-- `navbar.refresh()` sem bootstrap de sessao valida
-
-Condicao em que ocorre:
-- token expirado ou invalido
-
-Impacto:
-- pagina publica aparenta estado autenticado incorreto
-
-Recomendacao:
-- validar sessao no boot ou limpar token ao primeiro 401 em pagina publica
-
-### `admin/reviews.html`
-
-Contexto da pagina:
-- gestao de elegibilidade e papeis de moderacao por administradores
-
-Problemas encontrados:
-- F-09: renderer inline `renderUserCards()` concorre com o renderer administrativo compartilhado
-
-Causa predominante:
-- consolidacao incompleta da camada `features/admin/`
-
-Condicao em que ocorre:
-- qualquer ajuste visual ou funcional em cards administrativos
-
-Impacto:
-- drift de UI e manutencao em duplicidade
-
-Recomendacao:
-- mover o renderer inline para `features/admin/` ou reutilizar o existente com opcoes parametrizadas
-
-## 6. Problemas sistemicos/transversais
-
-### Drift HTML x JS x docs
-
-- O frontend depende de HTML estatico enriquecido por `data-*` hooks. Isso e valido para o stack atual, mas o projeto ainda nao blinda esses contratos.
-- Quando um hook some, o efeito frequente nao e "erro no boot"; e "parte da feature some". Isso e mais perigoso para regressao, porque o problema pode passar por testes superficiais.
-- O caso mais claro hoje e estrutural: `index.js` aceita a ausencia do campo de confirmacao sem falhar, e o controller do modal de post trata muitos hooks como opcionais.
-- Areas com maior risco de repeticao do padrao:
-  - onboarding (`index.html` + `index.js`)
-  - modal compartilhado de post (`feed.html`, `post.html`, `profile.html` + `post-modal.js`)
-  - cards administrativos (`admin-reviews.js` versus `features/admin/renderers.js`)
-
-### Contratos implicitos frageis via hooks/selectors
-
-- O contrato real do frontend nao esta so nos arquivos HTML nem so no JS. Ele esta espalhado entre:
-  - HTML estatico
-  - atributos `data-*`
-  - seletores consultados pelos orquestradores
-  - renderers compartilhados
-  - docs que descrevem o comportamento esperado
-- Enquanto isso nao tiver blindagem simples, um ajuste aparentemente inocente de markup pode quebrar comportamento sem erro explicito.
-
-### Padronizacao de estados de formulario e async
-
-- O projeto ja provou que sabe fazer isso bem em `post-modal.js` e nas reviews do feed/post.
-- O problema e sistemico: o padrao bom nao virou utilitario nem regra geral.
-- Isso explica por que `index.js`, comentario em `post.js` e varias acoes de `collections.js` ficaram para tras.
-
-### Politica fragmentada de sessao invalida
-
-- Algumas telas limpam sessao ao detectar token ruim; outras apenas mostram mensagem ou zeram parte do contexto.
-- Resultado: sessao invalida nao tem resposta uniforme e reaparece como bug de consistencia visual.
-- O ponto de consolidacao natural e a camada `api.request()` ou um bootstrap comum de paginas publicas.
-
-### Prevencao pratica de regressao
-
-Problemas com maior chance de voltar:
-- F-01 e F-09, porque dependem de contratos implicitos e markup duplicado
-- F-05, porque cada nova tela pode repetir o padrao "status textual sem busy-state"
-- F-06, porque cada pagina publica hoje decide sessao invalida localmente
-
-Blindagens simples que cabem no projeto atual:
-- smoke test/checklist de hooks obrigatorios por pagina critica
-- helper unico de busy-state para formularios e acoes de lista
-- helper unico para confirmacao destrutiva
-- politica unica de `401/UNAUTHENTICATED` em pagina publica
-- checklist de evolucao do modal compartilhado enquanto a deduplicacao total nao chega
-
-## 7. Falsos positivos evitados / decisoes intencionais respeitadas
-
-- Nao marquei como problema o feed ser estritamente cronologico. Isso e regra central do produto.
-- Nao marquei como problema a ausencia de perfil publico navegavel. A documentacao proibe autor publico clicavel.
-- Nao marquei como problema o questionario ser corrigido no browser e expor `correctOptionIndex`. Isso esta documentado como escolha de v1.
-- Nao marquei como problema usuarios autenticados poderem avaliar os proprios posts. O backend documenta isso explicitamente.
-- Nao marquei como problema o modo `Followed tags` de colecoes ignorar tags dos posts internos. Isso e regra definida.
-- Nao marquei como problema a inexistencia de light mode. O projeto nao declara sistema de temas alternativos.
-- Nao marquei como problema a separacao entre navegacao publica e CRUD do proprietario. Isso e intencional na proposta do sistema.
-- Revi o achado anterior sobre "confirmacao de senha ausente" e o retirei como bug atual. O `index.html` local agora contem o campo e os hooks esperados. O que permanece como problema confirmado e o risco estrutural de drift silencioso entre markup e JS.
-
-## 8. Quick wins
-
-- Adicionar um helper unico de confirmacao destrutiva e aplica-lo a deletes de usuario, post e colecao.
-- Fazer `Add to collection` depender da selecao atual do `<select>` e exibir mensagem curta quando a selecao for invalida.
-- Aplicar `maxlength="2000"` e contador simples nos comentarios de criar/editar.
-- Criar um helper pequeno de busy-state e usa-lo em login, cadastro, comentario e acoes de colecao.
-- Adicionar `assertRequiredElements()` para hooks criticos do onboarding e do modal compartilhado.
-
-## 9. Correcoes estruturais
-
-- Blindar contratos entre markup e JS:
-  - minima: assertivas de hooks obrigatorios no boot das paginas criticas
-  - estrutural: gerar superfices compartilhadas a partir de uma unica fonte de markup
-- Padronizar pending/busy-state:
-  - minima: helper comum para `disabled`, label temporario e restauracao de foco
-  - estrutural: tornar `busy` parte do contrato entre orquestradores e renderers
-- Criar politica unica de sessao invalida em paginas publicas:
-  - minima: limpar token e ressincronizar navbar ao detectar 401
-  - estrutural: centralizar a decisao na camada HTTP/bootstrap
-- Reduzir drift de UI compartilhada:
-  - mover renderers administrativos residuais para `features/admin/`
-  - deduplicar o modal de post
-- Centralizar copy nova em `core/ui-text.js` para evitar strings soltas e divergencia de idioma
-
-## 10. Ordem sugerida de priorizacao
-
-- Prioridade 1: confianca e prevencao de erro irreversivel
-  - F-02 acoes destrutivas sem confirmacao
-  - F-03 CTA de colecao com falha silenciosa
-  - F-04 limite de comentario so no backend
-  - F-07 feedback do cadastro mal ancorado
-
-- Prioridade 2: consistencia de estado e verdade da sessao
-  - F-05 busy-state inconsistente
-  - F-06 UI aparentemente autenticada com token invalido
-
-- Prioridade 3: prevencao de regressao e manutencao
-  - F-01 contratos implicitos entre HTML/JS/docs
-  - F-09 duplicacao e drift de UI compartilhada
-
-- Prioridade 4: ergonomia e acabamento
-  - F-08 chips touch pequenos
-  - F-10 copy de moderacao fora do sistema central
+   Login e cadastro compartilham um unico `status-line`, posicionado no card de login, e nenhum dos fluxos tem estado de submissao com disable de botao ou texto de carregamento.
+2. Onde e evidencia
+   - `src/public/pages/index.html:58` declara apenas um `data-auth-status`, localizado no card `Sign in`
+   - `src/public/js/pages/index.js:23` cria um unico `authFlash`
+   - `src/public/js/pages/index.js:104-137` usa esse mesmo `authFlash` para erros de cadastro
+   - `src/public/js/pages/index.js:139-160` usa o mesmo `authFlash` para login
+   - nao existe `isSubmitting`, `disabled` ou troca de label de botao nesses handlers
+3. Em que situacao ocorre
+   - erro de cadastro
+   - rede lenta no login
+   - clique repetido enquanto a request ainda nao terminou
+4. Como o problema se manifesta
+   - mensagem de cadastro aparece visualmente ancorada na area de login
+   - usuario nao recebe pista forte de que a submissao esta em andamento
+5. Causa-raiz
+   A pagina tem duas experiencias distintas, mas o feedback assincrono continua centralizado como se fosse um unico formulario.
+6. Por que isso ainda acontece
+   O fluxo foi endurecido em validacao de senha, mas nao em feedback operacional.
+7. Impacto real
+   - confusao moderada na UX de cadastro
+   - chance de duplo envio em rede lenta
+8. Diagnostico
+   E um debito localizado, nao um problema sistmico comparavel aos dois achados altos.
+9. Recomendacao objetiva
+   - minima: adicionar `status-line` dedicado para cadastro ou mover o status compartilhado para uma zona neutra acima dos cards
+   - estrutural: introduzir `isSubmitting` para login/cadastro com disable de botao e copy de pending
+
+## 5. Falsos positivos removidos ou reclassificados
+
+Itens do relatorio anterior que ja nao devem seguir como problema ativo:
+- O limite de 2000 caracteres de comentario ja esta refletido no frontend:
+  - `src/public/pages/post.html:39`
+  - `src/public/js/features/post/renderers.js:102`
+  - `src/public/js/features/post/constants.js:1`
+- O CTA `Add to collection` ja nao sai silenciosamente sem selecao:
+  - o botao nasce desabilitado em `src/public/js/features/profile/content-renderers.js:157-165`
+  - o handler mostra feedback explicito em `src/public/js/pages/collections.js:646-654`
+- Colecao ja possui modal de confirmacao de delete:
+  - `src/public/pages/collections.html:66`
+  - `src/public/js/pages/collections.js:290` e `:398`
+- Delete administrativo de usuario ja possui preview + confirmacao contextual:
+  - `src/public/pages/profile.html:49`
+  - `src/public/js/pages/profile.js:505`
+- Confirmacao de senha no cadastro ja foi restaurada:
+  - `src/public/pages/index.html:90-103`
+  - `src/public/js/pages/index.js:87-99`
+- A suite rapida atual nao esta quebrada:
+  - `node --test --test-isolation=none tests/*.test.js` passou com `13/13`
+
+## 6. Diagnostico sistemico
+
+O estado atual do projeto nao aponta para "arquitetura errada" nem para "backend fora de controle". O diagnostico mais fiel hoje e este:
+- o backend esta bem orientado por docs, modulo e contrato
+- o frontend melhorou bastante, mas os problemas remanescentes sao de consolidacao de padrao
+- a maior fragilidade ja nao esta em validacao basica de formulario; esta em coerencia transversal entre telas
+- a documentacao tecnica esta forte, mas a camada publica de apresentacao e a camada de teste rapido ainda nao acompanham totalmente o escopo atual
+
+Em termos praticos, o projeto entrou numa fase em que os maiores ganhos nao vem de adicionar mais feature. Vem de consolidar quatro politicas transversais:
+- auth failure handling
+- confirmacao destrutiva
+- contratos de markup compartilhado
+- validacao automatizada rapida
+
+## 7. Priorizacao recomendada
+
+Ordem sugerida:
+1. Resolver `A-01` e `A-02`
+   - sao os problemas mais perceptiveis ao usuario e os mais propensos a gerar erro operacional real
+2. Resolver `M-01`
+   - reduz regressao silenciosa e baixa custo de manutencao do frontend
+3. Resolver `M-02`
+   - importante para estabilizar crescimento futuro e proteger fluxos centrais
+4. Resolver `B-01` e `B-02`
+   - ganhos de apresentacao, onboarding e acabamento de UX
+
+Quick wins de baixo custo:
+- adicionar confirmacao nativa aos deletes de post/comentario
+- reaproveitar `handleAuthFailure()` ja existente em `profile.js`/`collections.js`
+- expor `npm test` para a suite rapida atual
+- corrigir o README principal
+- separar visualmente feedback de login e cadastro
+
+Correcao estrutural mais valiosa:
+- criar uma politica compartilhada de sessao e acoes destrutivas, em vez de continuar resolvendo isso tela a tela

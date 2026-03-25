@@ -3,6 +3,7 @@ import {
   formatFollowTagLabel,
   normalizeFollowTagValue,
 } from "../../core/followed-tags.js";
+import { renderInlineDestructiveConfirmation } from "../../components/destructive-confirmation.js";
 import { renderAuthorSummary } from "../authors/renderers.js";
 import {
   COMMENT_MAX_LENGTH,
@@ -77,13 +78,22 @@ function renderTags(tags, { canManageTagFollows = false, followedTagSet = new Se
   `;
 }
 
-function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit } = {}) {
+function renderCommentItem(
+  comment,
+  {
+    canDeleteAnyComment,
+    viewerId,
+    commentEdit,
+    commentDelete,
+  } = {},
+) {
   const isOwner = String(viewerId ?? "") === String(comment.author?.id ?? "");
   const canEditComment = isOwner;
   const canDeleteComment = isOwner || canDeleteAnyComment;
   const isEditing = String(commentEdit?.editingCommentId ?? "") === String(comment.id ?? "");
   const draft = String(commentEdit?.draft ?? comment.content ?? "");
   const isSaving = Boolean(commentEdit?.isSaving);
+  const isDeletePending = String(commentDelete?.pendingCommentId ?? "") === String(comment.id ?? "");
 
   return `
     <article class="comment-item">
@@ -134,11 +144,24 @@ function renderCommentItem(comment, { canDeleteAnyComment, viewerId, commentEdit
             : ""
         }
         ${
-          canDeleteComment
+          canDeleteComment && !isEditing && !isDeletePending
             ? `<button type="button" class="button-reject button-link-inline" data-delete-comment-id="${escapeHtml(comment.id)}">Delete</button>`
             : ""
         }
       </div>
+      ${
+        isDeletePending
+          ? renderInlineDestructiveConfirmation({
+              actionKey: "comment.delete",
+              entityId: comment.id,
+              cancelDataAttribute: "cancel-comment-delete-id",
+              confirmDataAttribute: "confirm-comment-delete-id",
+              isBusy: Boolean(commentDelete?.isDeleting),
+              statusMessage: commentDelete?.errorMessage,
+              statusState: "error",
+            })
+          : ""
+      }
     </article>
   `;
 }
@@ -196,6 +219,7 @@ export function renderPostView(
     followedTagSet = new Set(),
     questionnaireSession = null,
     isPostOwner = false,
+    commentDelete = null,
   } = {},
 ) {
   if (!target) {
@@ -302,6 +326,7 @@ export function renderPostView(
         canDeleteAnyComment,
         viewerId,
         commentEdit,
+        commentDelete,
       }),
     )
     .join("");

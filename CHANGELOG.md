@@ -7,10 +7,12 @@ All notable changes to this project should be documented in this file.
 ### Changed
 
 - Standardized auth password fields around one shared frontend toggle so sign-in, registration, and password confirmation now all support the same inline show/hide eye control without page-specific duplication.
+- Standardized destructive confirmations around one frontend policy: comment deletion now uses structured inline confirmation, post and collection deletion use shared strong danger modals, and account/admin deletion flows now reuse the same lifecycle/copy policy while keeping their stricter proof steps.
 
 ### Docs
 
 - Updated frontend architecture docs and the frontend guide to document the shared `data-password-toggle` contract for reusable password visibility controls.
+- Updated frontend architecture docs and the frontend guide to document the shared destructive-confirmation policy and its layered surfaces (`inline`, `modal`, `modal_strict`).
 
 ## 2026-03-24
 

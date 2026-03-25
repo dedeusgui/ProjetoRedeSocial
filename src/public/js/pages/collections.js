@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import { createDestructiveModalController } from "../components/destructive-confirmation.js";
 import { HOME_NOTICE_KEY, initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import { createTagInputController } from "../components/tag-input.js";
@@ -21,9 +22,7 @@ const state = {
   collections: [],
   followedTags: [],
   editingCollectionId: null,
-  pendingDeleteCollectionId: null,
   isManagingCollections: false,
-  isDeletingCollection: false,
   isManagingFollowedTags: false,
 };
 
@@ -41,7 +40,9 @@ const elements = {
   collectionModalForm: document.querySelector("[data-collection-modal-form]"),
   collectionModalStatus: document.querySelector("[data-collection-modal-status]"),
   deleteCollectionModal: document.querySelector("[data-delete-collection-modal]"),
+  deleteCollectionTitle: document.querySelector("[data-delete-collection-title]"),
   deleteCollectionDescription: document.querySelector("[data-delete-collection-description]"),
+  deleteCollectionNote: document.querySelector("[data-delete-collection-note]"),
   deleteCollectionCancelButton: document.querySelector("[data-delete-collection-cancel]"),
   deleteCollectionConfirmButton: document.querySelector("[data-delete-collection-confirm]"),
   deleteCollectionStatus: document.querySelector("[data-delete-collection-status]"),
@@ -49,7 +50,6 @@ const elements = {
 
 const statusFlash = createFlash(elements.status);
 const collectionModalFlash = createFlash(elements.collectionModalStatus);
-const deleteCollectionFlash = createFlash(elements.deleteCollectionStatus);
 const collectionTagInputController = createTagInputController({
   input: elements.collectionModalForm?.querySelector("[name='tags']") ?? null,
   noun: "tags",
@@ -182,59 +182,40 @@ function getManagedCollectionPostCount(collection) {
   return Number.isFinite(fallbackCount) && fallbackCount >= 0 ? fallbackCount : 0;
 }
 
-function resolveDeleteCollectionImpactMessage(collection) {
-  const itemCount = getManagedCollectionPostCount(collection);
-  if (itemCount <= 0) {
-    return "This collection is empty.";
-  }
+const deleteCollectionController = createDestructiveModalController({
+  dialog: elements.deleteCollectionModal,
+  titleTarget: elements.deleteCollectionTitle,
+  descriptionTarget: elements.deleteCollectionDescription,
+  noteTarget: elements.deleteCollectionNote,
+  cancelButton: elements.deleteCollectionCancelButton,
+  confirmButton: elements.deleteCollectionConfirmButton,
+  statusTarget: elements.deleteCollectionStatus,
+  async onConfirm({ context, close }) {
+    const collectionId = String(context?.collectionId ?? "").trim();
+    if (!collectionId || state.isManagingCollections) {
+      return;
+    }
 
-  if (itemCount === 1) {
-    return "This will remove this collection and its 1 post.";
-  }
+    state.isManagingCollections = true;
+    syncAllAddCollectionPostButtonStates();
 
-  return `This will remove this collection and its ${itemCount} posts.`;
-}
+    try {
+      await api.collections.delete(collectionId);
+      await refreshCollections({ showLoading: false });
+      statusFlash.show("Collection deleted.", "success");
+    } catch (error) {
+      if (handleAuthFailure(error)) {
+        close({ force: true });
+        return;
+      }
 
-function syncDeleteCollectionModalUi() {
-  const collection = getManagedCollection(state.pendingDeleteCollectionId);
-
-  if (elements.deleteCollectionDescription) {
-    elements.deleteCollectionDescription.textContent = collection
-      ? resolveDeleteCollectionImpactMessage(collection)
-      : "";
-  }
-
-  if (elements.deleteCollectionCancelButton) {
-    elements.deleteCollectionCancelButton.disabled = state.isDeletingCollection;
-  }
-
-  if (elements.deleteCollectionConfirmButton) {
-    elements.deleteCollectionConfirmButton.disabled =
-      state.isDeletingCollection || !state.pendingDeleteCollectionId;
-    elements.deleteCollectionConfirmButton.textContent = state.isDeletingCollection
-      ? "Deleting..."
-      : "Delete collection";
-  }
-}
-
-function resetDeleteCollectionModal() {
-  state.pendingDeleteCollectionId = null;
-  state.isDeletingCollection = false;
-  deleteCollectionFlash.clear();
-  syncDeleteCollectionModalUi();
-}
-
-function closeDeleteCollectionModal({ force = false } = {}) {
-  if (!force && state.isDeletingCollection) {
-    return;
-  }
-
-  if (!elements.deleteCollectionModal?.open) {
-    return;
-  }
-
-  elements.deleteCollectionModal.close();
-}
+      throw error;
+    } finally {
+      state.isManagingCollections = false;
+      syncAllAddCollectionPostButtonStates();
+    }
+  },
+});
 
 function resetCollectionModal() {
   state.editingCollectionId = null;
@@ -287,9 +268,13 @@ function openCollectionModalEdit(collectionId) {
   elements.collectionModal?.showModal();
 }
 
-function openDeleteCollectionModal(collectionId) {
+function openDeleteCollectionModal(collectionId, restoreFocusTo = null) {
   if (!hasSession()) {
     redirectToHome();
+    return;
+  }
+
+  if (state.isManagingCollections) {
     return;
   }
 
@@ -298,12 +283,14 @@ function openDeleteCollectionModal(collectionId) {
     return;
   }
 
-  state.pendingDeleteCollectionId = String(collectionId);
-  deleteCollectionFlash.clear();
-  syncDeleteCollectionModalUi();
-  elements.deleteCollectionModal?.showModal();
-  window.requestAnimationFrame(() => {
-    elements.deleteCollectionCancelButton?.focus();
+  deleteCollectionController.open({
+    actionKey: "collection.delete",
+    context: {
+      collectionId: String(collectionId),
+      itemCount: getManagedCollectionPostCount(collection),
+      resolveErrorMessage: resolveMessage,
+    },
+    restoreFocusTo,
   });
 }
 
@@ -392,38 +379,6 @@ async function submitCollectionModal(event) {
     collectionModalFlash.show(resolveMessage(error), "error");
   } finally {
     state.isManagingCollections = false;
-  }
-}
-
-async function deleteCollection() {
-  const collectionId = String(state.pendingDeleteCollectionId ?? "").trim();
-  if (!collectionId || state.isManagingCollections || state.isDeletingCollection) {
-    return;
-  }
-
-  state.isManagingCollections = true;
-  state.isDeletingCollection = true;
-  syncDeleteCollectionModalUi();
-  deleteCollectionFlash.show("Deleting collection...", "info");
-  statusFlash.show("Deleting collection...", "info");
-
-  try {
-    await api.collections.delete(collectionId);
-    await refreshCollections({ showLoading: false });
-    closeDeleteCollectionModal({ force: true });
-    statusFlash.show("Collection deleted.", "success");
-  } catch (error) {
-    if (handleAuthFailure(error)) {
-      return;
-    }
-
-    const message = resolveMessage(error);
-    deleteCollectionFlash.show(message, "error");
-    statusFlash.show(message, "error");
-  } finally {
-    state.isDeletingCollection = false;
-    state.isManagingCollections = false;
-    syncDeleteCollectionModalUi();
   }
 }
 
@@ -578,32 +533,6 @@ function bindEvents() {
     elements.collectionModal.addEventListener("close", resetCollectionModal);
   }
 
-  elements.deleteCollectionCancelButton?.addEventListener("click", () => {
-    closeDeleteCollectionModal();
-  });
-
-  elements.deleteCollectionConfirmButton?.addEventListener("click", () => {
-    deleteCollection();
-  });
-
-  if (elements.deleteCollectionModal) {
-    elements.deleteCollectionModal.addEventListener("click", (event) => {
-      if (event.target === elements.deleteCollectionModal && !state.isDeletingCollection) {
-        closeDeleteCollectionModal();
-      }
-    });
-
-    elements.deleteCollectionModal.addEventListener("cancel", (event) => {
-      if (state.isDeletingCollection) {
-        event.preventDefault();
-      }
-    });
-
-    elements.deleteCollectionModal.addEventListener("close", () => {
-      resetDeleteCollectionModal();
-    });
-  }
-
   elements.collectionModalForm?.addEventListener("submit", submitCollectionModal);
 
   elements.list?.addEventListener("click", (event) => {
@@ -630,7 +559,7 @@ function bindEvents() {
     if (deleteButton && elements.list.contains(deleteButton)) {
       const collectionId = String(deleteButton.dataset.deleteCollectionId ?? "").trim();
       if (collectionId) {
-        openDeleteCollectionModal(collectionId);
+        openDeleteCollectionModal(collectionId, deleteButton);
       }
       return;
     }

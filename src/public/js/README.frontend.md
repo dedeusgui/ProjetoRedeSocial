@@ -5,7 +5,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 
 ## Folder layout
 - `api.js`: HTTP client and endpoint facade for `/api/v1`
-- `core/`: shared helpers (session, formatters, API error mapping, shared UI copy)
+- `core/`: shared helpers (session, formatters, API error mapping, destructive-action policy, shared UI copy)
 - `components/`: reusable UI behaviors used across pages
 - `features/<domain>/renderers.js`: domain-specific rendering
 - `features/followed-tags/renderers.js`: safe DOM rendering for the followed-tags dropdown chip list and active-filter banner
@@ -23,8 +23,10 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `core/formatters.js`: shared formatting utilities for percentages, dates, and labels used by renderers.
 - `core/content-tags.js`: shared parse/normalize/validate helpers for post and collection tag inputs, including the current 5-tag and 10-character normalized-tag limits.
 - `core/http-state.js`: normalize API error messages for UI.
+- `core/destructive-actions.js`: central destructive-action policy that decides confirmation surface, shared copy, and labels by action key.
 - `core/followed-tags.js`: shared normalization for followed-tag values.
 - `core/ui-text.js`: shared English UI copy for auth/session/status feedback.
+- `components/destructive-confirmation.js`: shared danger-modal lifecycle helpers plus inline/modal destructive confirmation primitives driven by the policy module.
 - `components/tag-input.js`: reusable realtime preview + validation UI for simple comma-separated tag inputs, including rule indicators, normalized-tag chips, and submit-time validation feedback.
 - `components/password-toggle.js`: reusable show/hide password controller for inputs marked with `data-password-toggle`, including reset-safe hidden-state restoration.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
@@ -34,6 +36,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 
 ## Conventions
 - Use `data-*` selectors for DOM hooks.
+- Destructive actions must go through `core/destructive-actions.js` and `components/destructive-confirmation.js`; do not call delete APIs directly from the first destructive click.
 - For internal page-to-page actions, use `<button type="button" data-nav-href="...">` and shared navigation binding.
 - Use `modal-form-layout`, `modal-form-section`, and `modal-form-section-copy` as shared modal layout primitives; keep `danger-zone-card` semantic and let `.card` plus `danger-zone-*` own the visible danger styling.
 - Keep auth forms browser-friendly: use standard field names plus HTML autocomplete tokens such as `email`, `current-password`, and `new-password`; password fields that need reveal/hide behavior should opt into the shared `data-password-toggle` hook; account-creation password confirmation should be checked locally before the register request, and the frontend must not try to read or repopulate saved passwords from JavaScript.

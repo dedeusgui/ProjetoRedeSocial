@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { createFlash } from "../components/flash.js";
+import { createDestructiveModalController } from "../components/destructive-confirmation.js";
 import { initNavbar } from "../components/navbar.js";
 import { bindNavigation } from "../components/navigation.js";
 import {
@@ -83,6 +84,13 @@ const elements = {
   selectedPostMedia: document.querySelector("[data-selected-post-media]"),
   existingPostMedia: document.querySelector("[data-existing-post-media]"),
   questionnaireEditor: document.querySelector("[data-post-questionnaire-editor]"),
+  deletePostModal: document.querySelector("[data-delete-post-modal]"),
+  deletePostTitle: document.querySelector("[data-delete-post-title]"),
+  deletePostDescription: document.querySelector("[data-delete-post-description]"),
+  deletePostNote: document.querySelector("[data-delete-post-note]"),
+  deletePostCancelButton: document.querySelector("[data-delete-post-cancel]"),
+  deletePostConfirmButton: document.querySelector("[data-delete-post-confirm]"),
+  deletePostStatus: document.querySelector("[data-delete-post-status]"),
 };
 
 const statusFlash = createFlash(elements.status);
@@ -715,8 +723,43 @@ function resolveDeleteMessage(error) {
   );
 }
 
-async function deleteFeedPost(postId) {
-  if (state.isDeletingPost || isCollectionsFeed()) {
+const deletePostController = createDestructiveModalController({
+  dialog: elements.deletePostModal,
+  titleTarget: elements.deletePostTitle,
+  descriptionTarget: elements.deletePostDescription,
+  noteTarget: elements.deletePostNote,
+  cancelButton: elements.deletePostCancelButton,
+  confirmButton: elements.deletePostConfirmButton,
+  statusTarget: elements.deletePostStatus,
+  async onConfirm({ context, close }) {
+    const postId = String(context?.postId ?? "").trim();
+    if (!postId || state.isDeletingPost || isCollectionsFeed()) {
+      return;
+    }
+
+    state.isDeletingPost = true;
+
+    try {
+      await api.posts.delete(postId);
+      await loadFeed();
+      statusFlash.show("Post deleted.", "success");
+    } catch (error) {
+      if (error?.code === "UNAUTHENTICATED" || error?.status === 401) {
+        statusFlash.show("Sign in to delete posts.", "error");
+        close({ force: true });
+        window.location.href = "./index.html";
+        return;
+      }
+
+      throw error;
+    } finally {
+      state.isDeletingPost = false;
+    }
+  },
+});
+
+function openDeleteFeedPostModal(postId, restoreFocusTo = null) {
+  if (isCollectionsFeed() || state.isDeletingPost) {
     return;
   }
 
@@ -736,17 +779,14 @@ async function deleteFeedPost(postId) {
     return;
   }
 
-  state.isDeletingPost = true;
-  statusFlash.show("Deleting post...", "info");
-  try {
-    await api.posts.delete(postId);
-    await loadFeed();
-    statusFlash.show("Post deleted.", "success");
-  } catch (error) {
-    statusFlash.show(resolveDeleteMessage(error), "error");
-  } finally {
-    state.isDeletingPost = false;
-  }
+  deletePostController.open({
+    actionKey: "post.delete",
+    context: {
+      postId: String(postId),
+      resolveErrorMessage: resolveDeleteMessage,
+    },
+    restoreFocusTo,
+  });
 }
 
 function editFeedPost(postId) {
@@ -880,7 +920,7 @@ function bindEvents() {
     if (deleteButton && elements.list.contains(deleteButton)) {
       const postId = String(deleteButton.dataset.deletePostId ?? "").trim();
       if (postId) {
-        deleteFeedPost(postId);
+        openDeleteFeedPostModal(postId, deleteButton);
       }
     }
   });
