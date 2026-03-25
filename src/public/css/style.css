@@ -298,7 +298,6 @@ p {
 }
 
 .hero-panel,
-.info-strip,
 .empty-card {
   display: grid;
   gap: var(--space-2);
@@ -1133,11 +1132,6 @@ select:focus-visible {
   font-size: 0.82rem;
 }
 
-.post-meta {
-  font-size: 0.87rem;
-  color: var(--text-2);
-}
-
 .post-title {
   font-size: clamp(1.4rem, 1.15rem + 1vw, 1.95rem);
   line-height: 1.15;
@@ -1749,14 +1743,8 @@ select:focus-visible {
   background: var(--surface-card);
 }
 
-.profile-section-card {
-  display: grid;
-  gap: var(--space-3);
-}
-
 .collection-owner-meta,
 .collection-detail-copy,
-.collection-detail-meta,
 .collection-feed-copy,
 .collection-item-body,
 .managed-collection-header,
@@ -2043,11 +2031,6 @@ select:focus-visible {
 
 .comments-panel-header {
   justify-content: space-between;
-}
-
-.moderation-panel {
-  display: grid;
-  gap: var(--space-2);
 }
 
 .review-actions {

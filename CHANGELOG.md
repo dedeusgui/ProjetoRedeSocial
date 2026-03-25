@@ -11,6 +11,7 @@ All notable changes to this project should be documented in this file.
 - Promoted recurring shared stylesheet color literals into semantic tokens for buttons, chips, discovery controls, questionnaire states, collection surfaces, profile menus, and danger flows so repeated hard-coded values no longer drift between similar components.
 - Added an explicit shared `pill` primitive with semantic variants for chips, badges, questionnaire metadata, collection counts, privacy badges, followed-tag chips, and approval/reputation labels so the same visual family no longer depends on parallel one-off rules.
 - Replaced the owner collection-management negative-margin spacing hack with explicit control wrappers and grid gaps, so the `Open/Edit/Delete` area and the `Add a post` controls no longer depend on sibling-order compensation.
+- Removed unused selectors from the shared stylesheet so dead frontend hooks no longer add noise to collection, moderation, profile, and post CSS sections.
 
 ## 2026-03-22
 
