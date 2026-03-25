@@ -20,7 +20,7 @@ Folder responsibilities:
 - `core/`
   - session handling, formatter helpers, shared UI copy, and API error-to-UI state mapping.
 - `components/`
-  - reusable UI behavior (navbar state, delegated navigation, flash messages).
+  - reusable UI behavior (navbar state, delegated navigation, flash messages, password visibility toggles).
 - `features/<domain>/renderers.js`
   - render functions grouped by feature domain.
 - `pages/*.js`
@@ -31,7 +31,7 @@ Reference guide:
 
 ## UI Pages
 
-- `index.html`: authentication entrypoint, with browser-recognizable email/password autocomplete semantics for sign-in and account creation, a local password-confirmation check on account creation before the register request is sent, and startup session validation against the authenticated profile endpoint before redirecting to `feed.html`.
+- `index.html`: authentication entrypoint, with browser-recognizable email/password autocomplete semantics for sign-in and account creation, a shared show/hide password toggle on each password field, a local password-confirmation check on account creation before the register request is sent, and startup session validation against the authenticated profile endpoint before redirecting to `feed.html`.
 - `feed.html`: unified chronological browsing page for public posts and public collections, with one unified header/discovery surface for debounced real-time search, a grouped `Posts` vs `Collections` segmented control for immediate content-type switching, an authenticated followed-tags toggle, a lightweight followed-tags state banner below the filter row while that filter is active, a manual follow form outside the followed-tags dropdown, and the original compact followed-tags dropdown upgraded with a counter, a scrollable chip list, and tap-to-preview full tag labels for touch devices; plus tag follow/unfollow actions, post create/edit image upload, and a shared post modal that keeps a simple comma-separated tag input but now adds realtime normalized-tag preview, rule indicators, and submit-blocking validation ahead of the API request, enforcing up to 5 tags and 10 characters per normalized tag. The same modal now treats post-image picking as an accumulated list up to 4 images, shows local previews with per-item remove controls, keeps insertion order for new uploads, and in edit mode keeps saved images ahead of newly selected ones; the modal still keeps the neutral disclosure-style `Add poll (optional)` section placed below `Post images`, questionnaire authoring, questionnaire first-question preview on post cards, visible sequence membership on post cards, public author chips (avatar, username, reputation tier), and collection cards styled to follow the same spacing and chip rhythm as post cards, with an owner-only `Manage collection` shortcut that routes to `collections.html`.
 - `post.html`: post detail with comments, approval percentage, tag follow/unfollow actions, sequence context links, full sequence panel, a `Collections with this post` panel that shows collection titles for all viewers while keeping per-collection `Open` actions plus a `+ Add to collection` shortcut owner-only and routed back to `collections.html`, post edit image upload/removal, the same shared post-modal tag preview and submit-blocking validation used elsewhere with the 5-tag / 10-character limits, a stable two-column post-image gallery with a one-column mobile fallback where the grid stays in place for every media count, using square tiles by default, a `16:9` full-width treatment for a single image, and a wider first image when exactly three images are present, full questionnaire rendering with logged-in self-check, and public author chips for the post author and comment authors.
 - `profile.html`: authenticated profile with private approval metrics, an avatar-attached contextual image menu for upload/removal, owner post management through the same shared post modal with realtime tag preview and submit-blocking validation under the 5-tag / 10-character limits, accumulated post-image selection with preview/remove controls under the shared 4-image limit, a profile-bottom danger zone for permanent self-delete, and admin tools for admins, including a two-level admin user-delete modal with impact preview for standard users.
@@ -54,6 +54,7 @@ Reference guide:
 - Session/token handling should go through `core/session.js`.
 - API error messages should be normalized through `core/http-state.js`.
 - User-facing frontend copy should stay in English and be consistent with surfaced backend validation/auth messages.
+- Password inputs that need reveal/hide behavior should use the shared password-toggle component via the `data-password-toggle` hook instead of page-specific DOM logic.
 - Prefer shared `bindNavigation()` for internal navigation controls.
 - Live regions and helper text should be reserved for loading, error, and non-obvious action feedback, not for restating visible page context.
 - Ambient visual effects should live in shared CSS and stay behind content, subtle by default, and safe under `prefers-reduced-motion`.

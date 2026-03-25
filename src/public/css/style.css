@@ -364,6 +364,57 @@ label {
   color: var(--text-1);
 }
 
+.password-toggle-field {
+  position: relative;
+  display: grid;
+  align-items: center;
+}
+
+.password-toggle-field > input {
+  padding-right: 52px;
+}
+
+.password-toggle-button {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-1) - 2px);
+  background: transparent;
+  color: var(--text-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
+.password-toggle-button:hover {
+  transform: translateY(-50%);
+  border-color: var(--interactive-border-soft);
+  background: var(--surface-card-soft);
+  color: var(--text-0);
+}
+
+.password-toggle-button[aria-pressed="true"] {
+  border-color: var(--interactive-border-soft);
+  background: var(--surface-accent-soft);
+  color: var(--text-0);
+}
+
+.password-toggle-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .tag-input-shell,
 .tag-input-meta,
 .tag-input-preview,

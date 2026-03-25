@@ -2,6 +2,16 @@
 
 All notable changes to this project should be documented in this file.
 
+## 2026-03-25
+
+### Changed
+
+- Standardized auth password fields around one shared frontend toggle so sign-in, registration, and password confirmation now all support the same inline show/hide eye control without page-specific duplication.
+
+### Docs
+
+- Updated frontend architecture docs and the frontend guide to document the shared `data-password-toggle` contract for reusable password visibility controls.
+
 ## 2026-03-24
 
 ### Fixed

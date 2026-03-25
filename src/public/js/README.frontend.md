@@ -26,6 +26,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - `core/followed-tags.js`: shared normalization for followed-tag values.
 - `core/ui-text.js`: shared English UI copy for auth/session/status feedback.
 - `components/tag-input.js`: reusable realtime preview + validation UI for simple comma-separated tag inputs, including rule indicators, normalized-tag chips, and submit-time validation feedback.
+- `components/password-toggle.js`: reusable show/hide password controller for inputs marked with `data-password-toggle`, including reset-safe hidden-state restoration.
 - `components/navigation.js`: delegated internal navigation for elements using `data-nav-href`.
 - `components/navbar.js`: auth-aware nav state and logout behavior.
 - `components/flash.js`: transient status/feedback messaging.
@@ -35,7 +36,7 @@ Keep page scripts small and focused on orchestration. Reuse shared modules for s
 - Use `data-*` selectors for DOM hooks.
 - For internal page-to-page actions, use `<button type="button" data-nav-href="...">` and shared navigation binding.
 - Use `modal-form-layout`, `modal-form-section`, and `modal-form-section-copy` as shared modal layout primitives; keep `danger-zone-card` semantic and let `.card` plus `danger-zone-*` own the visible danger styling.
-- Keep auth forms browser-friendly: use standard field names plus HTML autocomplete tokens such as `email`, `current-password`, and `new-password`; account-creation password confirmation should be checked locally before the register request, and the frontend must not try to read or repopulate saved passwords from JavaScript.
+- Keep auth forms browser-friendly: use standard field names plus HTML autocomplete tokens such as `email`, `current-password`, and `new-password`; password fields that need reveal/hide behavior should opt into the shared `data-password-toggle` hook; account-creation password confirmation should be checked locally before the register request, and the frontend must not try to read or repopulate saved passwords from JavaScript.
 - On `index.html`, treat a stored token as tentative: validate it with `api.users.meProfile()` before redirecting to the authenticated experience, and clear the local session if validation fails.
 - Always show user feedback for async actions: loading, success, or error.
 - Prefer concise status text and avoid keeping explanatory copy that duplicates what the screen already shows after render.
