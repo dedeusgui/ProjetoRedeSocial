@@ -136,44 +136,48 @@ function renderCollectionCard(
         </div>
       </div>
       ${renderCollectionTags(collection.tags, { canManageTagFollows, followedTagSet })}
-      <div class="collection-card-actions">
-        <div class="collection-card-primary-actions">
-          <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">
-            Open collection
-          </button>
-          <button type="button" class="button-ghost" data-edit-collection-id="${escapeHtml(collectionId)}">
-            Edit
-          </button>
+      <div class="managed-collection-controls">
+        <div class="collection-card-actions">
+          <div class="collection-card-primary-actions">
+            <button type="button" class="button-link button-link-inline" data-nav-href="./collection.html?id=${encodeURIComponent(collectionId)}">
+              Open collection
+            </button>
+            <button type="button" class="button-ghost" data-edit-collection-id="${escapeHtml(collectionId)}">
+              Edit
+            </button>
+          </div>
+          <div class="collection-card-danger-actions">
+            <button type="button" class="button-reject" data-delete-collection-id="${escapeHtml(collectionId)}">
+              Delete
+            </button>
+          </div>
         </div>
-        <div class="collection-card-danger-actions">
-          <button type="button" class="button-reject" data-delete-collection-id="${escapeHtml(collectionId)}">
-            Delete
+        <div class="managed-collection-add-controls">
+          <label class="managed-collection-select">
+            Add a post
+            <select data-collection-post-select="${escapeHtml(collectionId)}">
+              <option value="">Choose a post</option>
+              ${addablePosts
+                .map(
+                  (post) => `
+                    <option value="${escapeHtml(String(post.id ?? ""))}">
+                      ${escapeHtml(post.title ?? "Untitled")}
+                    </option>
+                  `,
+                )
+                .join("")}
+            </select>
+          </label>
+          <button
+            type="button"
+            class="button-ghost"
+            data-add-collection-post-button="${escapeHtml(collectionId)}"
+            disabled
+          >
+            Add to collection
           </button>
         </div>
       </div>
-      <label class="managed-collection-select">
-        Add a post
-        <select data-collection-post-select="${escapeHtml(collectionId)}">
-          <option value="">Choose a post</option>
-          ${addablePosts
-            .map(
-              (post) => `
-                <option value="${escapeHtml(String(post.id ?? ""))}">
-                  ${escapeHtml(post.title ?? "Untitled")}
-                </option>
-              `,
-            )
-            .join("")}
-        </select>
-      </label>
-      <button
-        type="button"
-        class="button-ghost"
-        data-add-collection-post-button="${escapeHtml(collectionId)}"
-        disabled
-      >
-        Add to collection
-      </button>
       ${
         collectionItems.length === 0
           ? "<p class='muted'>No posts in this collection yet.</p>"

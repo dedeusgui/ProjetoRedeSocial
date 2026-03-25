@@ -1761,6 +1761,7 @@ select:focus-visible {
 .collection-item-body,
 .managed-collection-header,
 .managed-collection-header-copy,
+.managed-collection-add-controls,
 .managed-collection-select {
   display: grid;
   gap: var(--space-2);
@@ -1805,6 +1806,11 @@ select:focus-visible {
   gap: var(--space-3);
   border-color: var(--line-0);
   background: var(--surface-card);
+}
+
+.managed-collection-controls {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .collection-post-card {
@@ -1918,10 +1924,6 @@ select:focus-visible {
 .collection-card-danger-actions {
   padding-top: var(--space-1);
   border-top: 1px solid var(--line-divider-soft);
-}
-
-.collection-card-actions + .managed-collection-select {
-  margin-top: calc(var(--space-1) * -1);
 }
 
 .collection-membership-list {
